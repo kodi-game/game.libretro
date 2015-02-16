@@ -1,4 +1,4 @@
-project(library.game.libretro)
+project(game.library.libretro)
 
 cmake_minimum_required(VERSION 2.6)
 enable_language(CXX)
@@ -15,13 +15,13 @@ include_directories(${INCLUDES}
 
 #list(APPEND DEPLIBS ${kodiplatform_LIBRARIES})
 
-set(GAME_LIBRETRO_SOURCES src/client.cpp
-                          src/ClientBridge.cpp
-                          src/FrontendBridge.cpp
-                          src/GameInfoLoader.cpp
-                          src/LibretroDLL.cpp
-                          src/LibretroEnvironment.cpp)
+set(LIBRETRO_SOURCES src/client.cpp
+                     src/ClientBridge.cpp
+                     src/FrontendBridge.cpp
+                     src/GameInfoLoader.cpp
+                     src/LibretroDLL.cpp
+                     src/LibretroEnvironment.cpp)
 
-build_addon(library.game.libretro LIBRARY_GAME_LIBRETRO DEPLIBS)
+build_addon(game.library.libretro LIBRETRO DEPLIBS)
 
 include(CPack)
