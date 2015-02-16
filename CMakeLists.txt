@@ -5,12 +5,12 @@ enable_language(CXX)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR})
 
-#find_package(kodi REQUIRED)
+find_package(kodi REQUIRED)
 #find_package(kodiplatform REQUIRED)
 
 include_directories(${INCLUDES}
 #                    ${kodiplatform_INCLUDE_DIRS}
-#                    ${KODI_INCLUDE_DIR}
+                    ${KODI_INCLUDE_DIR}
                     ${PROJECT_SOURCE_DIR}/src)
 
 #list(APPEND DEPLIBS ${kodiplatform_LIBRARIES})
