@@ -29,7 +29,7 @@
   #define __stat64 stat64
 #endif
 
-#include "libXBMC_addon.h"
+#include "kodi/libXBMC_addon.h"
 
 using namespace ADDON;
 using namespace LIBRETRO;

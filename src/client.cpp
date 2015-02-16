@@ -23,10 +23,10 @@
 #include "libretro.h"
 #include "LibretroDLL.h"
 #include "LibretroEnvironment.h"
-#include "libXBMC_addon.h"
-#include "libXBMC_game.h"
-#include "xbmc_addon_dll.h"
-#include "xbmc_game_dll.h"
+#include "kodi/libXBMC_addon.h"
+#include "kodi/libXBMC_game.h"
+#include "kodi/xbmc_addon_dll.h"
+#include "kodi/xbmc_game_dll.h"
 
 #include <string>
 #include <vector>

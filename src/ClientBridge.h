@@ -19,7 +19,7 @@
  */
 #pragma once
 
-#include "xbmc_game_types.h"
+#include "kodi/xbmc_game_types.h"
 
 struct retro_game_info;
 

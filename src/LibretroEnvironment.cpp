@@ -23,8 +23,8 @@
 #include "FrontendBridge.h"
 #include "libretro.h"
 #include "LibretroDLL.h"
-#include "libXBMC_addon.h"
-#include "libXBMC_game.h"
+#include "kodi/libXBMC_addon.h"
+#include "kodi/libXBMC_game.h"
 
 #include <algorithm>
 #include <assert.h>

@@ -19,8 +19,8 @@
  */
 #pragma once
 
-//#include "lib/platform/threads/mutex.h" // TODO
-#include "xbmc_game_types.h"
+#include "kodi/threads/mutex.h"
+#include "kodi/xbmc_game_types.h"
 
 #include <map>
 #include <string>
@@ -75,6 +75,6 @@ namespace LIBRETRO
     static std::map<std::string, std::vector<std::string> > m_variables; // Record the variables reported by libretro core (key -> values)
     static std::map<std::string, std::string>               m_settings;  // Record the settings reported by XBMC (key -> current value)
     static volatile bool                                    m_bSettingsChanged;
-    //static PLATFORM::CMutex                                 m_settingsMutex; // TODO
+    static PLATFORM::CMutex                                 m_settingsMutex;
   };
 } // namespace LIBRETRO

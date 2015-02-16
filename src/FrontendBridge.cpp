@@ -20,8 +20,8 @@
 
 #include "FrontendBridge.h"
 #include "LibretroEnvironment.h"
-#include "libXBMC_addon.h"
-#include "libXBMC_game.h"
+#include "kodi/libXBMC_addon.h"
+#include "kodi/libXBMC_game.h"
 
 using namespace ADDON;
 using namespace LIBRETRO;

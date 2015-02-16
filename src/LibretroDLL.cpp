@@ -19,11 +19,11 @@
  */
 
 #include "LibretroDLL.h"
-#include "libXBMC_game.h"
-#include "xbmc_game_types.h"
+#include "kodi/libXBMC_game.h"
+#include "kodi/xbmc_game_types.h"
 
 #ifdef _WIN32
-  #include "dlfcn-win32.h"
+  #include "dlfcn-win32.h" // TODO: Use file from kodi-platform
 #else
   #include <dlfcn.h>
 #endif
