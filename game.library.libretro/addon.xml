@@ -9,7 +9,7 @@
   <extension point="xbmc.game.library"
        library_android="game.library.libretro.so"
        library_linux="game.library.libretro.so"
-       library_osx="game.library.libretro.so"
+       library_osx="game.library.libretro.dylib"
        library_windx="game.library.libretro.dll"
        library_wingl="game.library.libretro.dll">
 	</extension>
