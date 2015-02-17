@@ -1,4 +1,4 @@
-project(game.library.libretro)
+project(game.libretro)
 
 cmake_minimum_required(VERSION 2.6)
 enable_language(CXX)
@@ -22,6 +22,6 @@ set(LIBRETRO_SOURCES src/client.cpp
                      src/LibretroDLL.cpp
                      src/LibretroEnvironment.cpp)
 
-build_addon(game.library.libretro LIBRETRO DEPLIBS)
+build_addon(game.libretro LIBRETRO DEPLIBS)
 
 include(CPack)
