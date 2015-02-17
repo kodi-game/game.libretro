@@ -37,44 +37,49 @@ namespace LIBRETRO
   class CLibretroEnvironment
   {
   public:
-    static void Initialize(ADDON::CHelper_libXBMC_addon* xbmc, CHelper_libXBMC_game* frontend, CLibretroDLL* client, CClientBridge* clientBridge);
-    static void Deinitialize();
-    static ADDON::CHelper_libXBMC_addon* GetXBMC() { return m_xbmc; }
-    static CHelper_libXBMC_game* GetFrontend() { return m_frontend; }
+    CLibretroEnvironment(void);
+
+    void Initialize(ADDON::CHelper_libXBMC_addon* xbmc, CHelper_libXBMC_game* frontend, CLibretroDLL* client, CClientBridge* clientBridge);
+    void Deinitialize(void);
+
+    ADDON::CHelper_libXBMC_addon* GetXBMC(void)     { return m_xbmc; }
+    CHelper_libXBMC_game*         GetFrontend(void) { return m_frontend; }
 
     /*!
      * FPS info is used to calculate timing for toast messages and possibly
      * other things.
      */
-    static void UpdateFramerate(double fps);
+    void UpdateFramerate(double fps);
 
     /*!
      * Returns the pixel format set by the libretro core. Instead of forwarding
      * this to the frontend, we store the value and report it on calls to
      * VideoRefresh().
      */
-    static GAME_PIXEL_FORMAT GetPixelFormat() { return m_pixelFormat; }
+    GAME_PIXEL_FORMAT GetPixelFormat(void) const { return m_pixelFormat; }
 
     /*!
      * Invoked when XBMC transfers a setting to the add-on.
      */
-    static void SetSetting(const char* name, const char* value);
+    void SetSetting(const char* name, const char* value);
+
+    bool EnvironmentCallback(unsigned cmd, void* data);
 
   private:
-    static bool EnvironmentCallback(unsigned cmd, void *data);
+    ADDON::CHelper_libXBMC_addon* m_xbmc;
+    CHelper_libXBMC_game*         m_frontend;
+    CLibretroDLL*                 m_client;
+    CClientBridge*                m_clientBridge;
 
-    static ADDON::CHelper_libXBMC_addon* m_xbmc;
-    static CHelper_libXBMC_game*         m_frontend;
-    static CLibretroDLL*                 m_client;
-    static CClientBridge*                m_clientBridge;
+    double            m_fps;
+    bool              m_bFramerateKnown; // true if UpdateFramerate() has been called
+    GAME_PIXEL_FORMAT m_pixelFormat;
 
-    static double            m_fps;
-    static bool              m_bFramerateKnown; // true if UpdateFramerate() has been called
-    static GAME_PIXEL_FORMAT m_pixelFormat;
-
-    static std::map<std::string, std::vector<std::string> > m_variables; // Record the variables reported by libretro core (key -> values)
-    static std::map<std::string, std::string>               m_settings;  // Record the settings reported by XBMC (key -> current value)
-    static volatile bool                                    m_bSettingsChanged;
-    static PLATFORM::CMutex                                 m_settingsMutex;
+    std::map<std::string, std::vector<std::string> > m_variables; // Record the variables reported by libretro core (key -> values)
+    std::map<std::string, std::string>               m_settings;  // Record the settings reported by XBMC (key -> current value)
+    volatile bool                                    m_bSettingsChanged;
+    PLATFORM::CMutex                                 m_settingsMutex;
   };
+
+  extern CLibretroEnvironment ENVIRONMENT;
 } // namespace LIBRETRO

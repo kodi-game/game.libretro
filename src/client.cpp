@@ -56,6 +56,11 @@ namespace LIBRETRO
   CLibretroDLL*            CLIENT        = NULL;
   CClientBridge*           CLIENT_BRIDGE = NULL;
   vector<CGameInfoLoader*> GAME_INFO;
+
+  bool EnvironmentCallback(unsigned int cmd, void* data)
+  {
+    return ENVIRONMENT.EnvironmentCallback(cmd, data);
+  }
 }
 
 extern "C"
@@ -94,7 +99,7 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
 
     // Environment must be initialized before calling retro_init()
     CLIENT_BRIDGE = new CClientBridge;
-    CLibretroEnvironment::Initialize(XBMC, FRONTEND, CLIENT, CLIENT_BRIDGE);
+    ENVIRONMENT.Initialize(XBMC, FRONTEND, CLIENT, CLIENT_BRIDGE);
 
     CLIENT->retro_init();
   }
@@ -119,7 +124,7 @@ void ADDON_Destroy()
   if (CLIENT)
     CLIENT->retro_deinit();
 
-  CLibretroEnvironment::Deinitialize();
+  ENVIRONMENT.Deinitialize();
 
   SAFE_DELETE(XBMC);
   SAFE_DELETE(FRONTEND);
@@ -148,7 +153,7 @@ ADDON_STATUS ADDON_SetSetting(const char *settingName, const void *settingValue)
   if (!settingName || !settingValue)
     return ADDON_STATUS_UNKNOWN;
 
-  CLibretroEnvironment::SetSetting(settingName, static_cast<const char*>(settingValue));
+  ENVIRONMENT.SetSetting(settingName, static_cast<const char*>(settingValue));
 
   return ADDON_STATUS_OK;
 }
@@ -309,7 +314,7 @@ GAME_ERROR GetSystemAVInfo(game_system_av_info *info)
   if (info->timing.fps != 0.0)
   {
     // Report fps to CLibretroEnvironment
-    CLibretroEnvironment::UpdateFramerate(info->timing.fps);
+    ENVIRONMENT.UpdateFramerate(info->timing.fps);
   }
 
   return GAME_ERROR_NO_ERROR;

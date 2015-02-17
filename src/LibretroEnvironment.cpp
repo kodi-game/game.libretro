@@ -34,35 +34,42 @@
 
 using namespace ADDON;
 using namespace LIBRETRO;
-//using namespace PLATFORM; // TODO
+using namespace PLATFORM;
 using namespace std;
 
 #define DEFAULT_NOTIFICATION_TIME_MS  3000 // Time to display toast dialogs, from AddonCallbacksAddon.cpp
 
-// Define static members
-CHelper_libXBMC_addon* CLibretroEnvironment::m_xbmc = NULL;
-CHelper_libXBMC_game*  CLibretroEnvironment::m_frontend = NULL;
-CLibretroDLL*          CLibretroEnvironment::m_client = NULL;
-CClientBridge*         CLibretroEnvironment::m_clientBridge = NULL;
-
-double            CLibretroEnvironment::m_fps = 0.0;
-bool              CLibretroEnvironment::m_bFramerateKnown = false;
-GAME_PIXEL_FORMAT CLibretroEnvironment::m_pixelFormat = GAME_PIXEL_FORMAT_0RGB1555; // Default per libretro.h
-
-map<string, vector<string> > CLibretroEnvironment::m_variables;
-map<string, string>          CLibretroEnvironment::m_settings;
-volatile bool                CLibretroEnvironment::m_bSettingsChanged = false;
-//CMutex                       CLibretroEnvironment::m_settingsMutex; // TODO
-
-void CLibretroEnvironment::Initialize(CHelper_libXBMC_addon* xbmc, CHelper_libXBMC_game* frontend, CLibretroDLL* client, CClientBridge *clientBridge)
+namespace LIBRETRO
 {
-  m_xbmc = xbmc;
-  m_frontend = frontend;
-  m_client = client;
+  CLibretroEnvironment ENVIRONMENT;
+
+  bool EnvCallback(unsigned cmd, void* data)
+  {
+    return ENVIRONMENT.EnvironmentCallback(cmd, data);
+  }
+}
+
+CLibretroEnvironment::CLibretroEnvironment(void) :
+  m_xbmc(NULL),
+  m_frontend(NULL),
+  m_client(NULL),
+  m_clientBridge(NULL),
+  m_fps(0.0),
+  m_bFramerateKnown(false),
+  m_pixelFormat(GAME_PIXEL_FORMAT_0RGB1555),
+  m_bSettingsChanged(false)
+{
+}
+
+void CLibretroEnvironment::Initialize(CHelper_libXBMC_addon* xbmc, CHelper_libXBMC_game* frontend, CLibretroDLL* client, CClientBridge* clientBridge)
+{
+  m_xbmc         = xbmc;
+  m_frontend     = frontend;
+  m_client       = client;
   m_clientBridge = clientBridge;
 
   // Install environment callback
-  m_client->retro_set_environment(EnvironmentCallback);
+  m_client->retro_set_environment(EnvCallback);
 
   // Install other callbacks
   m_client->retro_set_video_refresh(CFrontendBridge::VideoRefresh);
