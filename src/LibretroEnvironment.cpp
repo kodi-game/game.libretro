@@ -169,7 +169,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     }
   case RETRO_ENVIRONMENT_SHUTDOWN:
     {
-      m_frontend->ShutdownFrontend();
+      m_frontend->CloseGame();
       break;
     }
   case RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL:
