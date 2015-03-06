@@ -36,8 +36,7 @@ namespace LIBRETRO
 
     // Forward to XBMC game API
     static void VideoRefresh(const void* data, unsigned width, unsigned height, size_t pitch);
-    static void AudioSample(int16_t left, int16_t right);
-    static size_t AudioSampleBatch(const int16_t* data, size_t frames);
+    static size_t AudioFrames(const int16_t* data, size_t frames);
     static void InputPoll(void);
     static int16_t InputState(unsigned port, unsigned device, unsigned index, unsigned id);
     static uintptr_t HwGetCurrentFramebuffer(void);

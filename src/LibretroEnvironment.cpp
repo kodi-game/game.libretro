@@ -47,6 +47,11 @@ namespace LIBRETRO
   {
     return ENVIRONMENT.EnvironmentCallback(cmd, data);
   }
+
+  void AudioFrame(int16_t left, int16_t right)
+  {
+    ENVIRONMENT.AudioFrame(left, right);
+  }
 }
 
 CLibretroEnvironment::CLibretroEnvironment(void) :
@@ -71,10 +76,12 @@ void CLibretroEnvironment::Initialize(CHelper_libXBMC_addon* xbmc, CHelper_libXB
   // Install environment callback
   m_client->retro_set_environment(EnvCallback);
 
+  // Handle single-frame audio specially
+  m_client->retro_set_audio_sample(LIBRETRO::AudioFrame);
+
   // Install other callbacks
   m_client->retro_set_video_refresh(CFrontendBridge::VideoRefresh);
-  m_client->retro_set_audio_sample(CFrontendBridge::AudioSample);
-  m_client->retro_set_audio_sample_batch(CFrontendBridge::AudioSampleBatch);
+  m_client->retro_set_audio_sample_batch(CFrontendBridge::AudioFrames);
   m_client->retro_set_input_poll(CFrontendBridge::InputPoll);
   m_client->retro_set_input_state(CFrontendBridge::InputState);
 }
@@ -119,6 +126,11 @@ void CLibretroEnvironment::SetSetting(const char* name, const char* value)
     m_settings[name] = value;
     m_bSettingsChanged = true;
   }
+}
+
+void CLibretroEnvironment::AudioFrame(int16_t left, int16_t right)
+{
+  // TODO
 }
 
 bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)

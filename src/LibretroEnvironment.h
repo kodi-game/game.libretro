@@ -63,6 +63,8 @@ namespace LIBRETRO
      */
     void SetSetting(const char* name, const char* value);
 
+    void AudioFrame(int16_t left, int16_t right);
+
     bool EnvironmentCallback(unsigned cmd, void* data);
 
   private:

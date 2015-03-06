@@ -58,20 +58,12 @@ void CFrontendBridge::VideoRefresh(const void* data, unsigned width, unsigned he
   return ENVIRONMENT.GetFrontend()->VideoRefresh(data, width, height, pitch, ENVIRONMENT.GetPixelFormat());
 }
 
-void CFrontendBridge::AudioSample(int16_t left, int16_t right)
-{
-  if (!ENVIRONMENT.GetFrontend())
-    return;
-
-  return ENVIRONMENT.GetFrontend()->AudioSample(left, right);
-}
-
-size_t CFrontendBridge::AudioSampleBatch(const int16_t* data, size_t frames)
+size_t CFrontendBridge::AudioFrames(const int16_t* data, size_t frames)
 {
   if (!ENVIRONMENT.GetFrontend())
     return 0;
 
-  return ENVIRONMENT.GetFrontend()->AudioSampleBatch(data, frames);
+  return ENVIRONMENT.GetFrontend()->AudioFrames(data, frames);
 }
 
 void CFrontendBridge::InputPoll(void)
