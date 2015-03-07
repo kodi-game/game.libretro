@@ -23,6 +23,7 @@
 #include "FrontendBridge.h"
 #include "libretro.h"
 #include "LibretroDLL.h"
+#include "LibretroTranslator.h"
 #include "kodi/libXBMC_addon.h"
 #include "kodi/libXBMC_game.h"
 
@@ -208,20 +209,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       const retro_pixel_format* typedData = reinterpret_cast<const retro_pixel_format*>(data);
       if (!typedData)
         return false;
-
-      switch (*typedData)
-      {
-        case RETRO_PIXEL_FORMAT_0RGB1555:
-          m_renderFormat = GAME_RENDER_FMT_0RGB1555;
-          break;
-        case RETRO_PIXEL_FORMAT_XRGB8888:
-          m_renderFormat = GAME_RENDER_FMT_0RGB8888;
-          break;
-        case RETRO_PIXEL_FORMAT_RGB565:
-          m_renderFormat = GAME_RENDER_FMT_RGB565;
-          break;
-      }
-
+      m_renderFormat = LibretroTranslator::GetRenderFormat(*typedData);
       break;
     }
   case RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS:
@@ -282,7 +270,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       {
         // Translate struct and report hw info to frontend
         game_hw_info hw_info;
-        hw_info.context_type       = (GAME_HW_CONTEXT_TYPE)typedData->context_type;
+        hw_info.context_type       = LibretroTranslator::GetHWContextType(typedData->context_type);
         hw_info.depth              = typedData->depth;
         hw_info.stencil            = typedData->stencil;
         hw_info.bottom_left_origin = typedData->bottom_left_origin;

@@ -20,7 +20,8 @@ set(LIBRETRO_SOURCES src/client.cpp
                      src/FrontendBridge.cpp
                      src/GameInfoLoader.cpp
                      src/LibretroDLL.cpp
-                     src/LibretroEnvironment.cpp)
+                     src/LibretroEnvironment.cpp
+                     src/LibretroTranslator.cpp)
 
 build_addon(game.libretro LIBRETRO DEPLIBS)
 

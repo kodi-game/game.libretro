@@ -20,6 +20,8 @@
 
 #include "FrontendBridge.h"
 #include "LibretroEnvironment.h"
+#include "LibretroTranslator.h"
+
 #include "kodi/libXBMC_addon.h"
 #include "kodi/libXBMC_game.h"
 
@@ -100,7 +102,7 @@ bool CFrontendBridge::RumbleSetState(unsigned port, retro_rumble_effect effect, 
   if (!ENVIRONMENT.GetFrontend())
     return false;
 
-  return ENVIRONMENT.GetFrontend()->RumbleSetState(port, (GAME_RUMBLE_EFFECT)effect, strength);
+  return ENVIRONMENT.GetFrontend()->RumbleSetState(port, LibretroTranslator::GetRumbleEffect(effect), strength);
 }
 
 bool CFrontendBridge::SensorSetState(unsigned port, retro_sensor_action action, unsigned rate)
@@ -108,7 +110,7 @@ bool CFrontendBridge::SensorSetState(unsigned port, retro_sensor_action action, 
   if (!ENVIRONMENT.GetFrontend())
     return false;
 
-  return ENVIRONMENT.GetFrontend()->SensorSetState(port, (GAME_SENSOR_ACTION)action, rate);
+  return ENVIRONMENT.GetFrontend()->SensorSetState(port, LibretroTranslator::GetSensorAction(action), rate);
 }
 
 float CFrontendBridge::SensorGetInput(unsigned port, unsigned id)
