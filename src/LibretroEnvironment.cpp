@@ -61,7 +61,7 @@ CLibretroEnvironment::CLibretroEnvironment(void) :
   m_clientBridge(NULL),
   m_fps(0.0),
   m_bFramerateKnown(false),
-  m_pixelFormat(GAME_PIXEL_FORMAT_0RGB1555),
+  m_renderFormat(GAME_RENDER_FMT_0RGB1555), // Default libretro format
   m_bSettingsChanged(false)
 {
 }
@@ -209,7 +209,18 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       if (!typedData)
         return false;
 
-      m_pixelFormat = (GAME_PIXEL_FORMAT)*typedData;
+      switch (*typedData)
+      {
+        case RETRO_PIXEL_FORMAT_0RGB1555:
+          m_renderFormat = GAME_RENDER_FMT_0RGB1555;
+          break;
+        case RETRO_PIXEL_FORMAT_XRGB8888:
+          m_renderFormat = GAME_RENDER_FMT_0RGB8888;
+          break;
+        case RETRO_PIXEL_FORMAT_RGB565:
+          m_renderFormat = GAME_RENDER_FMT_RGB565;
+          break;
+      }
 
       break;
     }

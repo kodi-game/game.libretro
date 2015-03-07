@@ -56,7 +56,7 @@ namespace LIBRETRO
      * this to the frontend, we store the value and report it on calls to
      * VideoRefresh().
      */
-    GAME_PIXEL_FORMAT GetPixelFormat(void) const { return m_pixelFormat; }
+    GAME_RENDER_FORMAT GetRenderFormat(void) const { return m_renderFormat; }
 
     /*!
      * Invoked when XBMC transfers a setting to the add-on.
@@ -73,9 +73,9 @@ namespace LIBRETRO
     CLibretroDLL*                 m_client;
     CClientBridge*                m_clientBridge;
 
-    double            m_fps;
-    bool              m_bFramerateKnown; // true if UpdateFramerate() has been called
-    GAME_PIXEL_FORMAT m_pixelFormat;
+    double             m_fps;
+    bool               m_bFramerateKnown; // true if UpdateFramerate() has been called
+    GAME_RENDER_FORMAT m_renderFormat;
 
     std::map<std::string, std::vector<std::string> > m_variables; // Record the variables reported by libretro core (key -> values)
     std::map<std::string, std::string>               m_settings;  // Record the settings reported by XBMC (key -> current value)
