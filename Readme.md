@@ -31,9 +31,13 @@ cmake -DADDONS_TO_BUILD=game.libretro \
       -DCMAKE_INSTALL_PREFIX=$XBMC_SRC/addons \
       -DPACKAGE_ZIP=1 \
       $XBMC_SRC/project/cmake/addons
+```
 
-### OR, for Eclipse 4.4 project files
+If you are developing in Eclipse, you can create a "makefile project with existing code" using `game.libretro/` as the existing code location. To build, enter Properties -> "C/C++ Build" and change the build command to `make -C build`.
 
+It is also possible to generate Eclipse project files with cmake
+
+```shell
 cmake -G"Eclipse CDT4 - Unix Makefiles" \
       -D_ECLIPSE_VERSION=4.4 \
       -DADDONS_TO_BUILD=game.libretro \
@@ -41,7 +45,6 @@ cmake -G"Eclipse CDT4 - Unix Makefiles" \
       -DCMAKE_INSTALL_PREFIX=$XBMC_SRC/addons \
       -DPACKAGE_ZIP=1 \
       $XBMC_SRC/project/cmake/addons
-      
 ```
 
 ## Windows
