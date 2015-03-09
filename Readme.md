@@ -24,13 +24,13 @@ cd build
 Generate a build environment with config for debugging
 
 ```shell
-XBMC_SRC=`pwd`/../../xbmc
 
 cmake -DADDONS_TO_BUILD=game.libretro \
+      -DADDON_SRC_PREFIX=/home/xbmc/progs/src \
       -DCMAKE_BUILD_TYPE=Debug \
-      -DCMAKE_INSTALL_PREFIX=$XBMC_SRC/addons \
+      -DCMAKE_INSTALL_PREFIX=/home/xbmc/progs/src/xbmc/addons \
       -DPACKAGE_ZIP=1 \
-      $XBMC_SRC/project/cmake/addons
+      /home/xbmc/progs/src/xbmc/project/cmake/addons
 ```
 
 If you are developing in Eclipse, you can create a "makefile project with existing code" using `game.libretro/` as the existing code location. To build, enter Properties -> "C/C++ Build" and change the build command to `make -C build`.
@@ -41,10 +41,11 @@ It is also possible to generate Eclipse project files with cmake
 cmake -G"Eclipse CDT4 - Unix Makefiles" \
       -D_ECLIPSE_VERSION=4.4 \
       -DADDONS_TO_BUILD=game.libretro \
+      -DADDON_SRC_PREFIX=/home/xbmc/progs/src \
       -DCMAKE_BUILD_TYPE=Debug \
-      -DCMAKE_INSTALL_PREFIX=$XBMC_SRC/addons \
+      -DCMAKE_INSTALL_PREFIX=/home/xbmc/progs/src/xbmc/addons \
       -DPACKAGE_ZIP=1 \
-      $XBMC_SRC/project/cmake/addons
+      /home/xbmc/progs/src/xbmc/project/cmake/addons
 ```
 
 ## Windows
@@ -67,7 +68,7 @@ Open Visual Studio, load and build this solution:
 D:\Projects\xbmx\xbmc\project\cmake\addons\kodi-addons.sln
 ```
 
-Altarnatively, copy [prepare-addons-dev.bat](https://gist.github.com/Montellese/149ecbd5ca20941d2be4) into tools/buildsteps/win32 and execute it from there. If you want to execute it from somewhere else you need to adjust the default value of WORKDIR in the batch file.
+Altarnatively, wait for the `prepare-addons-dev.bat` build script in [PR #6658](https://github.com/xbmc/xbmc/pull/6658) to be merged. Enter tools/buildsteps/win32 and execute it from there. If you want to execute it from somewhere else you need to adjust the default value of WORKDIR in the batch file.
 
 Available options are:
 * **clean** to simply clean the whole generated buildsystem
