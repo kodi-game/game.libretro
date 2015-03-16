@@ -2,20 +2,14 @@
 
 Libretro compatibility layer for the Kodi Game API
 
-# Building add-on
+# Building out-of-tree (recommended)
 
 ## Linux
 
-This assumes you start in the working directory where you've cloned the repos
+Clone the repo and create a build directory
 
 ```shell
-git clone https://github.com/garbear/xbmc.git
 git clone https://github.com/kodi-game/game.libretro.git
-```
-
-Create a build directory
-
-```shell
 cd game.libretro
 mkdir build
 cd build
@@ -50,6 +44,8 @@ cmake -G"Eclipse CDT4 - Unix Makefiles" \
 
 ## Windows
 
+First, download and install [CMake](http://www.cmake.org/download/).
+
 To build on windows, change to the addons folder:
 
 ```batch
@@ -73,3 +69,35 @@ Altarnatively, wait for the `prepare-addons-dev.bat` build script in [PR #6658](
 Available options are:
 * **clean** to simply clean the whole generated buildsystem
 * **&lt;addon-id>** to only generate the buildsystem for that addon
+
+# Building in-tree
+
+Kodi's build system will fetch the add-on from the GitHub URL and git hash specified in [game.libretro.txt](https://github.com/garbear/xbmc/blob/retroplayer-15alpha2/project/cmake/addons/addons/game.libretro/game.libretro.txt).
+
+## Windows
+
+Remember, CMake is needed.
+
+```shell
+cd tools\buildsteps\win32
+make-addons.bat game.libretro
+```
+
+The compiled .dll will be placed in `project\cmake\addons\build\game.libretro-prefix\src\game.libretro-build`.
+
+## OSX
+
+Per [README.osx](https://github.com/garbear/xbmc/blob/retroplayer-15alpha2/docs/README.osx), enter the `tools/depends` directory and make the add-on:
+
+```shell
+cd tools/depends
+make -C target/binary-addons ADDONS="game.libretro"
+```
+
+## Cleaning build directory
+
+Run the following to clean the build directory. Note, this will clean all add-ons, not just game.libretro.
+
+```shell
+make -C target/binary-addons clean
+```
