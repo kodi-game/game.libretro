@@ -17,10 +17,8 @@
  *  <http://www.gnu.org/licenses/>.
  *
  */
-#pragma once
 
-#include "kodi/xbmc_game_types.h"
-#include "libretro.h"
+#include "LibretroTranslator.h"
 
 using namespace LIBRETRO;
 
