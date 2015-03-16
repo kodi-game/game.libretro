@@ -30,6 +30,10 @@ GAME_HW_CONTEXT_TYPE LibretroTranslator::GetHWContextType(retro_hw_context_type 
     case RETRO_HW_CONTEXT_OPENGLES2:   return GAME_HW_CONTEXT_OPENGLES2;
     case RETRO_HW_CONTEXT_OPENGL_CORE: return GAME_HW_CONTEXT_OPENGL_CORE;
     case RETRO_HW_CONTEXT_OPENGLES3:   return GAME_HW_CONTEXT_OPENGLES3;
+    case RETRO_HW_CONTEXT_NONE:
+    case RETRO_HW_CONTEXT_DUMMY:
+    default:
+      break;
   }
   return GAME_HW_CONTEXT_NONE;
 }
@@ -41,6 +45,9 @@ GAME_RENDER_FORMAT LibretroTranslator::GetRenderFormat(retro_pixel_format format
     case RETRO_PIXEL_FORMAT_0RGB1555: return GAME_RENDER_FMT_0RGB1555;
     case RETRO_PIXEL_FORMAT_XRGB8888: return GAME_RENDER_FMT_0RGB8888;
     case RETRO_PIXEL_FORMAT_RGB565:   return GAME_RENDER_FMT_RGB565;
+    case RETRO_PIXEL_FORMAT_UNKNOWN:
+    default:
+      break;
   }
   return GAME_RENDER_FMT_NONE;
 }
@@ -51,6 +58,9 @@ GAME_RUMBLE_EFFECT LibretroTranslator::GetRumbleEffect(retro_rumble_effect effec
   {
     case RETRO_RUMBLE_STRONG: return GAME_RUMBLE_STRONG;
     case RETRO_RUMBLE_WEAK:   return GAME_RUMBLE_WEAK;
+    case RETRO_RUMBLE_DUMMY:
+    default:
+      break;
   }
   return GAME_RUMBLE_STRONG;
 }
@@ -61,6 +71,9 @@ GAME_SENSOR_ACTION LibretroTranslator::GetSensorAction(retro_sensor_action actio
   {
     case RETRO_SENSOR_ACCELEROMETER_ENABLE:  return GAME_SENSOR_ACCELEROMETER_ENABLE;
     case RETRO_SENSOR_ACCELEROMETER_DISABLE: return GAME_SENSOR_ACCELEROMETER_DISABLE;
+    case RETRO_SENSOR_DUMMY:
+    default:
+      break;
   }
   return RETRO_SENSOR_ACCELEROMETER_ENABLE;
 }
