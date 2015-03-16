@@ -22,6 +22,7 @@
 #include "kodi/xbmc_game_types.h"
 
 #include <stdint.h>
+#include <string>
 
 struct retro_input_descriptor;
 
@@ -30,12 +31,25 @@ namespace LIBRETRO
   typedef unsigned int libretro_device_t;
   typedef uint64_t     libretro_device_caps_t;
 
+  struct SInputDevice
+  {
+    SInputDevice(unsigned int port, const char* addonId, const game_input_device_caps& deviceCaps)
+      : port(port), addonId(addonId), caps(deviceCaps) { }
+
+    unsigned int           port;
+    std::string            addonId;
+    game_input_device_caps caps;
+  };
+
   class CInputManager
   {
   public:
     static CInputManager& Get(void);
 
     libretro_device_caps_t GetDeviceCaps(void);
+
+    void OpenPorts(void);
+    void ClosePorts(void);
 
     libretro_device_t UpdatePort(unsigned int port, bool bPortConnected);
 
@@ -52,6 +66,12 @@ namespace LIBRETRO
     int16_t MouseDeltaY(unsigned int port);
 
   private:
-    CInputManager(void) { }
+    CInputManager(void);
+
+    bool OpenPort(unsigned int port);
+    void ClosePort(unsigned int port);
+
+    unsigned int                         m_maxDevices;
+    std::map<unsigned int, SInputDevice> m_devices; // Port -> device
   };
 }

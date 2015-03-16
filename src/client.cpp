@@ -210,6 +210,9 @@ GAME_ERROR LoadGame(const char* url)
   GAME_INFO[0]->GetPathStruct(gameInfo);
   bool result = CLIENT->retro_load_game(&gameInfo);
 
+  if (result)
+    CInputManager::Get().OpenPorts();
+
   return result ? GAME_ERROR_NO_ERROR : GAME_ERROR_FAILED;
 }
 
@@ -257,6 +260,9 @@ GAME_ERROR UnloadGame(void)
   if (CLIENT)
   {
     CLIENT->retro_unload_game();
+
+    CInputManager::Get().ClosePorts();
+
     error = GAME_ERROR_NO_ERROR;
   }
 
@@ -289,7 +295,7 @@ void UpdatePort(unsigned int port, bool port_connected)
 {
   const unsigned int device = CInputManager::Get().UpdatePort(port, port_connected);
 
-  if (CLIENT && port_connected)
+  if (CLIENT && port_connected && device)
     CLIENT->retro_set_controller_port_device(port, device);
 }
 
