@@ -43,16 +43,14 @@ using namespace std;
 
 namespace LIBRETRO
 {
-  CLibretroEnvironment ENVIRONMENT;
-
   bool EnvCallback(unsigned cmd, void* data)
   {
-    return ENVIRONMENT.EnvironmentCallback(cmd, data);
+    return CLibretroEnvironment::Get().EnvironmentCallback(cmd, data);
   }
 
   void AudioFrame(int16_t left, int16_t right)
   {
-    ENVIRONMENT.AudioFrame(left, right);
+    CLibretroEnvironment::Get().AudioFrame(left, right);
   }
 }
 
@@ -66,6 +64,12 @@ CLibretroEnvironment::CLibretroEnvironment(void) :
   m_renderFormat(GAME_RENDER_FMT_0RGB1555), // Default libretro format
   m_bSettingsChanged(false)
 {
+}
+
+CLibretroEnvironment& CLibretroEnvironment::Get(void)
+{
+  static CLibretroEnvironment _instance;
+  return _instance;
 }
 
 void CLibretroEnvironment::Initialize(CHelper_libXBMC_addon* xbmc, CHelper_libXBMC_game* frontend, CLibretroDLL* client, CClientBridge* clientBridge)

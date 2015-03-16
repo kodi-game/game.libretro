@@ -37,7 +37,7 @@ namespace LIBRETRO
   class CLibretroEnvironment
   {
   public:
-    CLibretroEnvironment(void);
+    static CLibretroEnvironment& Get(void);
 
     void Initialize(ADDON::CHelper_libXBMC_addon* xbmc, CHelper_libXBMC_game* frontend, CLibretroDLL* client, CClientBridge* clientBridge);
     void Deinitialize(void);
@@ -68,6 +68,8 @@ namespace LIBRETRO
     bool EnvironmentCallback(unsigned cmd, void* data);
 
   private:
+    CLibretroEnvironment(void);
+
     ADDON::CHelper_libXBMC_addon* m_xbmc;
     CHelper_libXBMC_game*         m_frontend;
     CLibretroDLL*                 m_client;
@@ -82,6 +84,4 @@ namespace LIBRETRO
     volatile bool                                    m_bSettingsChanged;
     PLATFORM::CMutex                                 m_settingsMutex;
   };
-
-  extern CLibretroEnvironment ENVIRONMENT;
 } // namespace LIBRETRO
