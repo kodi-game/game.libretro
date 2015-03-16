@@ -19,6 +19,7 @@
  */
 
 #include "FrontendBridge.h"
+#include "InputManager.h"
 #include "LibretroEnvironment.h"
 #include "LibretroTranslator.h"
 
@@ -75,10 +76,72 @@ void CFrontendBridge::InputPoll(void)
 
 int16_t CFrontendBridge::InputState(unsigned port, unsigned device, unsigned index, unsigned id)
 {
-  if (!ENVIRONMENT.GetFrontend())
-    return 0;
+  int16_t inputState = 0;
 
-  return ENVIRONMENT.GetFrontend()->InputState(port, device, index, id);
+  device &= RETRO_DEVICE_MASK;
+
+  switch (device)
+  {
+  case RETRO_DEVICE_JOYPAD:
+    return CInputManager::Get().DigitalButtonState(port, id) ? 1 : 0;
+
+  case RETRO_DEVICE_MOUSE:
+    switch (id)
+    {
+      case RETRO_DEVICE_ID_MOUSE_LEFT:
+      case RETRO_DEVICE_ID_MOUSE_RIGHT:
+      {
+        const unsigned int buttonIndex = id - RETRO_DEVICE_ID_MOUSE_LEFT;
+        inputState = CInputManager::Get().DigitalButtonState(port, buttonIndex) ? 1 : 0;
+        break;
+      }
+      case RETRO_DEVICE_ID_MOUSE_X:
+        inputState = CInputManager::Get().MouseDeltaX(port);
+        break;
+      case RETRO_DEVICE_ID_MOUSE_Y:
+        inputState = CInputManager::Get().MouseDeltaY(port);
+        break;
+      default:
+        break;
+    }
+    break;
+
+  case RETRO_DEVICE_KEYBOARD:
+    // TODO
+    break;
+
+  case RETRO_DEVICE_LIGHTGUN:
+    // TODO
+    break;
+
+  case RETRO_DEVICE_ANALOG:
+  {
+    float x, y;
+    if (CInputManager::Get().AnalogStickState(port, index, x, y))
+    {
+      if (id == RETRO_DEVICE_ID_ANALOG_X)
+      {
+        const float normalized = x + 1.0f / 2.0f;
+        inputState = (int)(normalized * 0xffff) - 0x8000;
+      }
+      else if (id == RETRO_DEVICE_ID_ANALOG_Y)
+      {
+        const float normalized = -y + 1.0f / 2.0f; // y axis is inverted
+        inputState = (int)(normalized * 0xffff) - 0x8000;
+      }
+    }
+    break;
+  }
+
+  case RETRO_DEVICE_POINTER:
+    // TODO
+    break;
+
+  default:
+    break;
+  }
+
+  return inputState;
 }
 
 uintptr_t CFrontendBridge::HwGetCurrentFramebuffer(void)
@@ -107,18 +170,37 @@ bool CFrontendBridge::RumbleSetState(unsigned port, retro_rumble_effect effect, 
 
 bool CFrontendBridge::SensorSetState(unsigned port, retro_sensor_action action, unsigned rate)
 {
-  if (!ENVIRONMENT.GetFrontend())
-    return false;
+  const bool bEnabled = (action == RETRO_SENSOR_ACCELEROMETER_ENABLE);
 
-  return ENVIRONMENT.GetFrontend()->SensorSetState(port, LibretroTranslator::GetSensorAction(action), rate);
+  CInputManager::Get().EnableSource(bEnabled, port, GAME_INPUT_EVENT_ACCELEROMETER, 0);
+
+  return true;
 }
 
 float CFrontendBridge::SensorGetInput(unsigned port, unsigned id)
 {
-  if (!ENVIRONMENT.GetFrontend())
-    return 0.0f;
+  float axisState = 0.0f;
 
-  return ENVIRONMENT.GetFrontend()->SensorGetInput(port, id);
+  float x, y, z;
+  if (CInputManager::Get().AccelerometerState(port, 0, x, y, z))
+  {
+    switch (id)
+    {
+    case RETRO_SENSOR_ACCELEROMETER_X:
+      axisState = x;
+      break;
+    case RETRO_SENSOR_ACCELEROMETER_Y:
+      axisState = y;
+      break;
+    case RETRO_SENSOR_ACCELEROMETER_Z:
+      axisState = z;
+      break;
+    default:
+      break;
+    }
+  }
+
+  return axisState;
 }
 
 bool CFrontendBridge::CameraStart(void)

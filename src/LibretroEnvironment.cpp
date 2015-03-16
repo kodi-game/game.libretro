@@ -21,6 +21,7 @@
 #include "LibretroEnvironment.h"
 #include "ClientBridge.h"
 #include "FrontendBridge.h"
+#include "InputManager.h"
 #include "libretro.h"
 #include "LibretroDLL.h"
 #include "LibretroTranslator.h"
@@ -215,26 +216,8 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   case RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS:
     {
       const retro_input_descriptor* typedData = reinterpret_cast<const retro_input_descriptor*>(data);
-      size_t count = 0;
-      for (const retro_input_descriptor* descriptor = typedData; descriptor && descriptor->description; descriptor++)
-        count++;
-
-      if (count)
-      {
-        // Translate struct
-        game_input_descriptor* descriptors = new game_input_descriptor[count];
-        for (unsigned int i = 0; i < count; i++)
-        {
-          descriptors[i].port        = typedData->port;
-          descriptors[i].device      = typedData->device;
-          descriptors[i].index       = typedData->index;
-          descriptors[i].id          = typedData->id;
-          descriptors[i].description = typedData->description;
-        }
-        m_frontend->EnvironmentSetInputDescriptors(descriptors, count);
-        delete descriptors;
-      }
-
+      if (typedData)
+        CInputManager::Get().SetInputDescriptors(typedData);
       break;
     }
   case RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK:
@@ -465,7 +448,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     {
       uint64_t* typedData = reinterpret_cast<uint64_t*>(data);
       if (typedData)
-        *typedData = m_frontend->InputGetDeviceCapabilities();
+        *typedData = CInputManager::Get().GetDeviceCaps();
       break;
     }
   case RETRO_ENVIRONMENT_GET_SENSOR_INTERFACE:

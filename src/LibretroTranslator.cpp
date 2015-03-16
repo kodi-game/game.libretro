@@ -64,16 +64,3 @@ GAME_RUMBLE_EFFECT LibretroTranslator::GetRumbleEffect(retro_rumble_effect effec
   }
   return GAME_RUMBLE_STRONG;
 }
-
-GAME_SENSOR_ACTION LibretroTranslator::GetSensorAction(retro_sensor_action action)
-{
-  switch (action)
-  {
-    case RETRO_SENSOR_ACCELEROMETER_ENABLE:  return GAME_SENSOR_ACCELEROMETER_ENABLE;
-    case RETRO_SENSOR_ACCELEROMETER_DISABLE: return GAME_SENSOR_ACCELEROMETER_DISABLE;
-    case RETRO_SENSOR_DUMMY:
-    default:
-      break;
-  }
-  return GAME_SENSOR_ACCELEROMETER_ENABLE;
-}

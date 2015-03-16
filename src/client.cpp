@@ -20,6 +20,7 @@
 
 #include "ClientBridge.h"
 #include "GameInfoLoader.h"
+#include "InputManager.h"
 #include "libretro.h"
 #include "LibretroDLL.h"
 #include "LibretroEnvironment.h"
@@ -284,12 +285,20 @@ GAME_ERROR Reset(void)
   return GAME_ERROR_NO_ERROR;
 }
 
-GAME_ERROR KeyboardEvent(bool down, unsigned keycode, uint32_t character, uint16_t key_modifiers)
+void UpdatePort(unsigned int port, bool port_connected)
 {
-  if (!CLIENT_BRIDGE)
-    return GAME_ERROR_FAILED;
+  const unsigned int device = CInputManager::Get().UpdatePort(port, port_connected);
 
-  return CLIENT_BRIDGE->KeyboardEvent(down, keycode, character, key_modifiers);
+  if (CLIENT && port_connected)
+    CLIENT->retro_set_controller_port_device(port, device);
+}
+
+void InputEvent(unsigned int port, game_input_event* event)
+{
+  if (!event)
+    return;
+
+  CInputManager::Get().InputEvent(port, *event);
 }
 
 GAME_ERROR GetSystemAVInfo(game_system_av_info *info)
@@ -316,16 +325,6 @@ GAME_ERROR GetSystemAVInfo(game_system_av_info *info)
     // Report fps to CLibretroEnvironment
     ENVIRONMENT.UpdateFramerate(info->timing.fps);
   }
-
-  return GAME_ERROR_NO_ERROR;
-}
-
-GAME_ERROR SetControllerPortDevice(unsigned port, unsigned device)
-{
-  if (!CLIENT)
-    return GAME_ERROR_FAILED;
-
-  CLIENT->retro_set_controller_port_device(port, device);
 
   return GAME_ERROR_NO_ERROR;
 }
