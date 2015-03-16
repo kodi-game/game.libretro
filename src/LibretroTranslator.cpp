@@ -75,5 +75,5 @@ GAME_SENSOR_ACTION LibretroTranslator::GetSensorAction(retro_sensor_action actio
     default:
       break;
   }
-  return RETRO_SENSOR_ACCELEROMETER_ENABLE;
+  return GAME_SENSOR_ACCELEROMETER_ENABLE;
 }
