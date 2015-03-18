@@ -22,6 +22,8 @@
 #include "libretro.h"
 #include "LibretroEnvironment.h"
 
+#include "kodi/libXBMC_game.h"
+
 using namespace LIBRETRO;
 
 CInputManager::CInputManager(void)

@@ -21,6 +21,7 @@
 
 #include "kodi/xbmc_game_types.h"
 
+#include <map>
 #include <stdint.h>
 #include <string>
 
@@ -33,6 +34,8 @@ namespace LIBRETRO
 
   struct SInputDevice
   {
+    SInputDevice(void)
+      : port(0), caps() { }
     SInputDevice(unsigned int port, const char* addonId, const game_input_device_caps& deviceCaps)
       : port(port), addonId(addonId), caps(deviceCaps) { }
 
