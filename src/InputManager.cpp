@@ -74,10 +74,10 @@ bool CInputManager::OpenPort(unsigned int port)
   if (m_devices.find(port) == m_devices.end())
   {
     game_input_device_caps deviceCaps;
-    if (!CLibretroEnvironment::Get().GetFrontend()->OpenPort(port, addonId, &deviceCaps))
+    if (CLibretroEnvironment::Get().GetFrontend()->OpenPort(port, addonId, &deviceCaps))
+      m_devices[port] = SInputDevice(port, addonId, deviceCaps);
+    else
       bSuccess = false;
-
-    m_devices[port] = SInputDevice(port, addonId, deviceCaps);
   }
 
   return bSuccess;
