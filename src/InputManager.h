@@ -39,9 +39,9 @@ namespace LIBRETRO
     SInputDevice(unsigned int port, const char* addonId, const game_input_device_caps& deviceCaps)
       : port(port), addonId(addonId), caps(deviceCaps) { }
 
-    unsigned int           port;
-    std::string            addonId;
-    game_input_device_caps caps;
+    unsigned int           port;    // Input port on the game console
+    std::string            addonId; // Input device's addon ID, e.g. game.controller.default
+    game_input_device_caps caps;    // Specifies what the input device is capable of
   };
 
   class CInputManager
