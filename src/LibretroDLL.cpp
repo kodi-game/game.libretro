@@ -32,7 +32,6 @@
 
 using namespace ADDON;
 using namespace LIBRETRO;
-using namespace std;
 
 CLibretroDLL::CLibretroDLL(CHelper_libXBMC_addon* xbmc)
  : m_xbmc(xbmc),
@@ -56,10 +55,10 @@ void CLibretroDLL::Unload(void)
 }
 
 // Get directory part of path, or empty if path doesn't contain any directory separators
-string GetDirectory(const string& path)
+std::string GetDirectory(const std::string& path)
 {
   size_t pos = path.find_last_of("/\\");
-  if (pos != 0 && pos != string::npos)
+  if (pos != 0 && pos != std::string::npos)
   {
     // Don't include trailing slash, it causes some libretro clients to fail
     return path.substr(0, pos);

@@ -32,12 +32,13 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#include <string>
 #include <string.h>
+#include <vector>
 
 using namespace ADDON;
 using namespace LIBRETRO;
 using namespace PLATFORM;
-using namespace std;
 
 #define DEFAULT_NOTIFICATION_TIME_MS  3000 // Time to display toast dialogs, from AddonCallbacksAddon.cpp
 

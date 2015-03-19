@@ -35,7 +35,6 @@
 
 using namespace ADDON;
 using namespace LIBRETRO;
-using namespace std;
 
 #define GAME_CLIENT_NAME_UNKNOWN      "Unknown libretro core"
 #define GAME_CLIENT_VERSION_UNKNOWN   "0.0.0"
@@ -44,25 +43,20 @@ using namespace std;
 #define SAFE_DELETE(x)  do { delete x; x = NULL; } while (0)
 #endif
 
-void SAFE_DELETE_GAME_INFO(vector<CGameInfoLoader*>& vec)
+void SAFE_DELETE_GAME_INFO(std::vector<CGameInfoLoader*>& vec)
 {
-  for (vector<CGameInfoLoader*>::iterator it = vec.begin(); it != vec.end(); ++it)
+  for (std::vector<CGameInfoLoader*>::iterator it = vec.begin(); it != vec.end(); ++it)
     delete *it;
   vec.clear();
 }
 
 namespace LIBRETRO
 {
-  CHelper_libXBMC_addon*   XBMC          = NULL;
-  CHelper_libXBMC_game*    FRONTEND      = NULL;
-  CLibretroDLL*            CLIENT        = NULL;
-  CClientBridge*           CLIENT_BRIDGE = NULL;
-  vector<CGameInfoLoader*> GAME_INFO;
-
-  bool EnvironmentCallback(unsigned int cmd, void* data)
-  {
-    return CLibretroEnvironment::Get().EnvironmentCallback(cmd, data);
-  }
+  CHelper_libXBMC_addon*        XBMC          = NULL;
+  CHelper_libXBMC_game*         FRONTEND      = NULL;
+  CLibretroDLL*                 CLIENT        = NULL;
+  CClientBridge*                CLIENT_BRIDGE = NULL;
+  std::vector<CGameInfoLoader*> GAME_INFO;
 }
 
 extern "C"
@@ -235,7 +229,7 @@ GAME_ERROR LoadGameSpecial(GAME_TYPE type, const char** urls, size_t num_urls)
     GAME_INFO.push_back(new CGameInfoLoader(urls[i], XBMC, bSupportsVFS));
 
   // Try to load via memory
-  vector<retro_game_info> infoVec;
+  std::vector<retro_game_info> infoVec;
   infoVec.resize(num_urls);
   bool bLoadFromMemory = true;
   for (unsigned int i = 0; bLoadFromMemory && i < num_urls; i++)

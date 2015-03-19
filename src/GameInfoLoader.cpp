@@ -31,9 +31,10 @@
 
 #include "kodi/libXBMC_addon.h"
 
+#include <stdint.h>
+
 using namespace ADDON;
 using namespace LIBRETRO;
-using namespace std;
 
 #define READ_SIZE      (100 * 1024)         // Read from VFS 100KB at a time (if file size is unknown)
 #define MAX_READ_SIZE  (100 * 1024 * 1024)  // Read at most 100MB from VFS
