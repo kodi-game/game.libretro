@@ -61,6 +61,26 @@ project\cmake\addons\build\kodi-addons.sln
 
 Kodi's build system will fetch the add-on from the GitHub URL and git hash specified in [game.libretro.txt](https://github.com/garbear/xbmc/blob/retroplayer-15alpha2/project/cmake/addons/addons/game.libretro/game.libretro.txt).
 
+## Linux
+
+Ensure that kodi has been built successfully. Then, from the root of the source tree, run
+
+```shell
+make install DESTDIR=$HOME/kodi
+```
+
+Build the add-on
+
+```shell
+make -C tools/depends/target/binary-addons PREFIX=$HOME/kodi ADDONS="game.libretro"
+```
+
+The compiled .so can be found at
+
+```
+$HOME/kodi/lib/kodi/addons/game.libretro/game.libretro.so
+```
+
 ## Windows
 
 Remember, CMake is needed.
