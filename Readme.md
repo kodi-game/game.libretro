@@ -18,7 +18,6 @@ cd build
 Generate a build environment with config for debugging
 
 ```shell
-
 cmake -DADDONS_TO_BUILD=game.libretro \
       -DADDON_SRC_PREFIX=$HOME/workspace \
       -DCMAKE_BUILD_TYPE=Debug \
@@ -46,31 +45,19 @@ cmake -G"Eclipse CDT4 - Unix Makefiles" \
 
 First, download and install [CMake](http://www.cmake.org/download/).
 
-To build on windows, change to the addons folder:
-
-```batch
-cd D:\Projects\xbmx\xbmc\project\cmake\addons
-```
-
-Generate Visual Studio 2013 solution
-
-```batch
-cmake -DADDONS_TO_BUILD=game.libretro -DADDON_SRC_PREFIX="D:\Projects\demo" -DCMAKE_BUILD_TYPE=Debug -G "Visual Studio 12"  -DCMAKE_USER_MAKE_RULES_OVERRIDE="D:\Projects\xbmx\xbmc\project\cmake\scripts\windows\c-flag-overrides.cmake" -DCMAKE_USER_MAKE_RULES_OVERRIDE_CXX="D:\Projects\xbmx\xbmc\project\cmake\scripts\windows\cxx-flag-overrides.cmake" -DCMAKE_INSTALL_PREFIX="D:\Projects\xbmx\xbmc\adons" -DPACKAGE_ZIP=1
-```
-
-Open Visual Studio, load and build this solution:
+Run the script from [PR 6658](https://github.com/xbmc/xbmc/pull/6658) to create Visual Studio project files
 
 ```
-D:\Projects\xbmx\xbmc\project\cmake\addons\kodi-addons.sln
+tools\windows\prepare-binary-addons-dev.bat
 ```
 
-Altarnatively, wait for the `prepare-addons-dev.bat` build script in [PR #6658](https://github.com/xbmc/xbmc/pull/6658) to be merged. Enter tools/buildsteps/win32 and execute it from there. If you want to execute it from somewhere else you need to adjust the default value of WORKDIR in the batch file.
+The generated solution can be found at
 
-Available options are:
-* **clean** to simply clean the whole generated buildsystem
-* **&lt;addon-id>** to only generate the buildsystem for that addon
+```
+project\cmake\addons\build\kodi-addons.sln
+```
 
-# Building in-tree
+# Building in-tree (cross-compiling)
 
 Kodi's build system will fetch the add-on from the GitHub URL and git hash specified in [game.libretro.txt](https://github.com/garbear/xbmc/blob/retroplayer-15alpha2/project/cmake/addons/addons/game.libretro/game.libretro.txt).
 
@@ -83,7 +70,11 @@ cd tools\buildsteps\win32
 make-addons.bat game.libretro
 ```
 
-The compiled .dll will be placed in `project\cmake\addons\build\game.libretro-prefix\src\game.libretro-build`.
+The compiled .dll can be found at
+
+```
+project\cmake\addons\build\game.libretro-prefix\src\game.libretro-build\game.libretro.so
+```
 
 ## OSX
 
