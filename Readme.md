@@ -41,22 +41,6 @@ cmake -G"Eclipse CDT4 - Unix Makefiles" \
       $HOME/workspace/xbmc/project/cmake/addons
 ```
 
-## Windows
-
-First, download and install [CMake](http://www.cmake.org/download/).
-
-Run the script from [PR 6658](https://github.com/xbmc/xbmc/pull/6658) to create Visual Studio project files
-
-```
-tools\windows\prepare-binary-addons-dev.bat
-```
-
-The generated solution can be found at
-
-```
-project\cmake\addons\build\kodi-addons.sln
-```
-
 # Building in-tree (cross-compiling)
 
 Kodi's build system will fetch the add-on from the GitHub URL and git hash specified in [game.libretro.txt](https://github.com/garbear/xbmc/blob/retroplayer-15alpha2/project/cmake/addons/addons/game.libretro/game.libretro.txt).
@@ -89,17 +73,18 @@ make -C tools/depends/target/binary-addons clean
 
 ## Windows
 
-Remember, CMake is needed.
+First, download and install [CMake](http://www.cmake.org/download/).
 
-```shell
-cd tools\buildsteps\win32
-make-addons.bat game.libretro
-```
-
-The compiled .dll can be found at
+Run the script from [PR 6658](https://github.com/xbmc/xbmc/pull/6658) to create Visual Studio project files
 
 ```
-project\cmake\addons\build\game.libretro-prefix\src\game.libretro-build\game.libretro.so
+tools\windows\prepare-binary-addons-dev.bat
+```
+
+The generated solution can be found at
+
+```
+project\cmake\addons\build\kodi-addons.sln
 ```
 
 ## OSX
