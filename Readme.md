@@ -81,6 +81,12 @@ The compiled .so can be found at
 $HOME/kodi/lib/kodi/addons/game.libretro/game.libretro.so
 ```
 
+To rebuild the add-on or compile a different one, clean the build directory
+
+```shell
+make -C tools/depends/target/binary-addons clean
+```
+
 ## Windows
 
 Remember, CMake is needed.
@@ -105,9 +111,7 @@ cd tools/depends
 make -C target/binary-addons ADDONS="game.libretro"
 ```
 
-## Cleaning build directory
-
-Run the following to clean the build directory. Note, this will clean all add-ons, not just game.libretro.
+To rebuild the add-on or compile a different one, clean the build directory
 
 ```shell
 make -C target/binary-addons clean
