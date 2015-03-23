@@ -58,6 +58,11 @@ namespace LIBRETRO
      */
     GAME_RENDER_FORMAT GetRenderFormat(void) const { return m_renderFormat; }
 
+    /*!
+     * Invoked when XBMC transfers a setting to the add-on.
+     */
+    void SetSetting(const char* name, const char* value);
+
     void AudioFrame(int16_t left, int16_t right);
 
     bool EnvironmentCallback(unsigned cmd, void* data);
@@ -73,5 +78,10 @@ namespace LIBRETRO
     double             m_fps;
     bool               m_bFramerateKnown; // true if UpdateFramerate() has been called
     GAME_RENDER_FORMAT m_renderFormat;
+
+    std::map<std::string, std::vector<std::string> > m_variables; // Record the variables reported by libretro core (key -> values)
+    std::map<std::string, std::string>               m_settings;  // Record the settings reported by XBMC (key -> current value)
+    volatile bool                                    m_bSettingsChanged;
+    PLATFORM::CMutex                                 m_settingsMutex;
   };
 } // namespace LIBRETRO

@@ -25,11 +25,11 @@
 #include "libretro.h"
 #include "LibretroDLL.h"
 #include "LibretroTranslator.h"
-#include "Settings.h"
-
 #include "kodi/libXBMC_addon.h"
 #include "kodi/libKODI_game.h"
 
+#include <algorithm>
+#include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string>
@@ -62,7 +62,8 @@ CLibretroEnvironment::CLibretroEnvironment(void) :
   m_clientBridge(NULL),
   m_fps(0.0),
   m_bFramerateKnown(false),
-  m_renderFormat(GAME_RENDER_FMT_0RGB1555) // Default libretro format
+  m_renderFormat(GAME_RENDER_FMT_0RGB1555), // Default libretro format
+  m_bSettingsChanged(false)
 {
 }
 
@@ -100,6 +101,38 @@ void CLibretroEnvironment::UpdateFramerate(double fps)
 {
   m_fps = fps;
   m_bFramerateKnown = true;
+}
+
+void CLibretroEnvironment::SetSetting(const char* name, const char* value)
+{
+  //CLockObject lock(m_settingsMutex); // TODO
+
+  if (m_variables.empty())
+  {
+    // RETRO_ENVIRONMENT_SET_VARIABLES hasn't been called yet. We don't need to
+    // record the setting now, because m_settings will be initialized along with
+    // m_variables.
+    return;
+  }
+
+  // Check to make sure value is a valid value reported by libretro
+  if (m_variables.find(name) == m_variables.end())
+  {
+    m_xbmc->Log(LOG_ERROR, "XBMC setting %s unknown to libretro!", name);
+    return;
+  }
+  std::vector<std::string>& values = m_variables[name];
+  if (std::find(values.begin(), values.end(), value) == values.end())
+  {
+    m_xbmc->Log(LOG_ERROR, "\"%s\" is not a valid value for setting %s", value, name);
+    return;
+  }
+
+  if (m_settings[name] != value)
+  {
+    m_settings[name] = value;
+    m_bSettingsChanged = true;
+  }
 }
 
 void CLibretroEnvironment::AudioFrame(int16_t left, int16_t right)
@@ -254,14 +287,17 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
          if (!strKey)
            return false;
 
-         if (CSettings::Get().HasAddonSetting(strKey))
+         //CLockObject lock(m_settingsMutex); // TODO
+
+         if (m_settings.find(strKey) == m_settings.end())
          {
            m_xbmc->Log(LOG_ERROR, "Unknown setting ID: %s", strKey);
            return false;
          }
 
-         typedData->value = CSettings::Get().GetAddonSetting(strKey);
-         CSettings::Get().SetChanged(false);
+         typedData->value = m_settings[strKey].c_str();
+
+         m_bSettingsChanged = false;
        }
        break;
     }
@@ -270,16 +306,80 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       const retro_variable* typedData = reinterpret_cast<const retro_variable*>(data);
       if (typedData)
       {
+        //CLockObject lock(m_settingsMutex); // TODO
+
+        // Example retro_variable:
+        //      { "foo_option", "Speed hack coprocessor X; false|true" }
+
+        // Text before first ';' is description. This ';' must be followed by
+        // a space, and followed by a list of possible values split up with '|'.
+        // Here, we break up this horrible messy string into the m_variables
+        // data structure and initialize m_settings with XBMC's settings.
         for (const retro_variable* variable = typedData; variable->key && variable->value; variable++)
         {
-          std::string strKey = variable->key;
-          std::vector<std::string> vecOptions = CSettings::ParseOptions(variable->value);
+          const std::string strKey = variable->key;
+          std::string strValues = variable->value;
 
-          if (vecOptions.empty())
+          // Look for ; separating the description from the pipe-separated values
+          size_t pos;
+          if ((pos = strValues.find(';')) != std::string::npos)
+          {
+            pos++;
+            while (pos < strValues.size() && strValues[pos] == ' ')
+              pos++;
+            strValues = strValues.substr(pos);
+          }
+
+          // Split the values on | delimiter and build m_variables array
+          std::vector<std::string> vecValues;
+          while (!strValues.empty())
+          {
+            std::string strValue;
+
+            if ((pos = strValues.find('|')) == std::string::npos)
+            {
+              strValue = strValues;
+              strValues.clear();
+            }
+            else
+            {
+              strValue = strValues.substr(0, pos);
+              strValues.erase(0, pos + 1);
+            }
+
+            vecValues.push_back(strValue);
+          }
+
+          if (vecValues.empty())
             continue;
 
-          CSettings::Get().SetOptions(strKey, vecOptions);
+          m_variables[strKey] = vecValues;
+
+          // Query value for setting in XBMC
+          char valueBuf[1024] = { };
+          if (m_xbmc->GetSetting(variable->key, valueBuf))
+          {
+            if (std::find(vecValues.begin(), vecValues.end(), valueBuf) != vecValues.end())
+            {
+              m_xbmc->Log(LOG_DEBUG, "Setting %s has value \"%s\" in XBMC", strKey.c_str(), valueBuf);
+              m_settings[strKey] = valueBuf;
+            }
+            else
+            {
+              m_xbmc->Log(LOG_ERROR, "Setting %s: invalid value \"%s\" (values are: %s)", strKey.c_str(), valueBuf, variable->value);
+              m_settings[strKey] = vecValues[0]; // Default to first value per libretro api
+            }
+          }
+          else
+          {
+            m_xbmc->Log(LOG_ERROR, "Setting %s not found by XBMC", strKey.c_str());
+            m_settings[strKey] = vecValues[0];
+          }
+
+          assert(m_settings.find(strKey) != m_settings.end());
         }
+
+        m_bSettingsChanged = true;
       }
       break;
     }
@@ -288,7 +388,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       bool* typedData = reinterpret_cast<bool*>(data);
       if (typedData)
       {
-        *typedData = CSettings::Get().IsChanged();
+        *typedData = m_bSettingsChanged;
       }
       break;
     }
