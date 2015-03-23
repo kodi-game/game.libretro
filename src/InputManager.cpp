@@ -22,7 +22,7 @@
 #include "libretro.h"
 #include "LibretroEnvironment.h"
 
-#include "kodi/libXBMC_game.h"
+#include "kodi/libKODI_game.h"
 
 using namespace LIBRETRO;
 

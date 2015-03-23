@@ -4,9 +4,9 @@
        version="1.0.0"
        provider-name="Team-Kodi">
   <requires>
-    <import addon="xbmc.game" version="1.0.0"/>
+    <import addon="kodi.game" version="1.0.0"/>
   </requires>
-  <extension point="xbmc.gameclient"
+  <extension point="kodi.gameclient"
        library_android="game.libretro.so"
        library_linux="game.libretro.so"
        library_osx="game.libretro.dylib"
@@ -15,7 +15,7 @@
 	</extension>
   <extension point="xbmc.addon.metadata">
     <summary lang="en">Libretro compatibility layer for Kodi's Game API</summary>
-    <description>This add-on provides a wrapper for libretro DLLs, translating calls and data between the two APIs.</description>
+    <description>This add-on provides a wrapper for libretro cores, translating calls and data between the two APIs.</description>
     <platform>all</platform>
   </extension>
 </addon>

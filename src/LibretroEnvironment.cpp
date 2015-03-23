@@ -28,7 +28,7 @@
 #include "Settings.h"
 
 #include "kodi/libXBMC_addon.h"
-#include "kodi/libXBMC_game.h"
+#include "kodi/libKODI_game.h"
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -72,7 +72,7 @@ CLibretroEnvironment& CLibretroEnvironment::Get(void)
   return _instance;
 }
 
-void CLibretroEnvironment::Initialize(CHelper_libXBMC_addon* xbmc, CHelper_libXBMC_game* frontend, CLibretroDLL* client, CClientBridge* clientBridge)
+void CLibretroEnvironment::Initialize(CHelper_libXBMC_addon* xbmc, CHelper_libKODI_game* frontend, CLibretroDLL* client, CClientBridge* clientBridge)
 {
   m_xbmc         = xbmc;
   m_frontend     = frontend;

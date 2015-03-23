@@ -24,7 +24,7 @@
 #include "LibretroTranslator.h"
 
 #include "kodi/libXBMC_addon.h"
-#include "kodi/libXBMC_game.h"
+#include "kodi/libKODI_game.h"
 
 using namespace ADDON;
 using namespace LIBRETRO;

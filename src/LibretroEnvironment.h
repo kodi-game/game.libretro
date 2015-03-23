@@ -20,14 +20,14 @@
 #pragma once
 
 #include "kodi/threads/mutex.h"
-#include "kodi/xbmc_game_types.h"
+#include "kodi/kodi_game_types.h"
 
 #include <map>
 #include <string>
 #include <vector>
 
 namespace ADDON { class CHelper_libXBMC_addon; }
-class CHelper_libXBMC_game;
+class CHelper_libKODI_game;
 
 namespace LIBRETRO
 {
@@ -39,11 +39,11 @@ namespace LIBRETRO
   public:
     static CLibretroEnvironment& Get(void);
 
-    void Initialize(ADDON::CHelper_libXBMC_addon* xbmc, CHelper_libXBMC_game* frontend, CLibretroDLL* client, CClientBridge* clientBridge);
+    void Initialize(ADDON::CHelper_libXBMC_addon* xbmc, CHelper_libKODI_game* frontend, CLibretroDLL* client, CClientBridge* clientBridge);
     void Deinitialize(void);
 
     ADDON::CHelper_libXBMC_addon* GetXBMC(void)     { return m_xbmc; }
-    CHelper_libXBMC_game*         GetFrontend(void) { return m_frontend; }
+    CHelper_libKODI_game*         GetFrontend(void) { return m_frontend; }
 
     /*!
      * FPS info is used to calculate timing for toast messages and possibly
@@ -66,7 +66,7 @@ namespace LIBRETRO
     CLibretroEnvironment(void);
 
     ADDON::CHelper_libXBMC_addon* m_xbmc;
-    CHelper_libXBMC_game*         m_frontend;
+    CHelper_libKODI_game*         m_frontend;
     CLibretroDLL*                 m_client;
     CClientBridge*                m_clientBridge;
 

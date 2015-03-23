@@ -26,9 +26,9 @@
 #include "LibretroEnvironment.h"
 #include "Settings.h"
 #include "kodi/libXBMC_addon.h"
-#include "kodi/libXBMC_game.h"
+#include "kodi/libKODI_game.h"
 #include "kodi/xbmc_addon_dll.h"
-#include "kodi/xbmc_game_dll.h"
+#include "kodi/kodi_game_dll.h"
 
 #include <string>
 #include <vector>
@@ -53,7 +53,7 @@ void SAFE_DELETE_GAME_INFO(std::vector<CGameInfoLoader*>& vec)
 namespace LIBRETRO
 {
   CHelper_libXBMC_addon*        XBMC          = NULL;
-  CHelper_libXBMC_game*         FRONTEND      = NULL;
+  CHelper_libKODI_game*         FRONTEND      = NULL;
   CLibretroDLL*                 CLIENT        = NULL;
   CClientBridge*                CLIENT_BRIDGE = NULL;
   std::vector<CGameInfoLoader*> GAME_INFO;
@@ -75,7 +75,7 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
     if (!XBMC || !XBMC->RegisterMe(callbacks))
       throw ADDON_STATUS_PERMANENT_FAILURE;
 
-    FRONTEND = new CHelper_libXBMC_game;
+    FRONTEND = new CHelper_libKODI_game;
     if (!FRONTEND || !FRONTEND->RegisterMe(callbacks))
       throw ADDON_STATUS_PERMANENT_FAILURE;
 

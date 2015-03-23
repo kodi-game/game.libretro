@@ -26,7 +26,7 @@
 #include <vector>
 
 namespace ADDON { class CHelper_libXBMC_addon; }
-class CHelper_libXBMC_game;
+class CHelper_libKODI_game;
 
 namespace LIBRETRO
 {
