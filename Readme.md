@@ -18,8 +18,7 @@ cd build
 Generate a build environment with config for debugging
 
 ```shell
-cmake -DADDONS_TO_BUILD=game.libretro \
-      -DCMAKE_BUILD_TYPE=Debug \
+cmake -DCMAKE_BUILD_TYPE=Debug \
       -DCMAKE_INSTALL_PREFIX=$HOME/workspace/xbmc/addons \
       $HOME/workspace/xbmc/project/cmake/addons
 ```
@@ -31,7 +30,6 @@ It is also possible to generate Eclipse project files with cmake
 ```shell
 cmake -G"Eclipse CDT4 - Unix Makefiles" \
       -D_ECLIPSE_VERSION=4.4 \
-      -DADDONS_TO_BUILD=game.libretro \
       -DCMAKE_BUILD_TYPE=Debug \
       -DCMAKE_INSTALL_PREFIX=$HOME/workspace/xbmc/addons \
       $HOME/workspace/xbmc/project/cmake/addons
