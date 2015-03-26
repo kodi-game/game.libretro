@@ -192,22 +192,24 @@ GAME_ERROR LoadGame(const char* url)
   SAFE_DELETE_GAME_INFO(GAME_INFO);
   GAME_INFO.push_back(new CGameInfoLoader(url, XBMC, bSupportsVFS));
 
+  bool bResult = false;
+
   // Try to load via memory
   retro_game_info gameInfo;
   if (GAME_INFO[0]->GetMemoryStruct(gameInfo))
+    bResult = CLIENT->retro_load_game(&gameInfo);
+
+  if (!bResult)
   {
-    if (CLIENT->retro_load_game(&gameInfo))
-      return GAME_ERROR_NO_ERROR;
+    // Fall back to loading via path
+    GAME_INFO[0]->GetPathStruct(gameInfo);
+    bResult = CLIENT->retro_load_game(&gameInfo);
   }
 
-  // Fall back to loading via path
-  GAME_INFO[0]->GetPathStruct(gameInfo);
-  bool result = CLIENT->retro_load_game(&gameInfo);
-
-  if (result)
+  if (bResult)
     CInputManager::Get().OpenPorts();
 
-  return result ? GAME_ERROR_NO_ERROR : GAME_ERROR_FAILED;
+  return bResult ? GAME_ERROR_NO_ERROR : GAME_ERROR_FAILED;
 }
 
 GAME_ERROR LoadGameSpecial(GAME_TYPE type, const char** urls, size_t num_urls)
