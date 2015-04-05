@@ -44,72 +44,46 @@ libretro_device_caps_t CInputManager::GetDeviceCaps(void)
 
 void CInputManager::OpenPorts(void)
 {
+  if (!CLibretroEnvironment::Get().GetFrontend())
+    return;
+
   // TODO: Need a way to query number of supported controllers. Some cores
   // segfault if you use too many controllers.
   m_maxDevices = 2;
 
+  // TODO: Need a way to figure out which device to open
+  const char* deviceId = "game.controller.default";
+
   for (unsigned int i = 0; i < m_maxDevices; i++)
   {
-    if (!OpenPort(i))
+    game_input_device_caps deviceCaps;
+    if (!CLibretroEnvironment::Get().GetFrontend()->OpenPort(i, deviceId, &deviceCaps))
       break;
+
+    m_devices.push_back(SInputDevice(deviceId, deviceCaps));
   }
 }
 
 void CInputManager::ClosePorts(void)
 {
-  while (!m_devices.empty())
-    ClosePort(m_devices.begin()->first);
-}
+  m_devices.clear();
 
-bool CInputManager::OpenPort(unsigned int port)
-{
   if (!CLibretroEnvironment::Get().GetFrontend())
-    return false;
+    return;
 
-  bool bSuccess = true;
-
-  // TODO: Need a way to figure out which device to open
-  const char* addonId = "game.controller.default";
-
-  if (m_devices.find(port) == m_devices.end())
-  {
-    game_input_device_caps deviceCaps;
-    if (CLibretroEnvironment::Get().GetFrontend()->OpenPort(port, addonId, &deviceCaps))
-      m_devices[port] = SInputDevice(port, addonId, deviceCaps);
-    else
-      bSuccess = false;
-  }
-
-  return bSuccess;
-}
-
-void CInputManager::ClosePort(unsigned int port)
-{
-  std::map<unsigned int, SInputDevice>::iterator it = m_devices.find(port);
-
-  if (it != m_devices.end())
-  {
-    if (CLibretroEnvironment::Get().GetFrontend())
-      CLibretroEnvironment::Get().GetFrontend()->ClosePort(port);
-    m_devices.erase(it);
-  }
+  for (unsigned int i = 0; i < m_devices.size(); i++)
+    CLibretroEnvironment::Get().GetFrontend()->ClosePort(i);
 }
 
 libretro_device_t CInputManager::UpdatePort(unsigned int port, bool bPortConnected)
 {
   libretro_device_t deviceId = 0;
 
-  if (port < m_maxDevices)
+  if (port < m_devices.size())
   {
+    m_devices[port].bDeviceConnected = bPortConnected;
     if (bPortConnected)
-    {
-      if (OpenPort(port))
-        deviceId = RETRO_DEVICE_JOYPAD; // TODO
-    }
-    else
-    {
-      ClosePort(port);
-    }
+      deviceId = RETRO_DEVICE_JOYPAD; // TODO
   }
 
   return deviceId;

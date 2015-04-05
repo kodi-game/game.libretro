@@ -21,9 +21,9 @@
 
 #include "kodi/kodi_game_types.h"
 
-#include <map>
 #include <stdint.h>
 #include <string>
+#include <vector>
 
 struct retro_input_descriptor;
 
@@ -35,17 +35,20 @@ namespace LIBRETRO
   struct SInputDevice
   {
     SInputDevice(void)
-      : port(0), caps() { }
-    SInputDevice(unsigned int port, const char* addonId, const game_input_device_caps& deviceCaps)
-      : port(port), addonId(addonId), caps(deviceCaps) { }
+      : caps(), bDeviceConnected(true) { }
+    SInputDevice(const char* deviceId, const game_input_device_caps& deviceCaps)
+      : deviceId(deviceId), caps(deviceCaps), bDeviceConnected(true) { }
 
-    unsigned int           port;    // Input port on the game console
-    std::string            addonId; // Input device's addon ID, e.g. game.controller.default
-    game_input_device_caps caps;    // Specifies what the input device is capable of
+    std::string            deviceId; // Input device's addon ID, e.g. game.controller.default
+    game_input_device_caps caps;     // Specifies what the input device is capable of
+    bool                   bDeviceConnected;
   };
 
   class CInputManager
   {
+  private:
+    CInputManager(void);
+
   public:
     static CInputManager& Get(void);
 
@@ -69,12 +72,7 @@ namespace LIBRETRO
     int16_t MouseDeltaY(unsigned int port);
 
   private:
-    CInputManager(void);
-
-    bool OpenPort(unsigned int port);
-    void ClosePort(unsigned int port);
-
-    unsigned int                         m_maxDevices;
-    std::map<unsigned int, SInputDevice> m_devices; // Port -> device
+    unsigned int              m_maxDevices;
+    std::vector<SInputDevice> m_devices;
   };
 }
