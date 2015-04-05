@@ -20,6 +20,7 @@
 #pragma once
 
 #include "kodi/kodi_game_types.h"
+#include "kodi/threads/mutex.h"
 
 #include <stdint.h>
 #include <string>
@@ -32,47 +33,92 @@ namespace LIBRETRO
   typedef unsigned int libretro_device_t;
   typedef uint64_t     libretro_device_caps_t;
 
-  struct SInputDevice
+  class CLibretroDevice
   {
-    SInputDevice(void)
-      : caps(), bDeviceConnected(true) { }
-    SInputDevice(const char* deviceId, const game_input_device_caps& deviceCaps)
-      : deviceId(deviceId), caps(deviceCaps), bDeviceConnected(true) { }
+  public:
+    CLibretroDevice(const game_input_device* device = NULL);
+    CLibretroDevice(const CLibretroDevice& other) { *this = other; }
 
-    std::string            deviceId; // Input device's addon ID, e.g. game.controller.default
-    game_input_device_caps caps;     // Specifies what the input device is capable of
-    bool                   bDeviceConnected;
+    CLibretroDevice& operator=(const CLibretroDevice& rhs);
+
+    libretro_device_t Type(void) const { return m_type; }
+
+    void Clear(void);
+
+    bool DigitalButtonState(unsigned int buttonIndex) const;
+    bool AnalogStickState(unsigned int analogStickIndex, float& x, float& y) const;
+    bool AccelerometerState(float& x, float& y, float& z) const;
+    int RelativePointerDeltaX(void);
+    int RelativePointerDeltaY(void);
+    bool AbsolutePointerState(unsigned int pointerIndex, float& x, float& y) const;
+
+    bool InputEvent(const game_input_event& event);
+
+  private:
+    int GetLibretroIndex(const std::string& strDeviceId, const std::string& strFeatureName) const;
+
+    libretro_device_t                      m_type;
+    std::vector<game_digital_button_event> m_digitalButtons;
+    std::vector<game_analog_stick_event>   m_analogSticks;
+    std::vector<game_accelerometer_event>  m_accelerometers;
+    std::vector<game_rel_pointer_event>    m_relativePointers;
+    std::vector<game_abs_pointer_event>    m_absolutePointers;
+    PLATFORM::CMutex                       m_relativePtrMutex;
   };
 
   class CInputManager
   {
   private:
-    CInputManager(void);
+    CInputManager(void) { }
 
   public:
     static CInputManager& Get(void);
 
-    libretro_device_caps_t GetDeviceCaps(void);
+    /*!
+     * \brief Get the devices supported by the libretro wrapper
+     *
+     * \return A bitmask of libretro devices that this class supports
+     */
+    libretro_device_caps_t GetDeviceCaps(void) const;
 
-    void OpenPorts(void);
+    /*!
+     * \brief Called when a device has been connected to an open port
+     */
+    void DeviceConnected(unsigned int port, bool bConnected, const game_input_device* connectedDevice);
+
+    /*!
+     * \brief Get the libretro device abstraction for the device connected to
+     *        the specified port
+     */
+    libretro_device_t GetDevice(unsigned int port) const;
+
+    bool OpenPort(unsigned int port);
+    void ClosePort(unsigned int port);
     void ClosePorts(void);
 
-    libretro_device_t UpdatePort(unsigned int port, bool bPortConnected);
-
+    /*!
+     * \brief Enable input events for the specified source
+     */
     void EnableSource(bool bEnabled, unsigned int port, GAME_INPUT_EVENT_SOURCE source, unsigned int index);
 
-    void InputEvent(unsigned int port, const game_input_event& event);
+    /*!
+     * \brief Called when an input event has occurred
+     */
+    bool InputEvent(unsigned int port, const game_input_event& event);
 
-    void SetInputDescriptors(const retro_input_descriptor* descriptors);
+    /*!
+     * \brief Parse libretro input descriptors and output to the log
+     */
+    void LogInputDescriptors(const retro_input_descriptor* descriptors);
 
-    bool DigitalButtonState(unsigned int port, unsigned int index);
-    bool AnalogStickState(unsigned int port, unsigned int index, float& x, float& y);
-    bool AccelerometerState(unsigned int port, unsigned int index, float& x, float& y, float& z);
-    int16_t MouseDeltaX(unsigned int port);
-    int16_t MouseDeltaY(unsigned int port);
+    bool DigitalButtonState(libretro_device_t device, unsigned int port, unsigned int buttonIndex);
+    int DeltaX(libretro_device_t device, unsigned int port);
+    int DeltaY(libretro_device_t device, unsigned int port);
+    bool AnalogStickState(unsigned int port, unsigned int analogStickIndex, float& x, float& y);
+    bool AbsolutePointerState(unsigned int port, unsigned int pointerIndex, float& x, float& y);
+    bool AccelerometerState(unsigned int port, float& x, float& y, float& z);
 
   private:
-    unsigned int              m_maxDevices;
-    std::vector<SInputDevice> m_devices;
+    std::vector<CLibretroDevice> m_ports;
   };
 }

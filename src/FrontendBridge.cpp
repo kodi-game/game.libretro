@@ -26,6 +26,8 @@
 #include "kodi/libXBMC_addon.h"
 #include "kodi/libKODI_game.h"
 
+#include <assert.h>
+
 using namespace ADDON;
 using namespace LIBRETRO;
 
@@ -78,40 +80,36 @@ int16_t CFrontendBridge::InputState(unsigned port, unsigned device, unsigned ind
 {
   int16_t inputState = 0;
 
+  // According to libretro.h, device should already be masked, but just in case
   device &= RETRO_DEVICE_MASK;
 
   switch (device)
   {
   case RETRO_DEVICE_JOYPAD:
-    return CInputManager::Get().DigitalButtonState(port, id) ? 1 : 0;
+  case RETRO_DEVICE_KEYBOARD:
+    inputState = CInputManager::Get().DigitalButtonState(device, port, id) ? 1 : 0;
+    break;
 
   case RETRO_DEVICE_MOUSE:
+  case RETRO_DEVICE_LIGHTGUN:
+    static_assert(RETRO_DEVICE_ID_MOUSE_X == RETRO_DEVICE_ID_LIGHTGUN_X, "RETRO_DEVICE_ID_MOUSE_X != RETRO_DEVICE_ID_LIGHTGUN_X");
+    static_assert(RETRO_DEVICE_ID_MOUSE_Y == RETRO_DEVICE_ID_LIGHTGUN_Y, "RETRO_DEVICE_ID_MOUSE_Y != RETRO_DEVICE_ID_LIGHTGUN_Y");
+
     switch (id)
     {
-      case RETRO_DEVICE_ID_MOUSE_LEFT:
-      case RETRO_DEVICE_ID_MOUSE_RIGHT:
-      {
-        const unsigned int buttonIndex = id - RETRO_DEVICE_ID_MOUSE_LEFT;
-        inputState = CInputManager::Get().DigitalButtonState(port, buttonIndex) ? 1 : 0;
-        break;
-      }
       case RETRO_DEVICE_ID_MOUSE_X:
-        inputState = CInputManager::Get().MouseDeltaX(port);
+        inputState = CInputManager::Get().DeltaX(device, port);
         break;
       case RETRO_DEVICE_ID_MOUSE_Y:
-        inputState = CInputManager::Get().MouseDeltaY(port);
+        inputState = CInputManager::Get().DeltaY(device, port);
         break;
       default:
+      {
+        const unsigned int buttonIndex = id - 2;
+        inputState = CInputManager::Get().DigitalButtonState(device, port, buttonIndex) ? 1 : 0;
         break;
+      }
     }
-    break;
-
-  case RETRO_DEVICE_KEYBOARD:
-    // TODO
-    break;
-
-  case RETRO_DEVICE_LIGHTGUN:
-    // TODO
     break;
 
   case RETRO_DEVICE_ANALOG:
@@ -134,8 +132,25 @@ int16_t CFrontendBridge::InputState(unsigned port, unsigned device, unsigned ind
   }
 
   case RETRO_DEVICE_POINTER:
-    // TODO
+  {
+    float x, y;
+    if (CInputManager::Get().AbsolutePointerState(port, index, x, y))
+    {
+      if (id == RETRO_DEVICE_ID_POINTER_X)
+      {
+        inputState = (int)(x * 0x7fff);
+      }
+      else if (id == RETRO_DEVICE_ID_POINTER_Y)
+      {
+        inputState = (int)(y * 0x7fff);
+      }
+      else if (id == RETRO_DEVICE_ID_POINTER_PRESSED)
+      {
+        inputState = 1;
+      }
+    }
     break;
+  }
 
   default:
     break;
@@ -182,7 +197,7 @@ float CFrontendBridge::SensorGetInput(unsigned port, unsigned id)
   float axisState = 0.0f;
 
   float x, y, z;
-  if (CInputManager::Get().AccelerometerState(port, 0, x, y, z))
+  if (CInputManager::Get().AccelerometerState(port, x, y, z))
   {
     switch (id)
     {

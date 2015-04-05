@@ -222,7 +222,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     {
       const retro_input_descriptor* typedData = reinterpret_cast<const retro_input_descriptor*>(data);
       if (typedData)
-        CInputManager::Get().SetInputDescriptors(typedData);
+        CInputManager::Get().LogInputDescriptors(typedData);
       break;
     }
   case RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK:

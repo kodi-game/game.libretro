@@ -207,7 +207,7 @@ GAME_ERROR LoadGame(const char* url)
   }
 
   if (bResult)
-    CInputManager::Get().OpenPorts();
+    CInputManager::Get().OpenPort(0);
 
   return bResult ? GAME_ERROR_NO_ERROR : GAME_ERROR_FAILED;
 }
@@ -287,11 +287,16 @@ GAME_ERROR Reset(void)
   return GAME_ERROR_NO_ERROR;
 }
 
-void UpdatePort(unsigned int port, bool port_connected)
+void DeviceConnected(unsigned int port, bool connected, const game_input_device* connected_device)
 {
-  const unsigned int device = CInputManager::Get().UpdatePort(port, port_connected);
+  if (connected && !connected_device)
+    return;
 
-  if (CLIENT && port_connected && device)
+  CInputManager::Get().DeviceConnected(port, connected, connected_device);
+
+  const unsigned int device = CInputManager::Get().GetDevice(port);
+
+  if (CLIENT)
     CLIENT->retro_set_controller_port_device(port, device);
 }
 
