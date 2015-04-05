@@ -69,7 +69,7 @@ bool CInputManager::OpenPort(unsigned int port)
   bool bSuccess = true;
 
   // TODO: Need a way to figure out which device to open
-  const char* addonId = "game.controller.nes";
+  const char* addonId = "game.controller.default";
 
   if (m_devices.find(port) == m_devices.end())
   {
