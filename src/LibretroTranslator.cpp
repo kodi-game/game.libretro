@@ -22,6 +22,14 @@
 
 using namespace LIBRETRO;
 
+namespace LIBRETRO
+{
+  inline retro_mod operator|(retro_mod lhs, retro_mod rhs)
+  {
+    return static_cast<retro_mod>(static_cast<int>(lhs) | static_cast<int>(rhs));
+  }
+}
+
 GAME_HW_CONTEXT_TYPE LibretroTranslator::GetHWContextType(retro_hw_context_type type)
 {
   switch (type)
@@ -63,4 +71,19 @@ GAME_RUMBLE_EFFECT LibretroTranslator::GetRumbleEffect(retro_rumble_effect effec
       break;
   }
   return GAME_RUMBLE_STRONG;
+}
+
+retro_mod LibretroTranslator::GetKeyModifiers(GAME_KEY_MOD modifiers)
+{
+  retro_mod mods = RETROKMOD_NONE;
+
+  if (modifiers & GAME_KEY_MOD_SHIFT)      mods = mods | RETROKMOD_SHIFT;
+  if (modifiers & GAME_KEY_MOD_CTRL)       mods = mods | RETROKMOD_CTRL;
+  if (modifiers & GAME_KEY_MOD_ALT)        mods = mods | RETROKMOD_ALT;
+  if (modifiers & GAME_KEY_MOD_META)       mods = mods | RETROKMOD_META;
+  if (modifiers & GAME_KEY_MOD_NUMLOCK)    mods = mods | RETROKMOD_NUMLOCK;
+  if (modifiers & GAME_KEY_MOD_CAPSLOCK)   mods = mods | RETROKMOD_CAPSLOCK;
+  if (modifiers & GAME_KEY_MOD_SCROLLOCK)  mods = mods | RETROKMOD_SCROLLOCK;
+
+  return mods;
 }

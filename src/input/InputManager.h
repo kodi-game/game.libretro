@@ -19,10 +19,10 @@
  */
 #pragma once
 
-#include "kodi/kodi_game_types.h"
-#include "kodi/threads/mutex.h"
+#include "LibretroDevice.h"
 
-#include <stdint.h>
+#include "kodi/kodi_game_types.h"
+
 #include <string>
 #include <vector>
 
@@ -30,41 +30,7 @@ struct retro_input_descriptor;
 
 namespace LIBRETRO
 {
-  typedef unsigned int libretro_device_t;
-  typedef uint64_t     libretro_device_caps_t;
-
-  class CLibretroDevice
-  {
-  public:
-    CLibretroDevice(const game_input_device* device = NULL);
-    CLibretroDevice(const CLibretroDevice& other) { *this = other; }
-
-    CLibretroDevice& operator=(const CLibretroDevice& rhs);
-
-    libretro_device_t Type(void) const { return m_type; }
-
-    void Clear(void);
-
-    bool DigitalButtonState(unsigned int buttonIndex) const;
-    bool AnalogStickState(unsigned int analogStickIndex, float& x, float& y) const;
-    bool AccelerometerState(float& x, float& y, float& z) const;
-    int RelativePointerDeltaX(void);
-    int RelativePointerDeltaY(void);
-    bool AbsolutePointerState(unsigned int pointerIndex, float& x, float& y) const;
-
-    bool InputEvent(const game_input_event& event);
-
-  private:
-    int GetLibretroIndex(const std::string& strDeviceId, const std::string& strFeatureName) const;
-
-    libretro_device_t                      m_type;
-    std::vector<game_digital_button_event> m_digitalButtons;
-    std::vector<game_analog_stick_event>   m_analogSticks;
-    std::vector<game_accelerometer_event>  m_accelerometers;
-    std::vector<game_rel_pointer_event>    m_relativePointers;
-    std::vector<game_abs_pointer_event>    m_absolutePointers;
-    PLATFORM::CMutex                       m_relativePtrMutex;
-  };
+  typedef uint64_t  libretro_device_caps_t;
 
   class CInputManager
   {
@@ -97,9 +63,12 @@ namespace LIBRETRO
     void ClosePorts(void);
 
     /*!
-     * \brief Enable input events for the specified source
+     * \brief Enable or disable the port's analog sensors (enabled by default)
+     *
+     * \param port      The port
+     * \param bEnabled  True to enable port's analog sensors, false to disable
      */
-    void EnableSource(bool bEnabled, unsigned int port, GAME_INPUT_EVENT_SOURCE source, unsigned int index);
+    void EnableAnalogSensors(unsigned int port, bool bEnabled);
 
     /*!
      * \brief Called when an input event has occurred
@@ -111,7 +80,7 @@ namespace LIBRETRO
      */
     void LogInputDescriptors(const retro_input_descriptor* descriptors);
 
-    bool DigitalButtonState(libretro_device_t device, unsigned int port, unsigned int buttonIndex);
+    bool ButtonState(libretro_device_t device, unsigned int port, unsigned int buttonIndex);
     int DeltaX(libretro_device_t device, unsigned int port);
     int DeltaY(libretro_device_t device, unsigned int port);
     bool AnalogStickState(unsigned int port, unsigned int analogStickIndex, float& x, float& y);

@@ -30,5 +30,6 @@ namespace LIBRETRO
     static GAME_HW_CONTEXT_TYPE GetHWContextType(retro_hw_context_type type);
     static GAME_RENDER_FORMAT   GetRenderFormat(retro_pixel_format format);
     static GAME_RUMBLE_EFFECT   GetRumbleEffect(retro_rumble_effect effect);
+    static retro_mod            GetKeyModifiers(GAME_KEY_MOD modifiers);
   };
 }

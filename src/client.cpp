@@ -20,7 +20,7 @@
 
 #include "ClientBridge.h"
 #include "GameInfoLoader.h"
-#include "InputManager.h"
+#include "input/InputManager.h"
 #include "libretro.h"
 #include "LibretroDLL.h"
 #include "LibretroEnvironment.h"
@@ -289,10 +289,13 @@ GAME_ERROR Reset(void)
 
 void DeviceConnected(unsigned int port, bool connected, const game_input_device* connected_device)
 {
-  if (connected && !connected_device)
-    return;
+  if (connected)
+  {
+    if (!connected_device || !connected_device->device_id)
+      return;
+  }
 
-  CInputManager::Get().DeviceConnected(port, connected, connected_device);
+  CInputManager::Get().DeviceConnected(port, connected, connected ? connected_device : NULL);
 
   const unsigned int device = CInputManager::Get().GetDevice(port);
 

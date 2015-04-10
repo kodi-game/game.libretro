@@ -19,9 +19,9 @@
  */
 
 #include "FrontendBridge.h"
-#include "InputManager.h"
 #include "LibretroEnvironment.h"
 #include "LibretroTranslator.h"
+#include "input/InputManager.h"
 
 #include "kodi/libXBMC_addon.h"
 #include "kodi/libKODI_game.h"
@@ -86,8 +86,8 @@ int16_t CFrontendBridge::InputState(unsigned port, unsigned device, unsigned ind
   switch (device)
   {
   case RETRO_DEVICE_JOYPAD:
-  case RETRO_DEVICE_KEYBOARD:
-    inputState = CInputManager::Get().DigitalButtonState(device, port, id) ? 1 : 0;
+  //case RETRO_DEVICE_KEYBOARD: // TODO
+    inputState = CInputManager::Get().ButtonState(device, port, id) ? 1 : 0;
     break;
 
   case RETRO_DEVICE_MOUSE:
@@ -106,7 +106,7 @@ int16_t CFrontendBridge::InputState(unsigned port, unsigned device, unsigned ind
       default:
       {
         const unsigned int buttonIndex = id - 2;
-        inputState = CInputManager::Get().DigitalButtonState(device, port, buttonIndex) ? 1 : 0;
+        inputState = CInputManager::Get().ButtonState(device, port, buttonIndex) ? 1 : 0;
         break;
       }
     }
@@ -187,7 +187,7 @@ bool CFrontendBridge::SensorSetState(unsigned port, retro_sensor_action action, 
 {
   const bool bEnabled = (action == RETRO_SENSOR_ACCELEROMETER_ENABLE);
 
-  CInputManager::Get().EnableSource(bEnabled, port, GAME_INPUT_EVENT_ACCELEROMETER, 0);
+  CInputManager::Get().EnableAnalogSensors(port, bEnabled);
 
   return true;
 }

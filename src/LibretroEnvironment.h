@@ -44,6 +44,7 @@ namespace LIBRETRO
 
     ADDON::CHelper_libXBMC_addon* GetXBMC(void)     { return m_xbmc; }
     CHelper_libKODI_game*         GetFrontend(void) { return m_frontend; }
+    CClientBridge*                GetClient(void)   { return m_clientBridge; }
 
     /*!
      * FPS info is used to calculate timing for toast messages and possibly

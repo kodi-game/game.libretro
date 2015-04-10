@@ -18,28 +18,65 @@
  *
  */
 
-#include "InputManager.h"
-#include "libretro.h"
+#include "LibretroDevice.h"
+#include "ClientBridge.h"
 #include "LibretroEnvironment.h"
+#include "LibretroTranslator.h"
 
 #include "kodi/libKODI_game.h"
-
-#include <cstring>
 
 using namespace LIBRETRO;
 using namespace PLATFORM;
 
-// --- CLibretroDevice ---------------------------------------------------------
+#define LIBRETRO_JOYPAD_BUTTON_COUNT     16
+#define LIBRETRO_ANALOG_STICK_COUNT      2
+#define LIBRETRO_ACCELEROMETER_COUNT     1
+#define LIBRETRO_MOUSE_BUTTON_COUNT      2
+#define LIBRETRO_LIGHTGUN_BUTTON_COUNT   5
+#define LIBRETRO_RELATIVE_POINTER_COUNT  1
+#define LIBRETRO_ABSOLUTE_POINTER_COUNT  10
 
 CLibretroDevice::CLibretroDevice(const game_input_device* device /* = NULL */)
+  : m_type(RETRO_DEVICE_NONE)
 {
-  if (!device)
+  if (device)
   {
-    m_type = RETRO_DEVICE_NONE;
-  }
-  else
-  {
-    m_type = RETRO_DEVICE_NONE; // TODO
+    m_type = GetFeature(device->device_id);
+
+    switch (m_type)
+    {
+      case RETRO_DEVICE_JOYPAD:
+        m_buttons.resize(LIBRETRO_JOYPAD_BUTTON_COUNT);
+        break;
+
+      case RETRO_DEVICE_MOUSE:
+        m_buttons.resize(LIBRETRO_MOUSE_BUTTON_COUNT);
+        m_relativePointers.resize(LIBRETRO_RELATIVE_POINTER_COUNT);
+        break;
+
+      case RETRO_DEVICE_KEYBOARD:
+        // TODO
+        break;
+
+      case RETRO_DEVICE_LIGHTGUN:
+        m_buttons.resize(LIBRETRO_LIGHTGUN_BUTTON_COUNT);
+        m_relativePointers.resize(LIBRETRO_RELATIVE_POINTER_COUNT);
+        break;
+
+      case RETRO_DEVICE_ANALOG:
+        m_buttons.resize(LIBRETRO_JOYPAD_BUTTON_COUNT);
+        m_analogSticks.resize(LIBRETRO_ANALOG_STICK_COUNT);
+        break;
+
+      case RETRO_DEVICE_POINTER:
+        m_absolutePointers.resize(LIBRETRO_ABSOLUTE_POINTER_COUNT);
+        break;
+
+      default:
+        break;
+    }
+
+    m_accelerometers.resize(LIBRETRO_ACCELEROMETER_COUNT);
   }
 }
 
@@ -48,7 +85,7 @@ CLibretroDevice& CLibretroDevice::operator=(const CLibretroDevice& rhs)
   if (this != &rhs)
   {
     m_type             = rhs.m_type;
-    m_digitalButtons   = rhs.m_digitalButtons;
+    m_buttons          = rhs.m_buttons;
     m_analogSticks     = rhs.m_analogSticks;
     m_accelerometers   = rhs.m_accelerometers;
     m_relativePointers = rhs.m_relativePointers;
@@ -60,19 +97,19 @@ CLibretroDevice& CLibretroDevice::operator=(const CLibretroDevice& rhs)
 void CLibretroDevice::Clear(void)
 {
   m_type = RETRO_DEVICE_NONE;
-  m_digitalButtons.clear();
+  m_buttons.clear();
   m_analogSticks.clear();
   m_accelerometers.clear();
   m_relativePointers.clear();
   m_absolutePointers.clear();
 }
 
-bool CLibretroDevice::DigitalButtonState(unsigned int buttonIndex) const
+bool CLibretroDevice::ButtonState(unsigned int buttonIndex) const
 {
   bool buttonState = false;
 
-  if (buttonIndex < m_digitalButtons.size())
-    buttonState = m_digitalButtons[buttonIndex].pressed;
+  if (buttonIndex < m_buttons.size())
+    buttonState = m_buttons[buttonIndex].pressed;
 
   return buttonState;
 }
@@ -161,12 +198,12 @@ bool CLibretroDevice::InputEvent(const game_input_event& event)
     switch (event.type)
     {
       case GAME_INPUT_EVENT_DIGITAL_BUTTON:
-        if (index < m_digitalButtons.size())
-          m_digitalButtons[index] = event.digital_button;
+        if (index < m_buttons.size())
+          m_buttons[index] = event.digital_button;
         break;
 
       case GAME_INPUT_EVENT_ANALOG_BUTTON:
-        // TODO
+        // Not used by libretro
         break;
 
       case GAME_INPUT_EVENT_ANALOG_STICK:
@@ -180,7 +217,16 @@ bool CLibretroDevice::InputEvent(const game_input_event& event)
         break;
 
       case GAME_INPUT_EVENT_KEY:
-        // TODO
+        // libretro keyboard is event-based
+        if (CLibretroEnvironment::Get().GetClient())
+        {
+          /* TODO
+          CLibretroEnvironment::Get().GetClient()->KeyboardEvent(event.key.pressed,
+                                                                 0, // TODO
+                                                                 event.key.character,
+                                                                 LibretroTranslator::GetKeyModifiers(event.key.modifiers));
+          */
+        }
         break;
 
       case GAME_INPUT_EVENT_RELATIVE_POINTER:
@@ -261,181 +307,14 @@ int CLibretroDevice::GetLibretroIndex(const std::string& strDeviceId, const std:
   return -1;
 }
 
-// --- CInputManager -----------------------------------------------------------
-
-CInputManager& CInputManager::Get(void)
+libretro_device_t CLibretroDevice::GetFeature(const std::string& strDeviceId) const
 {
-  static CInputManager _instance;
-  return _instance;
-}
+  if (strDeviceId == "game.controller.default")
+    return RETRO_DEVICE_ANALOG;
+  else if (strDeviceId == "game.controller.nes")
+    return RETRO_DEVICE_JOYPAD;
+  else if (strDeviceId == "game.controller.snes")
+    return RETRO_DEVICE_JOYPAD;
 
-libretro_device_caps_t CInputManager::GetDeviceCaps(void) const
-{
-  libretro_device_caps_t deviceCaps = 0;
-
-  deviceCaps |= (1 << RETRO_DEVICE_JOYPAD);
-  //deviceCaps |= (1 << RETRO_DEVICE_MOUSE); // TODO
-  //deviceCaps |= (1 << RETRO_DEVICE_KEYBOARD); // TODO
-  //deviceCaps |= (1 << RETRO_DEVICE_LIGHTGUN); // TODO
-  //deviceCaps |= (1 << RETRO_DEVICE_ANALOG); // TODO
-  //deviceCaps |= (1 << RETRO_DEVICE_POINTER); // TODO
-
-  return deviceCaps;
-}
-
-void CInputManager::DeviceConnected(unsigned int port, bool bConnected, const game_input_device* connectedDevice)
-{
-  if (port < m_ports.size())
-    m_ports[port] = CLibretroDevice(bConnected ? connectedDevice : NULL);
-}
-
-libretro_device_t CInputManager::GetDevice(unsigned int port) const
-{
-  libretro_device_t deviceType = 0;
-
-  if (port < m_ports.size())
-    deviceType = m_ports[port].Type();
-
-  return deviceType;
-}
-
-void CInputManager::ClosePorts(void)
-{
-  for (unsigned int i = 0; i < m_ports.size(); i++)
-    ClosePort(i);
-}
-
-void CInputManager::EnableSource(bool bEnabled, unsigned int port, GAME_INPUT_EVENT_SOURCE source, unsigned int index)
-{
-  // TODO
-}
-
-bool CInputManager::InputEvent(unsigned int port, const game_input_event& event)
-{
-  bool bHandled = false;
-
-  if (port < m_ports.size())
-    bHandled = m_ports[port].InputEvent(event);
-
-  return bHandled;
-}
-
-void CInputManager::LogInputDescriptors(const retro_input_descriptor* descriptors)
-{
-  /* TODO
-  for (const retro_input_descriptor* descriptor = descriptors; descriptor->description != NULL; descriptor++)
-  {
-    switch (descriptor->device)
-    {
-    case RETRO_DEVICE_JOYPAD:
-    case RETRO_DEVICE_MOUSE:
-    case RETRO_DEVICE_KEYBOARD:
-    case RETRO_DEVICE_LIGHTGUN:
-    case RETRO_DEVICE_ANALOG:
-    case RETRO_DEVICE_POINTER:
-    case RETRO_DEVICE_JOYPAD_MULTITAP:
-    case RETRO_DEVICE_LIGHTGUN_SUPER_SCOPE:
-    case RETRO_DEVICE_LIGHTGUN_JUSTIFIER:
-    case RETRO_DEVICE_LIGHTGUN_JUSTIFIERS:
-    default:
-      break;
-    }
-  }
-  */
-}
-
-bool CInputManager::DigitalButtonState(libretro_device_t device, unsigned int port, unsigned int buttonIndex)
-{
-  bool bState = false;
-
-  if (port < m_ports.size() || OpenPort(port))
-  {
-    bState = m_ports[port].DigitalButtonState(buttonIndex);
-  }
-
-  return bState;
-}
-
-int CInputManager::DeltaX(libretro_device_t device, unsigned int port)
-{
-  int deltaX = 0;
-
-  if (port < m_ports.size() || OpenPort(port))
-  {
-    deltaX = m_ports[port].RelativePointerDeltaX();
-  }
-
-  return deltaX;
-}
-
-int CInputManager::DeltaY(libretro_device_t device, unsigned int port)
-{
-  int deltaY = 0;
-
-  if (port < m_ports.size() || OpenPort(port))
-  {
-    deltaY = m_ports[port].RelativePointerDeltaY();
-  }
-
-  return deltaY;
-}
-
-bool CInputManager::AnalogStickState(unsigned int port, unsigned int analogStickIndex, float& x, float& y)
-{
-  bool bSuccess = false;
-
-  if (port < m_ports.size() || OpenPort(port))
-  {
-    bSuccess = m_ports[port].AnalogStickState(analogStickIndex, x, y);
-  }
-
-  return bSuccess;
-}
-
-bool CInputManager::AbsolutePointerState(unsigned int port, unsigned int pointerIndex, float& x, float& y)
-{
-  bool bSuccess = false;
-
-  if (port < m_ports.size() || OpenPort(port))
-  {
-    bSuccess = m_ports[port].AbsolutePointerState(pointerIndex, x, y);
-  }
-
-  return bSuccess;
-}
-
-bool CInputManager::AccelerometerState(unsigned int port, float& x, float& y, float& z)
-{
-  bool bSuccess = false;
-
-  if (port < m_ports.size() || OpenPort(port))
-  {
-    bSuccess = m_ports[port].AccelerometerState(x, y, z);
-  }
-
-  return bSuccess;
-}
-
-bool CInputManager::OpenPort(unsigned int port)
-{
-  if (!CLibretroEnvironment::Get().GetFrontend())
-    return false;
-
-  if (port >= m_ports.size())
-    m_ports.resize(port + 1);
-
-  CLibretroEnvironment::Get().GetFrontend()->OpenPort(port);
-
-  return true;
-}
-
-void CInputManager::ClosePort(unsigned int port)
-{
-  if (!CLibretroEnvironment::Get().GetFrontend())
-    return;
-
-  CLibretroEnvironment::Get().GetFrontend()->ClosePort(port);
-
-  if (port < m_ports.size())
-    m_ports[port].Clear();
+  return RETRO_DEVICE_NONE;
 }

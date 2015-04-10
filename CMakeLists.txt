@@ -19,7 +19,8 @@ set(LIBRETRO_SOURCES src/client.cpp
                      src/ClientBridge.cpp
                      src/FrontendBridge.cpp
                      src/GameInfoLoader.cpp
-                     src/InputManager.cpp
+                     src/input/InputManager.cpp
+                     src/input/LibretroDevice.cpp
                      src/LibretroDLL.cpp
                      src/LibretroEnvironment.cpp
                      src/LibretroTranslator.cpp)
