@@ -87,3 +87,46 @@ retro_mod LibretroTranslator::GetKeyModifiers(GAME_KEY_MOD modifiers)
 
   return mods;
 }
+
+libretro_device_t LibretroTranslator::GetDeviceType(const std::string& strType)
+{
+  if (strType == "joypad")   return RETRO_DEVICE_JOYPAD;
+  if (strType == "mouse")    return RETRO_DEVICE_MOUSE;
+  if (strType == "keyboard") return RETRO_DEVICE_KEYBOARD;
+  if (strType == "lightgun") return RETRO_DEVICE_LIGHTGUN;
+  if (strType == "analog")   return RETRO_DEVICE_ANALOG;
+  if (strType == "pointer")  return RETRO_DEVICE_POINTER;
+
+  return RETRO_DEVICE_NONE;
+}
+
+int LibretroTranslator::GetFeatureIndex(const std::string& strFeatureName)
+{
+  if (strFeatureName == "a")            return RETRO_DEVICE_ID_JOYPAD_A;
+  if (strFeatureName == "b")            return RETRO_DEVICE_ID_JOYPAD_B;
+  if (strFeatureName == "x")            return RETRO_DEVICE_ID_JOYPAD_X;
+  if (strFeatureName == "y")            return RETRO_DEVICE_ID_JOYPAD_Y;
+  if (strFeatureName == "start")        return RETRO_DEVICE_ID_JOYPAD_START;
+  if (strFeatureName == "select")       return RETRO_DEVICE_ID_JOYPAD_SELECT;
+  if (strFeatureName == "up")           return RETRO_DEVICE_ID_JOYPAD_UP;
+  if (strFeatureName == "down")         return RETRO_DEVICE_ID_JOYPAD_DOWN;
+  if (strFeatureName == "right")        return RETRO_DEVICE_ID_JOYPAD_RIGHT;
+  if (strFeatureName == "left")         return RETRO_DEVICE_ID_JOYPAD_LEFT;
+  if (strFeatureName == "l")            return RETRO_DEVICE_ID_JOYPAD_L;
+  if (strFeatureName == "r")            return RETRO_DEVICE_ID_JOYPAD_R;
+  if (strFeatureName == "l2")           return RETRO_DEVICE_ID_JOYPAD_L2;
+  if (strFeatureName == "r2")           return RETRO_DEVICE_ID_JOYPAD_R2;
+  if (strFeatureName == "l3")           return RETRO_DEVICE_ID_JOYPAD_L3;
+  if (strFeatureName == "r3")           return RETRO_DEVICE_ID_JOYPAD_R3;
+  if (strFeatureName == "leftstick")    return RETRO_DEVICE_INDEX_ANALOG_LEFT;
+  if (strFeatureName == "rightstick")   return RETRO_DEVICE_INDEX_ANALOG_RIGHT;
+  if (strFeatureName == "leftmouse")    return RETRO_DEVICE_ID_MOUSE_LEFT;
+  if (strFeatureName == "rightmouse")   return RETRO_DEVICE_ID_MOUSE_RIGHT;
+  if (strFeatureName == "trigger")      return RETRO_DEVICE_ID_LIGHTGUN_TRIGGER;
+  if (strFeatureName == "cursor")       return RETRO_DEVICE_ID_LIGHTGUN_CURSOR;
+  if (strFeatureName == "turbo")        return RETRO_DEVICE_ID_LIGHTGUN_TURBO;
+  if (strFeatureName == "pause")        return RETRO_DEVICE_ID_LIGHTGUN_PAUSE;
+  if (strFeatureName == "start")        return RETRO_DEVICE_ID_LIGHTGUN_START;
+
+  return -1;
+}

@@ -51,9 +51,6 @@ namespace LIBRETRO
     bool InputEvent(const game_input_event& event);
 
   private:
-    int GetLibretroIndex(const std::string& strDeviceId, const std::string& strFeatureName) const;
-    libretro_device_t GetFeature(const std::string& strDeviceId) const;
-
     libretro_device_t                      m_type;
     std::vector<game_digital_button_event> m_buttons;
     std::vector<game_analog_stick_event>   m_analogSticks;

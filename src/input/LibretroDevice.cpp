@@ -19,6 +19,7 @@
  */
 
 #include "LibretroDevice.h"
+#include "ButtonMapper.h"
 #include "ClientBridge.h"
 #include "LibretroEnvironment.h"
 #include "LibretroTranslator.h"
@@ -41,7 +42,7 @@ CLibretroDevice::CLibretroDevice(const game_input_device* device /* = NULL */)
 {
   if (device)
   {
-    m_type = GetFeature(device->device_id);
+    m_type = CButtonMapper::Get().GetLibretroType(device->device_id);
 
     switch (m_type)
     {
@@ -192,13 +193,13 @@ bool CLibretroDevice::InputEvent(const game_input_event& event)
   const std::string strDeviceId = event.device_id;
   const std::string strFeatureName = event.feature_name;
 
-  int index = GetLibretroIndex(strDeviceId, strFeatureName); // TODO: signed/unsigned comparison
+  int index = CButtonMapper::Get().GetLibretroIndex(strDeviceId, strFeatureName);
   if (index >= 0)
   {
     switch (event.type)
     {
       case GAME_INPUT_EVENT_DIGITAL_BUTTON:
-        if (index < m_buttons.size())
+        if (index < (int)m_buttons.size())
           m_buttons[index] = event.digital_button;
         break;
 
@@ -207,30 +208,33 @@ bool CLibretroDevice::InputEvent(const game_input_event& event)
         break;
 
       case GAME_INPUT_EVENT_ANALOG_STICK:
-        if (index < m_analogSticks.size())
+        if (index < (int)m_analogSticks.size())
           m_analogSticks[index] = event.analog_stick;
         break;
 
       case GAME_INPUT_EVENT_ACCELEROMETER:
-        if (index < m_accelerometers.size())
+        if (index < (int)m_accelerometers.size())
           m_accelerometers[index] = event.accelerometer;
         break;
 
       case GAME_INPUT_EVENT_KEY:
+      {
         // libretro keyboard is event-based
-        if (CLibretroEnvironment::Get().GetClient())
+        CClientBridge* clientBridge = CLibretroEnvironment::Get().GetClientBridge();
+        if (clientBridge)
         {
           /* TODO
-          CLibretroEnvironment::Get().GetClient()->KeyboardEvent(event.key.pressed,
-                                                                 0, // TODO
-                                                                 event.key.character,
-                                                                 LibretroTranslator::GetKeyModifiers(event.key.modifiers));
+          clientBridge->KeyboardEvent(event.key.pressed,
+                                      0, // TODO
+                                      event.key.character,
+                                      LibretroTranslator::GetKeyModifiers(event.key.modifiers));
           */
         }
         break;
+      }
 
       case GAME_INPUT_EVENT_RELATIVE_POINTER:
-        if (index < m_relativePointers.size())
+        if (index < (int)m_relativePointers.size())
         {
           CLockObject lock(m_relativePtrMutex);
 
@@ -240,7 +244,7 @@ bool CLibretroDevice::InputEvent(const game_input_event& event)
         break;
 
       case GAME_INPUT_EVENT_ABSOLUTE_POINTER:
-        if (index < m_absolutePointers.size())
+        if (index < (int)m_absolutePointers.size())
           m_absolutePointers[index] = event.abs_pointer;
         break;
 
@@ -252,69 +256,4 @@ bool CLibretroDevice::InputEvent(const game_input_event& event)
   }
 
   return false;
-}
-
-int CLibretroDevice::GetLibretroIndex(const std::string& strDeviceId, const std::string& strFeatureName) const
-{
-  if (strDeviceId == "game.controller.default")
-  {
-    if (strFeatureName == "a")            return RETRO_DEVICE_ID_JOYPAD_A;
-    if (strFeatureName == "b")            return RETRO_DEVICE_ID_JOYPAD_B;
-    if (strFeatureName == "x")            return RETRO_DEVICE_ID_JOYPAD_X;
-    if (strFeatureName == "y")            return RETRO_DEVICE_ID_JOYPAD_Y;
-    if (strFeatureName == "start")        return RETRO_DEVICE_ID_JOYPAD_START;
-    if (strFeatureName == "back")         return RETRO_DEVICE_ID_JOYPAD_SELECT;
-    if (strFeatureName == "leftbumber")   return RETRO_DEVICE_ID_JOYPAD_L2;
-    if (strFeatureName == "rightbumper")  return RETRO_DEVICE_ID_JOYPAD_R2;
-    if (strFeatureName == "leftthumb")    return RETRO_DEVICE_ID_JOYPAD_L;
-    if (strFeatureName == "rightthumb")   return RETRO_DEVICE_ID_JOYPAD_R;
-    if (strFeatureName == "up")           return RETRO_DEVICE_ID_JOYPAD_UP;
-    if (strFeatureName == "down")         return RETRO_DEVICE_ID_JOYPAD_DOWN;
-    if (strFeatureName == "right")        return RETRO_DEVICE_ID_JOYPAD_RIGHT;
-    if (strFeatureName == "left")         return RETRO_DEVICE_ID_JOYPAD_LEFT;
-    if (strFeatureName == "lefttrigger")  return RETRO_DEVICE_ID_JOYPAD_L3;
-    if (strFeatureName == "righttrigger") return RETRO_DEVICE_ID_JOYPAD_R3;
-    if (strFeatureName == "leftstick")    return RETRO_DEVICE_INDEX_ANALOG_LEFT;
-    if (strFeatureName == "rightstick")   return RETRO_DEVICE_INDEX_ANALOG_RIGHT;
-  }
-  else if (strDeviceId == "game.controller.nes")
-  {
-    if (strFeatureName == "a")            return RETRO_DEVICE_ID_JOYPAD_A;
-    if (strFeatureName == "b")            return RETRO_DEVICE_ID_JOYPAD_B;
-    if (strFeatureName == "start")        return RETRO_DEVICE_ID_JOYPAD_START;
-    if (strFeatureName == "select")       return RETRO_DEVICE_ID_JOYPAD_SELECT;
-    if (strFeatureName == "up")           return RETRO_DEVICE_ID_JOYPAD_UP;
-    if (strFeatureName == "down")         return RETRO_DEVICE_ID_JOYPAD_DOWN;
-    if (strFeatureName == "right")        return RETRO_DEVICE_ID_JOYPAD_RIGHT;
-    if (strFeatureName == "left")         return RETRO_DEVICE_ID_JOYPAD_LEFT;
-  }
-  else if (strDeviceId == "game.controller.snes")
-  {
-    if (strFeatureName == "a")            return RETRO_DEVICE_ID_JOYPAD_A;
-    if (strFeatureName == "b")            return RETRO_DEVICE_ID_JOYPAD_B;
-    if (strFeatureName == "x")            return RETRO_DEVICE_ID_JOYPAD_X;
-    if (strFeatureName == "y")            return RETRO_DEVICE_ID_JOYPAD_Y;
-    if (strFeatureName == "start")        return RETRO_DEVICE_ID_JOYPAD_START;
-    if (strFeatureName == "select")       return RETRO_DEVICE_ID_JOYPAD_SELECT;
-    if (strFeatureName == "up")           return RETRO_DEVICE_ID_JOYPAD_UP;
-    if (strFeatureName == "down")         return RETRO_DEVICE_ID_JOYPAD_DOWN;
-    if (strFeatureName == "right")        return RETRO_DEVICE_ID_JOYPAD_RIGHT;
-    if (strFeatureName == "left")         return RETRO_DEVICE_ID_JOYPAD_LEFT;
-    if (strFeatureName == "rightbumper")  return RETRO_DEVICE_ID_JOYPAD_L2;
-    if (strFeatureName == "leftbumper")   return RETRO_DEVICE_ID_JOYPAD_R2;
-  }
-
-  return -1;
-}
-
-libretro_device_t CLibretroDevice::GetFeature(const std::string& strDeviceId) const
-{
-  if (strDeviceId == "game.controller.default")
-    return RETRO_DEVICE_ANALOG;
-  else if (strDeviceId == "game.controller.nes")
-    return RETRO_DEVICE_JOYPAD;
-  else if (strDeviceId == "game.controller.snes")
-    return RETRO_DEVICE_JOYPAD;
-
-  return RETRO_DEVICE_NONE;
 }

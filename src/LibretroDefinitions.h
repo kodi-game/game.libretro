@@ -19,25 +19,14 @@
  */
 #pragma once
 
-#include "input/LibretroDevice.h"
-#include "libretro.h"
+#define BUTTONMAP_XML_ROOT                "buttonmap"
 
-#include "kodi/kodi_game_types.h"
+#define BUTTONMAP_XML_ELM_DEVICE          "device"
+#define BUTTONMAP_XML_ELM_FEATURE         "feature"
 
-#include <string>
 
-class TiXmlNode;
+#define BUTTONMAP_XML_ATTR_DEVICE_ID      "id"
+#define BUTTONMAP_XML_ATTR_DEVICE_TYPE    "type"
 
-namespace LIBRETRO
-{
-  class LibretroTranslator
-  {
-  public:
-    static GAME_HW_CONTEXT_TYPE GetHWContextType(retro_hw_context_type type);
-    static GAME_RENDER_FORMAT   GetRenderFormat(retro_pixel_format format);
-    static GAME_RUMBLE_EFFECT   GetRumbleEffect(retro_rumble_effect effect);
-    static retro_mod            GetKeyModifiers(GAME_KEY_MOD modifiers);
-    static libretro_device_t    GetDeviceType(const std::string& strType);
-    static int                  GetFeatureIndex(const std::string& strFeatureName);
-  };
-}
+#define BUTTONMAP_XML_ATTR_FEATURE_NAME   "name"
+#define BUTTONMAP_XML_ATTR_FEATURE_MAPTO  "mapto"

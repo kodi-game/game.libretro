@@ -19,25 +19,37 @@
  */
 #pragma once
 
-#include "input/LibretroDevice.h"
-#include "libretro.h"
-
-#include "kodi/kodi_game_types.h"
+#include "LibretroDevice.h" // for libretro_device_t
 
 #include <string>
 
-class TiXmlNode;
+class TiXmlDocument;
+class TiXmlElement;
+
+namespace ADDON { class CHelper_libXBMC_addon; }
 
 namespace LIBRETRO
 {
-  class LibretroTranslator
+  class CButtonMapper
   {
+  private:
+    CButtonMapper(void);
+
   public:
-    static GAME_HW_CONTEXT_TYPE GetHWContextType(retro_hw_context_type type);
-    static GAME_RENDER_FORMAT   GetRenderFormat(retro_pixel_format format);
-    static GAME_RUMBLE_EFFECT   GetRumbleEffect(retro_rumble_effect effect);
-    static retro_mod            GetKeyModifiers(GAME_KEY_MOD modifiers);
-    static libretro_device_t    GetDeviceType(const std::string& strType);
-    static int                  GetFeatureIndex(const std::string& strFeatureName);
+    static CButtonMapper& Get(void);
+
+    libretro_device_t GetLibretroType(const std::string& strDeviceId);
+
+    int GetLibretroIndex(const std::string& strDeviceId, const std::string& strFeatureName);
+
+  private:
+    bool LoadButtonMap(void);
+
+    const TiXmlElement* GetDeviceNode(const std::string& strDeviceId);
+    const TiXmlElement* GetFeatureNode(const std::string& strDeviceId, const std::string& strFeatureName);
+
+    bool                          m_bLoadAttempted;
+    TiXmlDocument*                m_buttonMapXml;
+    ADDON::CHelper_libXBMC_addon* m_addon;
   };
 }
