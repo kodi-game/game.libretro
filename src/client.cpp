@@ -303,12 +303,12 @@ void DeviceConnected(unsigned int port, bool connected, const game_input_device*
     CLIENT->retro_set_controller_port_device(port, device);
 }
 
-void InputEvent(unsigned int port, game_input_event* event)
+bool InputEvent(unsigned int port, const game_input_event* event)
 {
   if (!event)
-    return;
+    return false;
 
-  CInputManager::Get().InputEvent(port, *event);
+  return CInputManager::Get().InputEvent(port, *event);
 }
 
 GAME_ERROR GetSystemAVInfo(game_system_av_info *info)
