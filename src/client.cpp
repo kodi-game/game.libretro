@@ -287,15 +287,15 @@ GAME_ERROR Reset(void)
   return GAME_ERROR_NO_ERROR;
 }
 
-void DeviceConnected(unsigned int port, bool connected, const game_input_device* connected_device)
+void ControllerConnected(unsigned int port, bool connected, const game_controller* connected_controller)
 {
   if (connected)
   {
-    if (!connected_device || !connected_device->device_id)
+    if (!connected_controller || !connected_controller->controller_id)
       return;
   }
 
-  CInputManager::Get().DeviceConnected(port, connected, connected ? connected_device : NULL);
+  CInputManager::Get().DeviceConnected(port, connected, connected ? connected_controller : NULL);
 
   const unsigned int device = CInputManager::Get().GetDevice(port);
 

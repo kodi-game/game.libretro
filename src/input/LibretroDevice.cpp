@@ -37,12 +37,12 @@ using namespace PLATFORM;
 #define LIBRETRO_RELATIVE_POINTER_COUNT  1
 #define LIBRETRO_ABSOLUTE_POINTER_COUNT  10
 
-CLibretroDevice::CLibretroDevice(const game_input_device* device /* = NULL */)
+CLibretroDevice::CLibretroDevice(const game_controller* controller /* = NULL */)
   : m_type(RETRO_DEVICE_NONE)
 {
-  if (device)
+  if (controller)
   {
-    m_type = CButtonMapper::Get().GetLibretroType(device->device_id);
+    m_type = CButtonMapper::Get().GetLibretroType(controller->controller_id);
 
     switch (m_type)
     {
@@ -190,10 +190,10 @@ bool CLibretroDevice::AbsolutePointerState(unsigned int pointerIndex, float& x, 
 
 bool CLibretroDevice::InputEvent(const game_input_event& event)
 {
-  const std::string strDeviceId = event.device_id;
+  const std::string strControllerId = event.controller_id;
   const std::string strFeatureName = event.feature_name;
 
-  int index = CButtonMapper::Get().GetLibretroIndex(strDeviceId, strFeatureName);
+  int index = CButtonMapper::Get().GetLibretroIndex(strControllerId, strFeatureName);
   if (index >= 0)
   {
     switch (event.type)

@@ -83,20 +83,20 @@ bool CButtonMapper::LoadButtonMap(void)
   return m_buttonMapXml != NULL;
 }
 
-libretro_device_t CButtonMapper::GetLibretroType(const std::string& strDeviceId)
+libretro_device_t CButtonMapper::GetLibretroType(const std::string& strControllerId)
 {
   // Handle default controller
-  if (strDeviceId == "game.controller.default")
+  if (strControllerId == "game.controller.default")
     return RETRO_DEVICE_ANALOG;
 
   // Check buttonmap for other controllers
-  const TiXmlElement* pDeviceNode = GetDeviceNode(strDeviceId);
-  if (pDeviceNode)
+  const TiXmlElement* pControllerNode = GetControllerNode(strControllerId);
+  if (pControllerNode)
   {
-    const char* type = pDeviceNode->Attribute(BUTTONMAP_XML_ATTR_DEVICE_TYPE);
+    const char* type = pControllerNode->Attribute(BUTTONMAP_XML_ATTR_CONTROLLER_TYPE);
     if (!type)
     {
-      m_addon->Log(ADDON::LOG_ERROR, "<%s> tag has no \"%s\" attribute", BUTTONMAP_XML_ELM_DEVICE, BUTTONMAP_XML_ATTR_DEVICE_TYPE);
+      m_addon->Log(ADDON::LOG_ERROR, "<%s> tag has no \"%s\" attribute", BUTTONMAP_XML_ELM_CONTROLLER, BUTTONMAP_XML_ATTR_CONTROLLER_TYPE);
     }
     else
     {
@@ -107,10 +107,10 @@ libretro_device_t CButtonMapper::GetLibretroType(const std::string& strDeviceId)
   return RETRO_DEVICE_NONE;
 }
 
-int CButtonMapper::GetLibretroIndex(const std::string& strDeviceId, const std::string& strFeatureName)
+int CButtonMapper::GetLibretroIndex(const std::string& strControllerId, const std::string& strFeatureName)
 {
   // Handle default controller
-  if (strDeviceId == "game.controller.default")
+  if (strControllerId == "game.controller.default")
   {
     if (strFeatureName == "a")            return RETRO_DEVICE_ID_JOYPAD_A;
     if (strFeatureName == "b")            return RETRO_DEVICE_ID_JOYPAD_B;
@@ -133,7 +133,7 @@ int CButtonMapper::GetLibretroIndex(const std::string& strDeviceId, const std::s
   }
 
   // Check buttonmap for other controllers
-  const TiXmlElement* pFeatureNode = GetFeatureNode(strDeviceId, strFeatureName);
+  const TiXmlElement* pFeatureNode = GetFeatureNode(strControllerId, strFeatureName);
   if (pFeatureNode)
   {
     const char* mapto = pFeatureNode->Attribute(BUTTONMAP_XML_ATTR_FEATURE_MAPTO);
@@ -150,56 +150,56 @@ int CButtonMapper::GetLibretroIndex(const std::string& strDeviceId, const std::s
   return -1;
 }
 
-const TiXmlElement* CButtonMapper::GetDeviceNode(const std::string& strDeviceId)
+const TiXmlElement* CButtonMapper::GetControllerNode(const std::string& strControllerId)
 {
-  const TiXmlElement* pDeviceNode = NULL;
+  const TiXmlElement* pControllerNode = NULL;
 
   if (LoadButtonMap())
   {
     TiXmlElement* pRootElement = m_buttonMapXml->RootElement();
 
-    const TiXmlElement* pChild = pRootElement->FirstChildElement(BUTTONMAP_XML_ELM_DEVICE);
+    const TiXmlElement* pChild = pRootElement->FirstChildElement(BUTTONMAP_XML_ELM_CONTROLLER);
 
     if (!pChild)
-      m_addon->Log(ADDON::LOG_ERROR, "Can't find <%s> tag", BUTTONMAP_XML_ELM_DEVICE);
+      m_addon->Log(ADDON::LOG_ERROR, "Can't find <%s> tag", BUTTONMAP_XML_ELM_CONTROLLER);
 
     while (pChild)
     {
-      const char* deviceId = pChild->Attribute(BUTTONMAP_XML_ATTR_DEVICE_ID);
-      if (!deviceId)
+      const char* controllerId = pChild->Attribute(BUTTONMAP_XML_ATTR_CONTROLLER_ID);
+      if (!controllerId)
       {
-        m_addon->Log(ADDON::LOG_ERROR, "<%s> tag has no \"%s\" attribute", BUTTONMAP_XML_ELM_DEVICE, BUTTONMAP_XML_ATTR_DEVICE_ID);
+        m_addon->Log(ADDON::LOG_ERROR, "<%s> tag has no \"%s\" attribute", BUTTONMAP_XML_ELM_CONTROLLER, BUTTONMAP_XML_ATTR_CONTROLLER_ID);
         break;
       }
 
-      if (strDeviceId == deviceId)
+      if (strControllerId == controllerId)
       {
-        pDeviceNode = pChild;
+        pControllerNode = pChild;
         break;
       }
 
-      pChild = pChild->NextSiblingElement(BUTTONMAP_XML_ELM_DEVICE);
+      pChild = pChild->NextSiblingElement(BUTTONMAP_XML_ELM_CONTROLLER);
     }
 
-    if (!pDeviceNode)
-      m_addon->Log(ADDON::LOG_ERROR, "Can't find <%s> tag for device \"%s\"", BUTTONMAP_XML_ELM_DEVICE, strDeviceId.c_str());
+    if (!pControllerNode)
+      m_addon->Log(ADDON::LOG_ERROR, "Can't find <%s> tag for controller \"%s\"", BUTTONMAP_XML_ELM_CONTROLLER, strControllerId.c_str());
   }
 
-  return pDeviceNode;
+  return pControllerNode;
 }
 
-const TiXmlElement* CButtonMapper::GetFeatureNode(const std::string& strDeviceId, const std::string& strFeatureName)
+const TiXmlElement* CButtonMapper::GetFeatureNode(const std::string& strControllerId, const std::string& strFeatureName)
 {
   const TiXmlElement* pFeatureNode = NULL;
 
-  const TiXmlElement* pDeviceNode = GetDeviceNode(strDeviceId);
+  const TiXmlElement* pControllerNode = GetControllerNode(strControllerId);
 
-  if (pDeviceNode)
+  if (pControllerNode)
   {
-    const TiXmlElement* pChild = pDeviceNode->FirstChildElement(BUTTONMAP_XML_ELM_FEATURE);
+    const TiXmlElement* pChild = pControllerNode->FirstChildElement(BUTTONMAP_XML_ELM_FEATURE);
 
     if (!pChild)
-      m_addon->Log(ADDON::LOG_ERROR, "Can't find <%s> tag for device \"%s\"", BUTTONMAP_XML_ELM_FEATURE, strDeviceId.c_str());
+      m_addon->Log(ADDON::LOG_ERROR, "Can't find <%s> tag for controller \"%s\"", BUTTONMAP_XML_ELM_FEATURE, strControllerId.c_str());
 
     while (pChild)
     {
@@ -220,7 +220,7 @@ const TiXmlElement* CButtonMapper::GetFeatureNode(const std::string& strDeviceId
     }
 
     if (!pFeatureNode)
-      m_addon->Log(ADDON::LOG_ERROR, "Can't find feature \"%s\" for device \"%s\"", strFeatureName.c_str(), strDeviceId.c_str());
+      m_addon->Log(ADDON::LOG_ERROR, "Can't find feature \"%s\" for controller \"%s\"", strFeatureName.c_str(), strControllerId.c_str());
   }
 
   return pFeatureNode;

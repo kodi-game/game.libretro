@@ -42,7 +42,7 @@ libretro_device_caps_t CInputManager::GetDeviceCaps(void) const
          1 << RETRO_DEVICE_POINTER;
 }
 
-void CInputManager::DeviceConnected(unsigned int port, bool bConnected, const game_input_device* connectedDevice)
+void CInputManager::DeviceConnected(unsigned int port, bool bConnected, const game_controller* connectedDevice)
 {
   if (port < m_ports.size())
     m_ports[port] = CLibretroDevice(bConnected ? connectedDevice : NULL);

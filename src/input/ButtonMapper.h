@@ -38,15 +38,15 @@ namespace LIBRETRO
   public:
     static CButtonMapper& Get(void);
 
-    libretro_device_t GetLibretroType(const std::string& strDeviceId);
+    libretro_device_t GetLibretroType(const std::string& strControllerId);
 
-    int GetLibretroIndex(const std::string& strDeviceId, const std::string& strFeatureName);
+    int GetLibretroIndex(const std::string& strControllerId, const std::string& strFeatureName);
 
   private:
     bool LoadButtonMap(void);
 
-    const TiXmlElement* GetDeviceNode(const std::string& strDeviceId);
-    const TiXmlElement* GetFeatureNode(const std::string& strDeviceId, const std::string& strFeatureName);
+    const TiXmlElement* GetControllerNode(const std::string& strControllerId);
+    const TiXmlElement* GetFeatureNode(const std::string& strControllerId, const std::string& strFeatureName);
 
     bool                          m_bLoadAttempted;
     TiXmlDocument*                m_buttonMapXml;

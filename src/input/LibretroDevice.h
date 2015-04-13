@@ -32,7 +32,7 @@ namespace LIBRETRO
   class CLibretroDevice
   {
   public:
-    CLibretroDevice(const game_input_device* device = NULL);
+    CLibretroDevice(const game_controller* controller = NULL);
     CLibretroDevice(const CLibretroDevice& other) { *this = other; }
 
     CLibretroDevice& operator=(const CLibretroDevice& rhs);

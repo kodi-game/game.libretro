@@ -50,7 +50,7 @@ namespace LIBRETRO
     /*!
      * \brief Called when a device has been connected to an open port
      */
-    void DeviceConnected(unsigned int port, bool bConnected, const game_input_device* connectedDevice);
+    void DeviceConnected(unsigned int port, bool bConnected, const game_controller* connectedController);
 
     /*!
      * \brief Get the libretro device abstraction for the device connected to
