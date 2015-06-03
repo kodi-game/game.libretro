@@ -19,7 +19,7 @@
  */
 #pragma once
 
-#include "kodi/threads/mutex.h"
+#include "threads/mutex.h"
 #include "kodi/kodi_game_types.h"
 
 #include <map>
