@@ -20,7 +20,7 @@
 #pragma once
 
 #include "kodi/kodi_game_types.h"
-#include "kodi/threads/mutex.h"
+#include "threads/mutex.h"
 
 #include <string>
 #include <vector>
