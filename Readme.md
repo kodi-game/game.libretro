@@ -50,6 +50,13 @@ make
 make install
 ```
 
+The platform library was split from kodi-platform. Do the same as above for the new platform library:
+
+```
+git clone https://github.com/Pulse-Eight/platform.git
+...
+```
+
 With these dependencies in place, the add-on can be built. Point CMake to the add-on's build system instead of `$HOME/workspace/xbmc/project/cmake/addons`
 
 ```shell
