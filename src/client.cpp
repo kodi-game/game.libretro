@@ -249,6 +249,18 @@ GAME_ERROR LoadGameSpecial(GAME_TYPE type, const char** urls, size_t num_urls)
   return result ? GAME_ERROR_NO_ERROR : GAME_ERROR_FAILED;
 }
 
+GAME_ERROR LoadStandalone(void)
+{
+  if (!CLIENT)
+    return GAME_ERROR_FAILED;
+
+  retro_game_info empty = { "", NULL, 0, NULL };
+  if (!CLIENT->retro_load_game(&empty))
+    return GAME_ERROR_FAILED;
+
+  return GAME_ERROR_NO_ERROR;
+}
+
 GAME_ERROR UnloadGame(void)
 {
   GAME_ERROR error = GAME_ERROR_FAILED;
