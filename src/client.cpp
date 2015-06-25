@@ -24,6 +24,8 @@
 #include "libretro.h"
 #include "LibretroDLL.h"
 #include "LibretroEnvironment.h"
+#include "settings/Settings.h"
+
 #include "kodi/libXBMC_addon.h"
 #include "kodi/libKODI_game.h"
 #include "kodi/xbmc_addon_dll.h"
@@ -107,7 +109,7 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
     return status;
   }
 
-  return ADDON_STATUS_OK;
+  return ADDON_GetStatus();
 }
 
 void ADDON_Stop()
@@ -130,7 +132,13 @@ void ADDON_Destroy()
 
 ADDON_STATUS ADDON_GetStatus()
 {
-  return XBMC ? ADDON_STATUS_OK : ADDON_STATUS_UNKNOWN;
+  if (!XBMC || !FRONTEND || !CLIENT || !CLIENT_BRIDGE)
+    return ADDON_STATUS_UNKNOWN;
+
+  if (!CSettings::Get().IsInitialized())
+    return ADDON_STATUS_NEED_SETTINGS;
+
+  return ADDON_STATUS_OK;
 }
 
 bool ADDON_HasSettings()
@@ -148,6 +156,7 @@ ADDON_STATUS ADDON_SetSetting(const char *settingName, const void *settingValue)
   if (!settingName || !settingValue)
     return ADDON_STATUS_UNKNOWN;
 
+  CSettings::Get().SetSetting(settingName, settingValue);
   CLibretroEnvironment::Get().SetSetting(settingName, static_cast<const char*>(settingValue));
 
   return ADDON_STATUS_OK;

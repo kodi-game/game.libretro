@@ -27,6 +27,7 @@
 #include "LibretroTranslator.h"
 #include "kodi/libXBMC_addon.h"
 #include "kodi/libKODI_game.h"
+#include "settings/Settings.h"
 
 #include <algorithm>
 #include <assert.h>
@@ -158,7 +159,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     {
       bool* typedData = reinterpret_cast<bool*>(data);
       if (typedData)
-        *typedData = m_frontend->EnvironmentGetOverscan();
+        *typedData = !CSettings::Get().CropOverscan();
       break;
     }
   case RETRO_ENVIRONMENT_GET_CAN_DUPE:
