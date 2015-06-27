@@ -19,8 +19,8 @@
  */
 #pragma once
 
-#include "threads/mutex.h"
 #include "kodi/kodi_game_types.h"
+#include "platform/threads/mutex.h"
 
 #include <map>
 #include <string>
