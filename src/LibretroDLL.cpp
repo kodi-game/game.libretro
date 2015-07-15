@@ -91,7 +91,7 @@ bool CLibretroDLL::Load(const game_client_properties* gameClientProps)
 {
   Unload();
 
-  m_libretroClient = dlopen(gameClientProps->library_path, RTLD_LAZY);
+  m_libretroClient = dlopen(gameClientProps->game_client_dll_path, RTLD_LAZY);
   if (m_libretroClient == NULL)
   {
     m_xbmc->Log(LOG_ERROR, "Unable to load %s", dlerror());
@@ -132,7 +132,7 @@ bool CLibretroDLL::Load(const game_client_properties* gameClientProps)
     return bSuccess;
   }
 
-  m_strLibraryDirectory = GetDirectory(gameClientProps->library_path);
+  m_strLibraryDirectory = GetDirectory(gameClientProps->game_client_dll_path);
   m_strSystemDirectory  = gameClientProps->system_directory;
   m_strContentDirectory = gameClientProps->content_directory;
   m_strSaveDirectory    = gameClientProps->save_directory;

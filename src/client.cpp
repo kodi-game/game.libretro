@@ -72,6 +72,9 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
 
     game_client_properties* gameClientProps = static_cast<game_client_properties*>(props);
 
+    if (gameClientProps->game_client_dll_path == NULL)
+      throw ADDON_STATUS_UNKNOWN;
+
     XBMC = new CHelper_libXBMC_addon;
     if (!XBMC || !XBMC->RegisterMe(callbacks))
       throw ADDON_STATUS_PERMANENT_FAILURE;
@@ -83,7 +86,7 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
     CLIENT = new CLibretroDLL(XBMC);
     if (!CLIENT->Load(gameClientProps))
     {
-      XBMC->Log(LOG_ERROR, "Failed to load %s", gameClientProps->library_path);
+      XBMC->Log(LOG_ERROR, "Failed to load %s", gameClientProps->game_client_dll_path);
       throw ADDON_STATUS_PERMANENT_FAILURE;
     }
 
@@ -112,11 +115,11 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
   return ADDON_GetStatus();
 }
 
-void ADDON_Stop()
+void ADDON_Stop(void)
 {
 }
 
-void ADDON_Destroy()
+void ADDON_Destroy(void)
 {
   if (CLIENT)
     CLIENT->retro_deinit();
@@ -130,7 +133,7 @@ void ADDON_Destroy()
   SAFE_DELETE_GAME_INFO(GAME_INFO);
 }
 
-ADDON_STATUS ADDON_GetStatus()
+ADDON_STATUS ADDON_GetStatus(void)
 {
   if (!XBMC || !FRONTEND || !CLIENT || !CLIENT_BRIDGE)
     return ADDON_STATUS_UNKNOWN;
@@ -141,17 +144,17 @@ ADDON_STATUS ADDON_GetStatus()
   return ADDON_STATUS_OK;
 }
 
-bool ADDON_HasSettings()
+bool ADDON_HasSettings(void)
 {
   return false;
 }
 
-unsigned int ADDON_GetSettings(ADDON_StructSetting ***sSet)
+unsigned int ADDON_GetSettings(ADDON_StructSetting*** sSet)
 {
   return 0;
 }
 
-ADDON_STATUS ADDON_SetSetting(const char *settingName, const void *settingValue)
+ADDON_STATUS ADDON_SetSetting(const char* settingName, const void* settingValue)
 {
   if (!settingName || !settingValue)
     return ADDON_STATUS_UNKNOWN;
@@ -162,11 +165,11 @@ ADDON_STATUS ADDON_SetSetting(const char *settingName, const void *settingValue)
   return ADDON_STATUS_OK;
 }
 
-void ADDON_FreeSettings()
+void ADDON_FreeSettings(void)
 {
 }
 
-void ADDON_Announce(const char *flag, const char *sender, const char *message, const void *data)
+void ADDON_Announce(const char* flag, const char* sender, const char* message, const void* data)
 {
 }
 
@@ -221,12 +224,12 @@ GAME_ERROR LoadGame(const char* url)
   return bResult ? GAME_ERROR_NO_ERROR : GAME_ERROR_FAILED;
 }
 
-GAME_ERROR LoadGameSpecial(GAME_TYPE type, const char** urls, size_t num_urls)
+GAME_ERROR LoadGameSpecial(SPECIAL_GAME_TYPE type, const char** urls, size_t urlCount)
 {
   if (!CLIENT)
     return GAME_ERROR_FAILED;
 
-  if (urls == NULL || num_urls == 0)
+  if (urls == NULL || urlCount == 0)
     return GAME_ERROR_INVALID_PARAMETERS;
 
   retro_system_info info = { };
@@ -235,25 +238,25 @@ GAME_ERROR LoadGameSpecial(GAME_TYPE type, const char** urls, size_t num_urls)
 
   // Build info loader vector
   SAFE_DELETE_GAME_INFO(GAME_INFO);
-  for (unsigned int i = 0; i < num_urls; i++)
+  for (unsigned int i = 0; i < urlCount; i++)
     GAME_INFO.push_back(new CGameInfoLoader(urls[i], XBMC, bSupportsVFS));
 
   // Try to load via memory
   std::vector<retro_game_info> infoVec;
-  infoVec.resize(num_urls);
+  infoVec.resize(urlCount);
   bool bLoadFromMemory = true;
-  for (unsigned int i = 0; bLoadFromMemory && i < num_urls; i++)
+  for (unsigned int i = 0; bLoadFromMemory && i < urlCount; i++)
     bLoadFromMemory &= GAME_INFO[i]->GetMemoryStruct(infoVec[i]);
   if (bLoadFromMemory)
   {
-    if (CLIENT->retro_load_game_special(type, infoVec.data(), num_urls))
+    if (CLIENT->retro_load_game_special(type, infoVec.data(), urlCount))
       return GAME_ERROR_NO_ERROR;
   }
 
   // Fall back to loading by path
-  for (unsigned int i = 0; i < num_urls; i++)
+  for (unsigned int i = 0; i < urlCount; i++)
     GAME_INFO[i]->GetPathStruct(infoVec[i]);
-  bool result = CLIENT->retro_load_game_special(type, infoVec.data(), num_urls);
+  bool result = CLIENT->retro_load_game_special(type, infoVec.data(), urlCount);
 
   return result ? GAME_ERROR_NO_ERROR : GAME_ERROR_FAILED;
 }
@@ -288,51 +291,7 @@ GAME_ERROR UnloadGame(void)
   return error;
 }
 
-GAME_ERROR Run(void)
-{
-  if (!CLIENT)
-    return GAME_ERROR_FAILED;
-
-  CLIENT->retro_run();
-
-  return GAME_ERROR_NO_ERROR;
-}
-
-GAME_ERROR Reset(void)
-{
-  if (!CLIENT)
-    return GAME_ERROR_FAILED;
-
-  CLIENT->retro_reset();
-
-  return GAME_ERROR_NO_ERROR;
-}
-
-void ControllerConnected(unsigned int port, bool connected, const game_controller* connected_controller)
-{
-  if (connected)
-  {
-    if (!connected_controller || !connected_controller->controller_id)
-      return;
-  }
-
-  CInputManager::Get().DeviceConnected(port, connected, connected ? connected_controller : NULL);
-
-  const unsigned int device = CInputManager::Get().GetDevice(port);
-
-  if (CLIENT)
-    CLIENT->retro_set_controller_port_device(port, device);
-}
-
-bool InputEvent(unsigned int port, const game_input_event* event)
-{
-  if (!event)
-    return false;
-
-  return CInputManager::Get().InputEvent(port, *event);
-}
-
-GAME_ERROR GetSystemAVInfo(game_system_av_info *info)
+GAME_ERROR GetGameInfo(game_system_av_info* info)
 {
   if (!CLIENT)
     return GAME_ERROR_FAILED;
@@ -351,13 +310,167 @@ GAME_ERROR GetSystemAVInfo(game_system_av_info *info)
   info->timing.fps            = retro_info.timing.fps;
   info->timing.sample_rate    = retro_info.timing.sample_rate;
 
-  if (info->timing.fps != 0.0)
-  {
-    // Report fps to CLibretroEnvironment
-    CLibretroEnvironment::Get().UpdateFramerate(info->timing.fps);
-  }
+  // Report info to CLibretroEnvironment
+  CLibretroEnvironment::Get().UpdateSystemInfo(*info);
 
   return GAME_ERROR_NO_ERROR;
+}
+
+GAME_REGION GetRegion(void)
+{
+  if (!CLIENT)
+    return GAME_REGION_UNKNOWN;
+
+  return CLIENT->retro_get_region() == RETRO_REGION_NTSC ? GAME_REGION_NTSC : GAME_REGION_PAL;
+}
+
+void FrameEvent(void)
+{
+  if (!CLIENT)
+    return;
+
+  CLIENT->retro_run();
+}
+
+GAME_ERROR Reset(void)
+{
+  if (!CLIENT)
+    return GAME_ERROR_FAILED;
+
+  CLIENT->retro_reset();
+
+  return GAME_ERROR_NO_ERROR;
+}
+
+GAME_ERROR HwContextReset()
+{
+  if (!CLIENT_BRIDGE)
+    return GAME_ERROR_FAILED;
+
+  return CLIENT_BRIDGE->HwContextReset();
+}
+
+GAME_ERROR HwContextDestroy()
+{
+  if (!CLIENT_BRIDGE)
+    return GAME_ERROR_FAILED;
+
+  return CLIENT_BRIDGE->HwContextDestroy();
+}
+
+void UpdatePort(unsigned int port, bool connected, const game_controller* controller)
+{
+  if (connected)
+  {
+    if (!controller || !controller->controller_id)
+      return;
+  }
+
+  CInputManager::Get().DeviceConnected(port, connected, connected ? controller : NULL);
+
+  const unsigned int device = CInputManager::Get().GetDevice(port);
+
+  if (CLIENT)
+    CLIENT->retro_set_controller_port_device(port, device);
+}
+
+bool InputEvent(unsigned int port, const game_input_event* event)
+{
+  if (!event)
+    return false;
+
+  return CInputManager::Get().InputEvent(port, *event);
+}
+
+GAME_ERROR DiskSetEjectState(GAME_EJECT_STATE ejected)
+{
+  if (!CLIENT_BRIDGE)
+    return GAME_ERROR_FAILED;
+
+  return CLIENT_BRIDGE->DiskSetEjectState(ejected);
+}
+
+GAME_EJECT_STATE DiskGetEjectState(void)
+{
+  if (!CLIENT_BRIDGE)
+    return GAME_NOT_EJECTED;
+
+  return CLIENT_BRIDGE->DiskGetEjectState();
+}
+
+unsigned DiskGetImageIndex(void)
+{
+  if (!CLIENT_BRIDGE)
+    return 0;
+
+  return CLIENT_BRIDGE->DiskGetImageIndex();
+}
+
+GAME_ERROR DiskSetImageIndex(unsigned int index)
+{
+  if (!CLIENT_BRIDGE)
+    return GAME_ERROR_FAILED;
+
+  return CLIENT_BRIDGE->DiskSetImageIndex(index);
+}
+
+unsigned DiskGetNumImages(void)
+{
+  if (!CLIENT_BRIDGE)
+    return 0;
+
+  return CLIENT_BRIDGE->DiskGetNumImages();
+}
+
+GAME_ERROR DiskReplaceImageIndex(unsigned int index, const char* url)
+{
+  if (!CLIENT_BRIDGE)
+    return GAME_ERROR_FAILED;
+
+  if (url == NULL)
+    return GAME_ERROR_INVALID_PARAMETERS;
+
+  return CLIENT_BRIDGE->DiskReplaceImageIndex(index, url);
+}
+
+GAME_ERROR DiskAddImageIndex(void)
+{
+  if (!CLIENT_BRIDGE)
+    return GAME_ERROR_FAILED;
+
+  return CLIENT_BRIDGE->DiskAddImageIndex();
+}
+
+GAME_ERROR CameraInitialized(void)
+{
+  if (!CLIENT_BRIDGE)
+    return GAME_ERROR_FAILED;
+
+  return CLIENT_BRIDGE->CameraInitialized();
+}
+
+GAME_ERROR CameraDeinitialized(void)
+{
+  if (!CLIENT_BRIDGE)
+    return GAME_ERROR_FAILED;
+
+  return CLIENT_BRIDGE->CameraDeinitialized();
+}
+
+GAME_ERROR CameraFrameRawBuffer(const uint32_t* buffer, unsigned int width, unsigned int height, size_t stride)
+{
+  if (!CLIENT_BRIDGE)
+    return GAME_ERROR_FAILED;
+
+  return CLIENT_BRIDGE->CameraFrameRawBuffer(buffer, width, height, stride);
+}
+
+GAME_ERROR CameraFrameOpenglTexture(unsigned int textureId, unsigned int textureTarget, const float* affine)
+{
+  if (!CLIENT_BRIDGE)
+    return GAME_ERROR_FAILED;
+
+  return CLIENT_BRIDGE->CameraFrameOpenglTexture(textureId, textureTarget, affine);
 }
 
 size_t SerializeSize(void)
@@ -368,7 +481,7 @@ size_t SerializeSize(void)
   return CLIENT->retro_serialize_size();
 }
 
-GAME_ERROR Serialize(void *data, size_t size)
+GAME_ERROR Serialize(uint8_t* data, size_t size)
 {
   if (!CLIENT)
     return GAME_ERROR_FAILED;
@@ -381,7 +494,7 @@ GAME_ERROR Serialize(void *data, size_t size)
   return result ? GAME_ERROR_NO_ERROR : GAME_ERROR_FAILED;
 }
 
-GAME_ERROR Deserialize(const void *data, size_t size)
+GAME_ERROR Deserialize(const uint8_t* data, size_t size)
 {
   if (!CLIENT)
     return GAME_ERROR_FAILED;
@@ -404,7 +517,21 @@ GAME_ERROR CheatReset(void)
   return GAME_ERROR_NO_ERROR;
 }
 
-GAME_ERROR CheatSet(unsigned index, bool enabled, const char *code)
+GAME_ERROR GetMemory(GAME_MEMORY type, const uint8_t** data, size_t* size)
+{
+  if (!CLIENT)
+    return GAME_ERROR_FAILED;
+
+  if (data == NULL || size == NULL)
+    return GAME_ERROR_INVALID_PARAMETERS;
+
+  *data = static_cast<const uint8_t*>(CLIENT->retro_get_memory_data(type));
+  *size = CLIENT->retro_get_memory_size(type);
+
+  return GAME_ERROR_NO_ERROR;
+}
+
+GAME_ERROR SetCheat(unsigned int index, bool enabled, const char* code)
 {
   if (!CLIENT)
     return GAME_ERROR_FAILED;
@@ -412,161 +539,6 @@ GAME_ERROR CheatSet(unsigned index, bool enabled, const char *code)
   CLIENT->retro_cheat_set(index, enabled, code);
 
   return GAME_ERROR_NO_ERROR;
-}
-
-GAME_REGION GetRegion(void)
-{
-  if (!CLIENT)
-    return GAME_REGION_NTSC;
-
-  return CLIENT->retro_get_region() == RETRO_REGION_NTSC ? GAME_REGION_NTSC : GAME_REGION_PAL;
-}
-
-void* GetMemoryData(GAME_MEMORY id)
-{
-  if (!CLIENT)
-    return NULL;
-
-  return CLIENT->retro_get_memory_data(id);
-}
-
-size_t GetMemorySize(GAME_MEMORY id)
-{
-  if (!CLIENT)
-    return 0;
-
-  return CLIENT->retro_get_memory_size(id);
-}
-
-GAME_ERROR DiskSetEjectState(GAME_EJECT_STATE ejected)
-{
-  if (!CLIENT_BRIDGE)
-    return GAME_ERROR_FAILED;
-
-  return CLIENT_BRIDGE->DiskSetEjectState(ejected);
-}
-
-GAME_EJECT_STATE DiskGetEjectState()
-{
-  if (!CLIENT_BRIDGE)
-    return GAME_NOT_EJECTED;
-
-  return CLIENT_BRIDGE->DiskGetEjectState();
-}
-
-unsigned DiskGetImageIndex()
-{
-  if (!CLIENT_BRIDGE)
-    return 0;
-
-  return CLIENT_BRIDGE->DiskGetImageIndex();
-}
-
-GAME_ERROR DiskSetImageIndex(unsigned index)
-{
-  if (!CLIENT_BRIDGE)
-    return GAME_ERROR_FAILED;
-
-  return CLIENT_BRIDGE->DiskSetImageIndex(index);
-}
-
-unsigned DiskGetNumImages()
-{
-  if (!CLIENT_BRIDGE)
-    return 0;
-
-  return CLIENT_BRIDGE->DiskGetNumImages();
-}
-
-GAME_ERROR DiskReplaceImageIndex(unsigned index, const char* url)
-{
-  if (!CLIENT_BRIDGE)
-    return GAME_ERROR_FAILED;
-
-  if (url == NULL)
-    return GAME_ERROR_INVALID_PARAMETERS;
-
-  return CLIENT_BRIDGE->DiskReplaceImageIndex(index, url);
-}
-
-GAME_ERROR DiskAddImageIndex()
-{
-  if (!CLIENT_BRIDGE)
-    return GAME_ERROR_FAILED;
-
-  return CLIENT_BRIDGE->DiskAddImageIndex();
-}
-
-GAME_ERROR HwContextReset()
-{
-  if (!CLIENT_BRIDGE)
-    return GAME_ERROR_FAILED;
-
-  return CLIENT_BRIDGE->HwContextReset();
-}
-
-GAME_ERROR HwContextDestroy()
-{
-  if (!CLIENT_BRIDGE)
-    return GAME_ERROR_FAILED;
-
-  return CLIENT_BRIDGE->HwContextDestroy();
-}
-
-GAME_ERROR AudioAvailable()
-{
-  if (!CLIENT_BRIDGE)
-    return GAME_ERROR_FAILED;
-
-  return CLIENT_BRIDGE->AudioAvailable();
-}
-
-GAME_ERROR AudioSetState(bool enabled)
-{
-  if (!CLIENT_BRIDGE)
-    return GAME_ERROR_FAILED;
-
-  return CLIENT_BRIDGE->AudioSetState(enabled);
-}
-
-GAME_ERROR FrameTimeNotify(game_usec_t usec)
-{
-  if (!CLIENT_BRIDGE)
-    return GAME_ERROR_FAILED;
-
-  return CLIENT_BRIDGE->FrameTimeNotify(usec);
-}
-
-GAME_ERROR CameraInitialized()
-{
-  if (!CLIENT_BRIDGE)
-    return GAME_ERROR_FAILED;
-
-  return CLIENT_BRIDGE->CameraInitialized();
-}
-
-GAME_ERROR CameraDeinitialized()
-{
-  if (!CLIENT_BRIDGE)
-    return GAME_ERROR_FAILED;
-
-  return CLIENT_BRIDGE->CameraDeinitialized();
-}
-
-GAME_ERROR CameraFrameRawBuffer(const uint32_t *buffer, unsigned width, unsigned height, size_t pitch)
-{
-  if (!CLIENT_BRIDGE)
-    return GAME_ERROR_FAILED;
-
-  return CLIENT_BRIDGE->CameraFrameRawBuffer(buffer, width, height, pitch);
-}
-
-GAME_ERROR CameraFrameOpenglTexture(unsigned texture_id, unsigned texture_target, const float *affine)
-{
-  if (!CLIENT_BRIDGE)
-    return GAME_ERROR_FAILED;
-
-  return CLIENT_BRIDGE->CameraFrameOpenglTexture(texture_id, texture_target, affine);
 }
 
 } // extern "C"

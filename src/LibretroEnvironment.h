@@ -47,11 +47,8 @@ namespace LIBRETRO
     CLibretroDLL*                 GetClient(void)       { return m_client; }
     CClientBridge*                GetClientBridge(void) { return m_clientBridge; }
 
-    /*!
-     * FPS info is used to calculate timing for toast messages and possibly
-     * other things.
-     */
-    void UpdateFramerate(double fps);
+    game_system_av_info GetSystemInfo(void) const { return m_systemInfo; }
+    void UpdateSystemInfo(game_system_av_info info) { m_systemInfo = info; }
 
     /*!
      * Returns the pixel format set by the libretro core. Instead of forwarding
@@ -77,9 +74,9 @@ namespace LIBRETRO
     CLibretroDLL*                 m_client;
     CClientBridge*                m_clientBridge;
 
-    double             m_fps;
-    bool               m_bFramerateKnown; // true if UpdateFramerate() has been called
-    GAME_RENDER_FORMAT m_renderFormat;
+    game_system_av_info m_systemInfo;
+    game_camera_info    m_cameraInfo;
+    GAME_RENDER_FORMAT  m_renderFormat;
 
     std::map<std::string, std::vector<std::string> > m_variables; // Record the variables reported by libretro core (key -> values)
     std::map<std::string, std::string>               m_settings;  // Record the settings reported by XBMC (key -> current value)

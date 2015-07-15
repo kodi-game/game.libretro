@@ -35,17 +35,17 @@ namespace LIBRETRO
     static void LogFrontend(retro_log_level level, const char *fmt, ...);
 
     // Forward to XBMC game API
-    static void VideoRefresh(const void* data, unsigned width, unsigned height, size_t pitch);
+    static void VideoRefresh(const void* data, unsigned int width, unsigned int height, size_t pitch);
     static size_t AudioFrames(const int16_t* data, size_t frames);
     static void InputPoll(void);
-    static int16_t InputState(unsigned port, unsigned device, unsigned index, unsigned id);
+    static int16_t InputState(unsigned int port, unsigned int device, unsigned int index, unsigned int id);
     static uintptr_t HwGetCurrentFramebuffer(void);
     static retro_proc_address_t HwGetProcAddress(const char *sym);
     static bool RumbleSetState(unsigned port, retro_rumble_effect effect, uint16_t strength);
     static bool SensorSetState(unsigned port, retro_sensor_action action, unsigned rate);
     static float SensorGetInput(unsigned port, unsigned id);
-    static bool CameraStart(void);
-    static void CameraStop(void);
+    static bool StartCamera(void);
+    static void StopCamera(void);
     static retro_time_t PerfGetTimeUsec(void);
     static retro_perf_tick_t PerfGetCounter(void);
     static uint64_t PerfGetCpuFeatures(void);
@@ -53,10 +53,10 @@ namespace LIBRETRO
     static void PerfRegister(retro_perf_counter *counter);
     static void PerfStart(retro_perf_counter *counter);
     static void PerfStop(retro_perf_counter *counter);
-    static bool LocationStart(void);
-    static void LocationStop(void);
-    static bool LocationGetPosition(double *lat, double *lon, double *horiz_accuracy, double *vert_accuracy);
-    static void LocationSetInterval(unsigned interval_ms, unsigned interval_distance);
+    static bool StartLocation(void);
+    static void StopLocation(void);
+    static bool GetLocation(double *lat, double *lon, double *horiz_accuracy, double *vert_accuracy);
+    static void SetLocationInterval(unsigned interval_ms, unsigned interval_distance);
     static void LocationInitialized(void);
     static void LocationDeinitialized(void);
   };

@@ -61,8 +61,6 @@ CLibretroEnvironment::CLibretroEnvironment(void) :
   m_frontend(NULL),
   m_client(NULL),
   m_clientBridge(NULL),
-  m_fps(0.0),
-  m_bFramerateKnown(false),
   m_renderFormat(GAME_RENDER_FMT_0RGB1555), // Default libretro format
   m_bSettingsChanged(false)
 {
@@ -96,12 +94,6 @@ void CLibretroEnvironment::Initialize(CHelper_libXBMC_addon* xbmc, CHelper_libKO
 
 void CLibretroEnvironment::Deinitialize()
 {
-}
-
-void CLibretroEnvironment::UpdateFramerate(double fps)
-{
-  m_fps = fps;
-  m_bFramerateKnown = true;
 }
 
 void CLibretroEnvironment::SetSetting(const char* name, const char* value)
@@ -150,9 +142,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   {
   case RETRO_ENVIRONMENT_SET_ROTATION:
     {
-      const unsigned* typedData = reinterpret_cast<const unsigned*>(data);
-      if (typedData)
-        m_frontend->EnvironmentSetRotation(static_cast<GAME_ROTATION>(*typedData));
+      // Removed from frontend
       break;
     }
   case RETRO_ENVIRONMENT_GET_OVERSCAN:
@@ -166,7 +156,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     {
       bool* typedData = reinterpret_cast<bool*>(data);
       if (typedData)
-        *typedData = m_frontend->EnvironmentCanDupe();
+        *typedData = true;
       break;
     }
   case RETRO_ENVIRONMENT_SET_MESSAGE:
@@ -179,8 +169,8 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
 
         // Convert frame count to duration
         unsigned int notificationTimeMs = DEFAULT_NOTIFICATION_TIME_MS;
-        if (m_bFramerateKnown)
-          notificationTimeMs = (unsigned int)(1000 * typedData->frames / m_fps);
+        if (m_systemInfo.timing.fps != 0.0f)
+          notificationTimeMs = (unsigned int)(1000 * typedData->frames / m_systemInfo.timing.fps);
 
         // TODO: Include notification time parameter in QueueNotification()
         m_xbmc->QueueNotification(QUEUE_INFO, msg);
@@ -435,8 +425,8 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
         // Store callback from libretro client
         m_clientBridge->m_retro_frame_time_callback = typedData->callback;
 
-        // Report frame time reference
-        m_frontend->FrameTimeSetReference(typedData->reference);
+        // Removed from API
+        //m_frontend->FrameTimeSetReference(typedData->reference);
       }
       break;
     }
@@ -473,12 +463,10 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       retro_camera_callback* typedData = reinterpret_cast<retro_camera_callback*>(data);
       if (typedData)
       {
-        // Translate struct and report camera info to frontend
-        game_camera_info camera_info;
-        camera_info.caps   = typedData->caps;
-        camera_info.width  = typedData->width;
-        camera_info.height = typedData->height;
-        m_frontend->CameraSetInfo(&camera_info);
+        // Translate struct
+        m_cameraInfo.caps   = typedData->caps;
+        m_cameraInfo.width  = typedData->width;
+        m_cameraInfo.height = typedData->height;
 
         // Store callbacks from libretro core
         m_clientBridge->m_retro_camera_frame_raw_buffer     = typedData->frame_raw_framebuffer;
@@ -487,8 +475,8 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
         m_clientBridge->m_retro_camera_deinitialized        = typedData->deinitialized;
 
         // Expose callbacks to libretro core
-        typedData->start = CFrontendBridge::CameraStart;
-        typedData->stop  = CFrontendBridge::CameraStop;
+        typedData->start = CFrontendBridge::StartCamera;
+        typedData->stop  = CFrontendBridge::StopCamera;
       }
       break;
     }
@@ -524,10 +512,10 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       if (typedData)
       {
         // Expose callbacks to libretro core
-        typedData->start         = CFrontendBridge::LocationStart;
-        typedData->stop          = CFrontendBridge::LocationStop;
-        typedData->get_position  = CFrontendBridge::LocationGetPosition;
-        typedData->set_interval  = CFrontendBridge::LocationSetInterval;
+        typedData->start         = CFrontendBridge::StartLocation;
+        typedData->stop          = CFrontendBridge::StopLocation;
+        typedData->get_position  = CFrontendBridge::GetLocation;
+        typedData->set_interval  = CFrontendBridge::SetLocationInterval;
         typedData->initialized   = CFrontendBridge::LocationInitialized;
         typedData->deinitialized = CFrontendBridge::LocationDeinitialized;
       }
@@ -564,18 +552,13 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
         return false;
 
       // Translate struct
-      game_system_av_info info;
-      info.geometry.base_width   = typedData->geometry.base_width;
-      info.geometry.base_height  = typedData->geometry.base_height;
-      info.geometry.max_width    = typedData->geometry.max_width;
-      info.geometry.max_height   = typedData->geometry.max_height;
-      info.geometry.aspect_ratio = typedData->geometry.aspect_ratio;
-      info.timing.fps            = typedData->timing.fps;
-      info.timing.sample_rate    = typedData->timing.sample_rate;
-      if (!m_frontend->EnvironmentSetSystemAvInfo(&info))
-        return false; // Frontend does not acknowledge a changed av_info struct
-      else
-        UpdateFramerate(info.timing.fps); // Record the new framerate
+      m_systemInfo.geometry.base_width   = typedData->geometry.base_width;
+      m_systemInfo.geometry.base_height  = typedData->geometry.base_height;
+      m_systemInfo.geometry.max_width    = typedData->geometry.max_width;
+      m_systemInfo.geometry.max_height   = typedData->geometry.max_height;
+      m_systemInfo.geometry.aspect_ratio = typedData->geometry.aspect_ratio;
+      m_systemInfo.timing.fps            = typedData->timing.fps;
+      m_systemInfo.timing.sample_rate    = typedData->timing.sample_rate;
 
       break;
     }

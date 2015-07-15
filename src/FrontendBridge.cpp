@@ -55,12 +55,15 @@ void CFrontendBridge::LogFrontend(retro_log_level level, const char *fmt, ...)
   CLibretroEnvironment::Get().GetXBMC()->Log(xbmcLevel, buffer);
 }
 
-void CFrontendBridge::VideoRefresh(const void* data, unsigned width, unsigned height, size_t pitch)
+void CFrontendBridge::VideoRefresh(const void* data, unsigned int width, unsigned int height, size_t pitch)
 {
   if (!CLibretroEnvironment::Get().GetFrontend())
     return;
 
-  CLibretroEnvironment::Get().GetFrontend()->VideoFrame(CLibretroEnvironment::Get().GetRenderFormat(), width, height, static_cast<const uint8_t*>(data));
+  CLibretroEnvironment::Get().GetFrontend()->VideoFrame(static_cast<const uint8_t*>(data),
+                                                        width,
+                                                        height,
+                                                        CLibretroEnvironment::Get().GetRenderFormat());
 }
 
 size_t CFrontendBridge::AudioFrames(const int16_t* data, size_t frames)
@@ -68,7 +71,11 @@ size_t CFrontendBridge::AudioFrames(const int16_t* data, size_t frames)
   if (!CLibretroEnvironment::Get().GetFrontend())
     return 0;
 
-  return CLibretroEnvironment::Get().GetFrontend()->AudioFrames(GAME_AUDIO_FMT_S16NE, frames, reinterpret_cast<const uint8_t*>(data));
+  CLibretroEnvironment::Get().GetFrontend()->AudioFrames(reinterpret_cast<const uint8_t*>(data),
+                                                         frames,
+                                                         GAME_AUDIO_FMT_S16NE);
+
+  return frames;
 }
 
 void CFrontendBridge::InputPoll(void)
@@ -76,7 +83,7 @@ void CFrontendBridge::InputPoll(void)
   // Not needed
 }
 
-int16_t CFrontendBridge::InputState(unsigned port, unsigned device, unsigned index, unsigned id)
+int16_t CFrontendBridge::InputState(unsigned int port, unsigned int device, unsigned int index, unsigned int id)
 {
   int16_t inputState = 0;
 
@@ -175,12 +182,13 @@ retro_proc_address_t CFrontendBridge::HwGetProcAddress(const char *sym)
   return CLibretroEnvironment::Get().GetFrontend()->HwGetProcAddress(sym);
 }
 
-bool CFrontendBridge::RumbleSetState(unsigned port, retro_rumble_effect effect, uint16_t strength)
+bool CFrontendBridge::RumbleSetState(unsigned int port, retro_rumble_effect effect, uint16_t strength)
 {
   if (!CLibretroEnvironment::Get().GetFrontend())
     return false;
 
-  return CLibretroEnvironment::Get().GetFrontend()->RumbleSetState(port, LibretroTranslator::GetRumbleEffect(effect), strength);
+  CLibretroEnvironment::Get().GetFrontend()->RumbleSetState(port, LibretroTranslator::GetRumbleEffect(effect), strength);
+  return true;
 }
 
 bool CFrontendBridge::SensorSetState(unsigned port, retro_sensor_action action, unsigned rate)
@@ -218,122 +226,95 @@ float CFrontendBridge::SensorGetInput(unsigned port, unsigned id)
   return axisState;
 }
 
-bool CFrontendBridge::CameraStart(void)
+bool CFrontendBridge::StartCamera(void)
 {
   if (!CLibretroEnvironment::Get().GetFrontend())
     return false;
 
-  return CLibretroEnvironment::Get().GetFrontend()->CameraStart();
+  return CLibretroEnvironment::Get().GetFrontend()->StartCamera();
 }
 
-void CFrontendBridge::CameraStop(void)
+void CFrontendBridge::StopCamera(void)
 {
   if (!CLibretroEnvironment::Get().GetFrontend())
     return;
 
-  CLibretroEnvironment::Get().GetFrontend()->CameraStop();
+  CLibretroEnvironment::Get().GetFrontend()->StopCamera();
 }
 
 retro_time_t CFrontendBridge::PerfGetTimeUsec(void)
 {
-  if (!CLibretroEnvironment::Get().GetFrontend())
-    return 0;
-
-  return CLibretroEnvironment::Get().GetFrontend()->PerfGetTimeUsec();
+  return 0; // Not implemented
 }
 
 retro_perf_tick_t CFrontendBridge::PerfGetCounter(void)
 {
-  if (!CLibretroEnvironment::Get().GetFrontend())
-    return 0;
-
-  return CLibretroEnvironment::Get().GetFrontend()->PerfGetCounter();
+  return 0; // Not implemented
 }
 
 uint64_t CFrontendBridge::PerfGetCpuFeatures(void)
 {
-  if (!CLibretroEnvironment::Get().GetFrontend())
-    return 0;
-
-  return CLibretroEnvironment::Get().GetFrontend()->PerfGetCpuFeatures();
+  return 0; // Not implemented
 }
 
 void CFrontendBridge::PerfLog(void)
 {
-  if (!CLibretroEnvironment::Get().GetFrontend())
-    return;
-
-  CLibretroEnvironment::Get().GetFrontend()->PerfLog();
+  // Not implemented
 }
 
 void CFrontendBridge::PerfRegister(retro_perf_counter *counter)
 {
-  if (!CLibretroEnvironment::Get().GetFrontend())
-    return;
-
-  CLibretroEnvironment::Get().GetFrontend()->PerfRegister(reinterpret_cast<game_perf_counter*>(counter));
+  // Not implemented
 }
 
 void CFrontendBridge::PerfStart(retro_perf_counter *counter)
 {
-  if (!CLibretroEnvironment::Get().GetFrontend())
-    return;
-
-  CLibretroEnvironment::Get().GetFrontend()->PerfStart(reinterpret_cast<game_perf_counter*>(counter));
+  // Not implemented
 }
 
 void CFrontendBridge::PerfStop(retro_perf_counter *counter)
 {
-  if (!CLibretroEnvironment::Get().GetFrontend())
-    return;
-
-  CLibretroEnvironment::Get().GetFrontend()->PerfStop(reinterpret_cast<game_perf_counter*>(counter));
+  // Not implemented
 }
 
-bool CFrontendBridge::LocationStart(void)
+bool CFrontendBridge::StartLocation(void)
 {
   if (!CLibretroEnvironment::Get().GetFrontend())
     return false;
 
-  return CLibretroEnvironment::Get().GetFrontend()->LocationStart();
+  return CLibretroEnvironment::Get().GetFrontend()->StartLocation();
 }
 
-void CFrontendBridge::LocationStop(void)
+void CFrontendBridge::StopLocation(void)
 {
   if (!CLibretroEnvironment::Get().GetFrontend())
     return;
 
-  CLibretroEnvironment::Get().GetFrontend()->LocationStop();
+  CLibretroEnvironment::Get().GetFrontend()->StopLocation();
 }
 
-bool CFrontendBridge::LocationGetPosition(double *lat, double *lon, double *horiz_accuracy, double *vert_accuracy)
+bool CFrontendBridge::GetLocation(double *lat, double *lon, double *horiz_accuracy, double *vert_accuracy)
 {
   if (!CLibretroEnvironment::Get().GetFrontend())
     return false;
 
-  return CLibretroEnvironment::Get().GetFrontend()->LocationGetPosition(lat, lon, horiz_accuracy, vert_accuracy);
+  return CLibretroEnvironment::Get().GetFrontend()->GetLocation(lat, lon, horiz_accuracy, vert_accuracy);
 }
 
-void CFrontendBridge::LocationSetInterval(unsigned interval_ms, unsigned interval_distance)
+void CFrontendBridge::SetLocationInterval(unsigned interval_ms, unsigned interval_distance)
 {
   if (!CLibretroEnvironment::Get().GetFrontend())
     return;
 
-  CLibretroEnvironment::Get().GetFrontend()->LocationSetInterval(interval_ms, interval_distance);
+  CLibretroEnvironment::Get().GetFrontend()->SetLocationInterval(interval_ms, interval_distance);
 }
 
 void CFrontendBridge::LocationInitialized(void)
 {
-  if (!CLibretroEnvironment::Get().GetFrontend())
-    return;
-
-  CLibretroEnvironment::Get().GetFrontend()->LocationInitialized();
+  // Not implemented
 }
 
 void CFrontendBridge::LocationDeinitialized(void)
 {
-  if (!CLibretroEnvironment::Get().GetFrontend())
-    return;
-
-  CLibretroEnvironment::Get().GetFrontend()->LocationDeinitialized();
+  // Not implemented
 }
