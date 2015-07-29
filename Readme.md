@@ -57,12 +57,12 @@ git clone https://github.com/Pulse-Eight/platform.git
 ...
 ```
 
-With these dependencies in place, the add-on can be built. Point CMake to the add-on's build system instead of `$HOME/workspace/xbmc/project/cmake/addons`
+With these dependencies in place, the add-on can be built. Use the CMake command above, or use this command to copy add-ons to your Kodi source tree:
 
 ```shell
 cmake -DCMAKE_BUILD_TYPE=Debug \
-      -DCMAKE_INSTALL_PREFIX=$HOME/workspace/xbmc/addons \
       -DCMAKE_PREFIX_PATH=$HOME/kodi \
+      -DCMAKE_INSTALL_PREFIX=$HOME/workspace/xbmc/addons \
       -DPACKAGE_ZIP=1 \
       ..
 ```
@@ -99,11 +99,15 @@ make -C tools/depends/target/binary-addons clean
 
 ## Windows
 
-We will use CMake to generate a `kodi-addons.sln` Visual Studio solution and project files. Add-ons can be built individually through their specific project, or all at once by building the solution.
-
 First, download and install [CMake](http://www.cmake.org/download/).
 
-Run the script from [PR 6658](https://github.com/xbmc/xbmc/pull/6658) to create Visual Studio project files
+To compile on windows, open a command prompt at `tools\buildsteps\win32` and run the script:
+
+```
+make-addons.bat install game.libretro
+```
+
+Alternatively, generate the `kodi-addons.sln` Visual Studio solution and project files.
 
 ```
 tools\windows\prepare-binary-addons-dev.bat
@@ -114,6 +118,8 @@ The generated solution can be found at
 ```
 project\cmake\addons\build\kodi-addons.sln
 ```
+
+Add-ons can be built individually through their specific project, or all at once by building the solution.
 
 No source code is downloaded at the CMake stage; when the project is built, the add-on's source will be downloaded and compiled.
 
