@@ -231,14 +231,8 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       const retro_disk_control_callback *typedData = reinterpret_cast<const retro_disk_control_callback*>(data);
       if (typedData)
       {
-        // Store callbacks from libretro client
-        m_clientBridge->m_retro_disk_set_eject_state     = typedData->set_eject_state;
-        m_clientBridge->m_retro_disk_get_eject_state     = typedData->get_eject_state;
-        m_clientBridge->m_retro_disk_get_image_index     = typedData->get_image_index;
-        m_clientBridge->m_retro_disk_set_image_index     = typedData->set_image_index;
-        m_clientBridge->m_retro_disk_get_num_images      = typedData->get_num_images;
-        m_clientBridge->m_retro_disk_replace_image_index = typedData->replace_image_index;
-        m_clientBridge->m_retro_disk_add_image_index     = typedData->add_image_index;
+        // Disk control interface not implemented
+        return false;
       }
       break;
     }
@@ -422,11 +416,8 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       const retro_frame_time_callback *typedData = reinterpret_cast<const retro_frame_time_callback*>(data);
       if (typedData)
       {
-        // Store callback from libretro client
-        m_clientBridge->m_retro_frame_time_callback = typedData->callback;
-
-        // Removed from API
-        //m_frontend->FrameTimeSetReference(typedData->reference);
+        // Frame time callback not implemented
+        return false;
       }
       break;
     }
@@ -463,20 +454,8 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       retro_camera_callback* typedData = reinterpret_cast<retro_camera_callback*>(data);
       if (typedData)
       {
-        // Translate struct
-        m_cameraInfo.caps   = typedData->caps;
-        m_cameraInfo.width  = typedData->width;
-        m_cameraInfo.height = typedData->height;
-
-        // Store callbacks from libretro core
-        m_clientBridge->m_retro_camera_frame_raw_buffer     = typedData->frame_raw_framebuffer;
-        m_clientBridge->m_retro_camera_frame_opengl_texture = typedData->frame_opengl_texture;
-        m_clientBridge->m_retro_camera_initialized          = typedData->initialized;
-        m_clientBridge->m_retro_camera_deinitialized        = typedData->deinitialized;
-
-        // Expose callbacks to libretro core
-        typedData->start = CFrontendBridge::StartCamera;
-        typedData->stop  = CFrontendBridge::StopCamera;
+        // Camera interface not implemented
+        return false;
       }
       break;
     }
@@ -562,6 +541,8 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
 
       break;
     }
+  default:
+    return false;
   }
 
   return true;

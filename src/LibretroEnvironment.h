@@ -75,7 +75,6 @@ namespace LIBRETRO
     CClientBridge*                m_clientBridge;
 
     game_system_av_info m_systemInfo;
-    game_camera_info    m_cameraInfo;
     GAME_RENDER_FORMAT  m_renderFormat;
 
     std::map<std::string, std::vector<std::string> > m_variables; // Record the variables reported by libretro core (key -> values)

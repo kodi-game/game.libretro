@@ -228,18 +228,12 @@ float CFrontendBridge::SensorGetInput(unsigned port, unsigned id)
 
 bool CFrontendBridge::StartCamera(void)
 {
-  if (!CLibretroEnvironment::Get().GetFrontend())
-    return false;
-
-  return CLibretroEnvironment::Get().GetFrontend()->StartCamera();
+  return false; // Not implemented
 }
 
 void CFrontendBridge::StopCamera(void)
 {
-  if (!CLibretroEnvironment::Get().GetFrontend())
-    return;
-
-  CLibretroEnvironment::Get().GetFrontend()->StopCamera();
+  // Not implemented
 }
 
 retro_time_t CFrontendBridge::PerfGetTimeUsec(void)
@@ -279,34 +273,22 @@ void CFrontendBridge::PerfStop(retro_perf_counter *counter)
 
 bool CFrontendBridge::StartLocation(void)
 {
-  if (!CLibretroEnvironment::Get().GetFrontend())
-    return false;
-
-  return CLibretroEnvironment::Get().GetFrontend()->StartLocation();
+  return false; // Not implemented
 }
 
 void CFrontendBridge::StopLocation(void)
 {
-  if (!CLibretroEnvironment::Get().GetFrontend())
-    return;
-
-  CLibretroEnvironment::Get().GetFrontend()->StopLocation();
+  // Not implemented
 }
 
 bool CFrontendBridge::GetLocation(double *lat, double *lon, double *horiz_accuracy, double *vert_accuracy)
 {
-  if (!CLibretroEnvironment::Get().GetFrontend())
-    return false;
-
-  return CLibretroEnvironment::Get().GetFrontend()->GetLocation(lat, lon, horiz_accuracy, vert_accuracy);
+  return false; // Not implemented
 }
 
 void CFrontendBridge::SetLocationInterval(unsigned interval_ms, unsigned interval_distance)
 {
-  if (!CLibretroEnvironment::Get().GetFrontend())
-    return;
-
-  CLibretroEnvironment::Get().GetFrontend()->SetLocationInterval(interval_ms, interval_distance);
+  // Not implemented
 }
 
 void CFrontendBridge::LocationInitialized(void)
