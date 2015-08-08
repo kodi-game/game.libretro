@@ -208,8 +208,11 @@ GAME_ERROR LoadGame(const char* url)
 
   // Try to load via memory
   retro_game_info gameInfo;
-  if (GAME_INFO[0]->GetMemoryStruct(gameInfo))
+  if (GAME_INFO[0]->Load())
+  {
+    GAME_INFO[0]->GetMemoryStruct(gameInfo);
     bResult = CLIENT->retro_load_game(&gameInfo);
+  }
 
   if (!bResult)
   {
@@ -232,6 +235,9 @@ GAME_ERROR LoadGameSpecial(SPECIAL_GAME_TYPE type, const char** urls, size_t url
   if (urls == NULL || urlCount == 0)
     return GAME_ERROR_INVALID_PARAMETERS;
 
+  // TODO
+  return GAME_ERROR_FAILED;
+  /*
   retro_system_info info = { };
   CLIENT->retro_get_system_info(&info);
   const bool bSupportsVFS = !info.need_fullpath;
@@ -259,6 +265,7 @@ GAME_ERROR LoadGameSpecial(SPECIAL_GAME_TYPE type, const char** urls, size_t url
   bool result = CLIENT->retro_load_game_special(type, infoVec.data(), urlCount);
 
   return result ? GAME_ERROR_NO_ERROR : GAME_ERROR_FAILED;
+  */
 }
 
 GAME_ERROR LoadStandalone(void)

@@ -41,6 +41,8 @@ namespace LIBRETRO
   public:
     CGameInfoLoader(const char* path, ADDON::CHelper_libXBMC_addon* XBMC, bool bSupportsVFS);
 
+    bool Load(void);
+
     /*!
      * Get the struct that instructs libretro to load via memory. Returns false
      * if loading via memory is not a valid strategy for this libretro core
@@ -55,7 +57,9 @@ namespace LIBRETRO
     bool GetPathStruct(retro_game_info& info) const;
 
   private:
-    std::string          m_pathBuffer;
-    std::vector<uint8_t> m_dataBuffer;
+    const std::string                   m_path;
+    ADDON::CHelper_libXBMC_addon* const m_xbmc;
+    const bool                          m_bSupportsVfs;
+    std::vector<uint8_t>                m_dataBuffer;
   };
 } // namespace LIBRETRO

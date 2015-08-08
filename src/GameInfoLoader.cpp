@@ -40,17 +40,23 @@ using namespace LIBRETRO;
 #define MAX_READ_SIZE  (100 * 1024 * 1024)  // Read at most 100MB from VFS
 
 CGameInfoLoader::CGameInfoLoader(const char* path, CHelper_libXBMC_addon* XBMC, bool bSupportsVFS)
- : m_pathBuffer(path)
+ : m_path(path),
+   m_xbmc(XBMC),
+   m_bSupportsVfs(bSupportsVFS)
+{
+}
+
+bool CGameInfoLoader::Load(void)
 {
   // If libretro client supports loading from memory, try reading the file into m_dataBuffer
-  if (bSupportsVFS)
+  if (m_bSupportsVfs)
   {
     struct __stat64 statStruct = { };
 
     // Not all VFS protocols necessarily support StatFile(), so also check if file exists
-    if (XBMC->StatFile(path, &statStruct) == 0 || XBMC->FileExists(path, true))
+    if (m_xbmc->StatFile(m_path.c_str(), &statStruct) == 0 || m_xbmc->FileExists(m_path.c_str(), true))
     {
-      void* file = XBMC->OpenFile(path, 0);
+      void* file = m_xbmc->OpenFile(m_path.c_str(), 0);
       if (file)
       {
         int64_t size = statStruct.st_size;
@@ -60,7 +66,7 @@ CGameInfoLoader::CGameInfoLoader(const char* path, CHelper_libXBMC_addon* XBMC, 
           if (size <= MAX_READ_SIZE)
           {
             m_dataBuffer.resize((size_t)size);
-            XBMC->ReadFile(file, m_dataBuffer.data(), size);
+            m_xbmc->ReadFile(file, m_dataBuffer.data(), size);
           }
         }
         else
@@ -68,7 +74,7 @@ CGameInfoLoader::CGameInfoLoader(const char* path, CHelper_libXBMC_addon* XBMC, 
           // Read file in chunks
           unsigned int bytesRead;
           uint8_t buffer[READ_SIZE];
-          while ((bytesRead = XBMC->ReadFile(file, buffer, sizeof(buffer))) > 0)
+          while ((bytesRead = m_xbmc->ReadFile(file, buffer, sizeof(buffer))) > 0)
           {
             m_dataBuffer.insert(m_dataBuffer.end(), buffer, buffer + bytesRead);
 
@@ -88,6 +94,7 @@ CGameInfoLoader::CGameInfoLoader(const char* path, CHelper_libXBMC_addon* XBMC, 
       }
     }
   }
+  return !m_dataBuffer.empty();
 }
 
 bool CGameInfoLoader::GetMemoryStruct(retro_game_info& info) const
@@ -105,7 +112,7 @@ bool CGameInfoLoader::GetMemoryStruct(retro_game_info& info) const
 
 bool CGameInfoLoader::GetPathStruct(retro_game_info& info) const
 {
-  info.path = m_pathBuffer.c_str();
+  info.path = m_path.c_str();
   info.data = NULL;
   info.size = 0;
   info.meta = NULL;
