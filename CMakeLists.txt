@@ -27,6 +27,9 @@ set(LIBRETRO_SOURCES src/client.cpp
                      src/LibretroDLL.cpp
                      src/LibretroEnvironment.cpp
                      src/LibretroTranslator.cpp
+                     src/log/Log.cpp
+                     src/log/LogAddon.cpp
+                     src/log/LogConsole.cpp
                      src/settings/Settings.cpp)
 
 build_addon(game.libretro LIBRETRO DEPLIBS)

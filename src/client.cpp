@@ -24,6 +24,8 @@
 #include "libretro.h"
 #include "LibretroDLL.h"
 #include "LibretroEnvironment.h"
+#include "log/Log.h"
+#include "log/LogAddon.h"
 #include "settings/Settings.h"
 
 #include "kodi/libXBMC_addon.h"
@@ -79,6 +81,8 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
     if (!XBMC || !XBMC->RegisterMe(callbacks))
       throw ADDON_STATUS_PERMANENT_FAILURE;
 
+    CLog::Get().SetPipe(new CLogAddon(XBMC));
+
     FRONTEND = new CHelper_libKODI_game;
     if (!FRONTEND || !FRONTEND->RegisterMe(callbacks))
       throw ADDON_STATUS_PERMANENT_FAILURE;
@@ -125,6 +129,8 @@ void ADDON_Destroy(void)
     CLIENT->retro_deinit();
 
   CLibretroEnvironment::Get().Deinitialize();
+
+  CLog::Get().SetType(SYS_LOG_TYPE_CONSOLE);
 
   SAFE_DELETE(XBMC);
   SAFE_DELETE(FRONTEND);
