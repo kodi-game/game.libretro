@@ -19,6 +19,7 @@
  */
 
 #include "GameInfoLoader.h"
+#include "log/Log.h"
 
 // TODO: This must #defined before libXBMC_addon.h to fix compile on OS X
 #include <sys/stat.h>
@@ -48,53 +49,84 @@ CGameInfoLoader::CGameInfoLoader(const char* path, CHelper_libXBMC_addon* XBMC, 
 
 bool CGameInfoLoader::Load(void)
 {
-  // If libretro client supports loading from memory, try reading the file into m_dataBuffer
-  if (m_bSupportsVfs)
+  if (!m_bSupportsVfs)
+    return false;
+
+  struct __stat64 statStruct = { };
+
+  bool bExists = (m_xbmc->StatFile(m_path.c_str(), &statStruct) != 0);
+
+  // Not all VFS protocols necessarily support StatFile(), so also check if file exists
+  if (!bExists)
   {
-    struct __stat64 statStruct = { };
-
-    // Not all VFS protocols necessarily support StatFile(), so also check if file exists
-    if (m_xbmc->StatFile(m_path.c_str(), &statStruct) == 0 || m_xbmc->FileExists(m_path.c_str(), true))
+    bExists = m_xbmc->FileExists(m_path.c_str(), true);
+    if (bExists)
     {
-      void* file = m_xbmc->OpenFile(m_path.c_str(), 0);
-      if (file)
+      dsyslog("Failed to stat (but file exists): %s", m_path.c_str());
+    }
+    else
+    {
+      esyslog("File doesn't exist: %s", m_path.c_str());
+      return false;
+    }
+  }
+
+  void* file = m_xbmc->OpenFile(m_path.c_str(), 0);
+  if (!file)
+  {
+    esyslog("Failed to open file: %s", m_path.c_str());
+    return false;
+  }
+
+  int64_t size = statStruct.st_size;
+  if (size > 0)
+  {
+    // Size is known, read entire file at once (unless it is too big)
+    if (size <= MAX_READ_SIZE)
+    {
+      m_dataBuffer.resize((size_t)size);
+      m_xbmc->ReadFile(file, m_dataBuffer.data(), size);
+    }
+    else
+    {
+      dsyslog("File size (%d MB) is greater than memory limit (%d MB), loading by path",
+              size / (1024 * 1024), MAX_READ_SIZE / (1024 * 1024));
+      return false;
+    }
+  }
+  else
+  {
+    // Read file in chunks
+    unsigned int bytesRead;
+    uint8_t buffer[READ_SIZE];
+    while ((bytesRead = m_xbmc->ReadFile(file, buffer, sizeof(buffer))) > 0)
+    {
+      m_dataBuffer.insert(m_dataBuffer.end(), buffer, buffer + bytesRead);
+
+      // If we read less than READ_SIZE, assume we hit the end of the file
+      if (bytesRead < READ_SIZE)
+        break;
+
+      // If we have exceeded the VFS file size limit, don't try to load by
+      // VFS and fall back to loading by path
+      if (m_dataBuffer.size() > MAX_READ_SIZE)
       {
-        int64_t size = statStruct.st_size;
-        if (size > 0)
-        {
-          // Size is known, read entire file at once (unless it is too big)
-          if (size <= MAX_READ_SIZE)
-          {
-            m_dataBuffer.resize((size_t)size);
-            m_xbmc->ReadFile(file, m_dataBuffer.data(), size);
-          }
-        }
-        else
-        {
-          // Read file in chunks
-          unsigned int bytesRead;
-          uint8_t buffer[READ_SIZE];
-          while ((bytesRead = m_xbmc->ReadFile(file, buffer, sizeof(buffer))) > 0)
-          {
-            m_dataBuffer.insert(m_dataBuffer.end(), buffer, buffer + bytesRead);
-
-            // If we read less than READ_SIZE, assume we hit the end of the file
-            if (bytesRead < READ_SIZE)
-              break;
-
-            // If we have exceeded the VFS file size limit, don't try to load by
-            // VFS and fall back to loading by path
-            if (m_dataBuffer.size() > MAX_READ_SIZE)
-            {
-              m_dataBuffer.clear();
-              break;
-            }
-          }
-        }
+        dsyslog("File exceeds memory limit (%d MB), loading by path",
+                MAX_READ_SIZE / (1024 * 1024));
+        return false;
       }
     }
   }
-  return !m_dataBuffer.empty();
+
+  if (m_dataBuffer.empty())
+  {
+    dsyslog("Failed to read file (no data), loading by path");
+    return false;
+  }
+
+  dsyslog("Loaded file into memory (%d bytes): %s", m_dataBuffer.size(), m_path.c_str());
+
+  return true;
 }
 
 bool CGameInfoLoader::GetMemoryStruct(retro_game_info& info) const
