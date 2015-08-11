@@ -45,7 +45,7 @@ bool CGameInfoLoader::Load(void)
 
   struct __stat64 statStruct = { };
 
-  bool bExists = (m_xbmc->StatFile(m_path.c_str(), &statStruct) != 0);
+  bool bExists = (m_xbmc->StatFile(m_path.c_str(), &statStruct) == 0);
 
   // Not all VFS protocols necessarily support StatFile(), so also check if file exists
   if (!bExists)
