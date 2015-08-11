@@ -21,15 +21,6 @@
 #include "GameInfoLoader.h"
 #include "log/Log.h"
 
-// TODO: This must #defined before libXBMC_addon.h to fix compile on OS X
-#include <sys/stat.h>
-#if defined(TARGET_OSX)
-  #define stat64 stat
-  #define __stat64 stat
-#elif !defined(TARGET_WINDOWS)
-  #define __stat64 stat64
-#endif
-
 #include "kodi/libXBMC_addon.h"
 
 #include <stdint.h>
