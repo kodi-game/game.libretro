@@ -31,6 +31,8 @@
 using namespace ADDON;
 using namespace LIBRETRO;
 
+#define S16NE_FRAMESIZE  4
+
 void CFrontendBridge::LogFrontend(retro_log_level level, const char *fmt, ...)
 {
   if (!CLibretroEnvironment::Get().GetXBMC())
@@ -61,6 +63,7 @@ void CFrontendBridge::VideoRefresh(const void* data, unsigned int width, unsigne
     return;
 
   CLibretroEnvironment::Get().GetFrontend()->VideoFrame(static_cast<const uint8_t*>(data),
+                                                        pitch * height,
                                                         width,
                                                         height,
                                                         CLibretroEnvironment::Get().GetRenderFormat());
@@ -72,6 +75,7 @@ size_t CFrontendBridge::AudioFrames(const int16_t* data, size_t frames)
     return 0;
 
   CLibretroEnvironment::Get().GetFrontend()->AudioFrames(reinterpret_cast<const uint8_t*>(data),
+                                                         frames * S16NE_FRAMESIZE,
                                                          frames,
                                                          GAME_AUDIO_FMT_S16NE);
 
