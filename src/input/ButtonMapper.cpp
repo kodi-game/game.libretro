@@ -28,8 +28,8 @@
 #include "kodi/libXBMC_addon.h"
 #include "tinyxml.h"
 
-#define BUTTONMAP_XML  "buttonmap.xml"
-
+#define BUTTONMAP_XML          "buttonmap.xml"
+#define DEFAULT_CONTROLLER_ID  "game.controller.default"
 using namespace LIBRETRO;
 
 CButtonMapper::CButtonMapper(void)
@@ -86,7 +86,7 @@ bool CButtonMapper::LoadButtonMap(void)
 libretro_device_t CButtonMapper::GetLibretroType(const std::string& strControllerId)
 {
   // Handle default controller
-  if (strControllerId == "game.controller.default")
+  if (strControllerId == DEFAULT_CONTROLLER_ID)
     return RETRO_DEVICE_ANALOG;
 
   // Check buttonmap for other controllers
@@ -110,7 +110,7 @@ libretro_device_t CButtonMapper::GetLibretroType(const std::string& strControlle
 int CButtonMapper::GetLibretroIndex(const std::string& strControllerId, const std::string& strFeatureName)
 {
   // Handle default controller
-  if (strControllerId == "game.controller.default")
+  if (strControllerId == DEFAULT_CONTROLLER_ID)
   {
     if (strFeatureName == "a")            return RETRO_DEVICE_ID_JOYPAD_A;
     if (strFeatureName == "b")            return RETRO_DEVICE_ID_JOYPAD_B;
