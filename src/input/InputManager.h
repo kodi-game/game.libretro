@@ -22,7 +22,9 @@
 #include "LibretroDevice.h"
 
 #include "kodi/kodi_game_types.h"
+#include "platform/threads/mutex.h"
 
+#include <stdint.h>
 #include <string>
 #include <vector>
 
@@ -88,6 +90,11 @@ namespace LIBRETRO
     bool AccelerometerState(unsigned int port, float& x, float& y, float& z);
 
   private:
+    void HandlePress(const game_key_event& key);
+    bool IsPressed(uint32_t character);
+
     std::vector<CLibretroDevice> m_ports;
+    std::vector<game_key_event>  m_pressedKeys;
+    PLATFORM::CMutex             m_keyMutex;
   };
 }

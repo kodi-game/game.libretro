@@ -20,9 +20,8 @@
 
 #include "LibretroDevice.h"
 #include "ButtonMapper.h"
-#include "ClientBridge.h"
+#include "libretro.h"
 #include "LibretroEnvironment.h"
-#include "LibretroTranslator.h"
 
 #include "kodi/libKODI_game.h"
 
@@ -216,20 +215,6 @@ bool CLibretroDevice::InputEvent(const game_input_event& event)
         if (index < (int)m_accelerometers.size())
           m_accelerometers[index] = event.accelerometer;
         break;
-
-      case GAME_INPUT_EVENT_KEY:
-      {
-        // libretro keyboard is event-based
-        CClientBridge* clientBridge = CLibretroEnvironment::Get().GetClientBridge();
-        if (clientBridge)
-        {
-          clientBridge->KeyboardEvent(event.key.pressed,
-                                      LibretroTranslator::GetKeyCode(event.key.character),
-                                      event.key.character,
-                                      LibretroTranslator::GetKeyModifiers(event.key.modifiers));
-        }
-        break;
-      }
 
       case GAME_INPUT_EVENT_RELATIVE_POINTER:
         if (index < (int)m_relativePointers.size())

@@ -19,12 +19,18 @@
  */
 
 #include "InputManager.h"
+#include "ClientBridge.h"
 #include "libretro.h"
 #include "LibretroEnvironment.h"
+#include "LibretroTranslator.h"
+#include "log/Log.h"
 
 #include "kodi/libKODI_game.h"
 
+#include <algorithm>
+
 using namespace LIBRETRO;
+using namespace PLATFORM;
 
 CInputManager& CInputManager::Get(void)
 {
@@ -97,8 +103,33 @@ bool CInputManager::InputEvent(unsigned int port, const game_input_event& event)
 {
   bool bHandled = false;
 
-  if (port < m_ports.size())
-    bHandled = m_ports[port].InputEvent(event);
+  if (event.type == GAME_INPUT_EVENT_KEY)
+  {
+    // Report key to client
+    CClientBridge* clientBridge = CLibretroEnvironment::Get().GetClientBridge();
+    if (clientBridge)
+    {
+      const bool      down          = event.key.pressed;
+      const retro_key keycode       = LibretroTranslator::GetKeyCode(event.key.character);
+      const uint32_t  character     = event.key.character;
+      const retro_mod key_modifiers = LibretroTranslator::GetKeyModifiers(event.key.modifiers);
+
+      dsyslog("Key %s: %s (0x%04x)", down ? "down" : "up",
+          LibretroTranslator::GetKeyName(character), character);
+
+      clientBridge->KeyboardEvent(down, keycode, character, key_modifiers);
+    }
+
+    // Record key press for polling
+    HandlePress(event.key);
+
+    bHandled = true;
+  }
+  else
+  {
+    if (port < m_ports.size())
+      bHandled = m_ports[port].InputEvent(event);
+  }
 
   return bHandled;
 }
@@ -131,9 +162,16 @@ bool CInputManager::ButtonState(libretro_device_t device, unsigned int port, uns
 {
   bool bState = false;
 
-  if (port < m_ports.size() || OpenPort(port))
+  if (device == RETRO_DEVICE_KEYBOARD)
   {
-    bState = m_ports[port].ButtonState(buttonIndex);
+    bState = IsPressed(buttonIndex);
+  }
+  else
+  {
+    if (port < m_ports.size() || OpenPort(port))
+    {
+      bState = m_ports[port].ButtonState(buttonIndex);
+    }
   }
 
   return bState;
@@ -197,4 +235,33 @@ bool CInputManager::AccelerometerState(unsigned int port, float& x, float& y, fl
   }
 
   return bSuccess;
+}
+
+void CInputManager::HandlePress(const game_key_event& key)
+{
+  CLockObject lock(m_keyMutex);
+
+  if (key.pressed)
+  {
+    m_pressedKeys.push_back(key);
+  }
+  else
+  {
+    m_pressedKeys.erase(std::remove_if(m_pressedKeys.begin(), m_pressedKeys.end(),
+      [&key](const game_key_event& pressedKey)
+      {
+        return pressedKey.character == key.character;
+      }), m_pressedKeys.end());
+  }
+}
+
+bool CInputManager::IsPressed(uint32_t character)
+{
+  CLockObject lock(m_keyMutex);
+
+  return std::count_if(m_pressedKeys.begin(), m_pressedKeys.end(),
+    [character](const game_key_event& keyEvent)
+    {
+      return keyEvent.character == character;
+    }) > 0;
 }
