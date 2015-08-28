@@ -223,12 +223,10 @@ bool CLibretroDevice::InputEvent(const game_input_event& event)
         CClientBridge* clientBridge = CLibretroEnvironment::Get().GetClientBridge();
         if (clientBridge)
         {
-          /* TODO
           clientBridge->KeyboardEvent(event.key.pressed,
-                                      0, // TODO
+                                      LibretroTranslator::GetKeyCode(event.key.character),
                                       event.key.character,
                                       LibretroTranslator::GetKeyModifiers(event.key.modifiers));
-          */
         }
         break;
       }
