@@ -109,41 +109,44 @@ libretro_device_t CButtonMapper::GetLibretroType(const std::string& strControlle
 
 int CButtonMapper::GetLibretroIndex(const std::string& strControllerId, const std::string& strFeatureName)
 {
-  // Handle default controller
-  if (strControllerId == DEFAULT_CONTROLLER_ID)
+  if (!strControllerId.empty() && !strFeatureName.empty())
   {
-    if (strFeatureName == "a")            return RETRO_DEVICE_ID_JOYPAD_A;
-    if (strFeatureName == "b")            return RETRO_DEVICE_ID_JOYPAD_B;
-    if (strFeatureName == "x")            return RETRO_DEVICE_ID_JOYPAD_X;
-    if (strFeatureName == "y")            return RETRO_DEVICE_ID_JOYPAD_Y;
-    if (strFeatureName == "start")        return RETRO_DEVICE_ID_JOYPAD_START;
-    if (strFeatureName == "back")         return RETRO_DEVICE_ID_JOYPAD_SELECT;
-    if (strFeatureName == "leftbumber")   return RETRO_DEVICE_ID_JOYPAD_L2;
-    if (strFeatureName == "rightbumper")  return RETRO_DEVICE_ID_JOYPAD_R2;
-    if (strFeatureName == "leftthumb")    return RETRO_DEVICE_ID_JOYPAD_L;
-    if (strFeatureName == "rightthumb")   return RETRO_DEVICE_ID_JOYPAD_R;
-    if (strFeatureName == "up")           return RETRO_DEVICE_ID_JOYPAD_UP;
-    if (strFeatureName == "down")         return RETRO_DEVICE_ID_JOYPAD_DOWN;
-    if (strFeatureName == "right")        return RETRO_DEVICE_ID_JOYPAD_RIGHT;
-    if (strFeatureName == "left")         return RETRO_DEVICE_ID_JOYPAD_LEFT;
-    if (strFeatureName == "lefttrigger")  return RETRO_DEVICE_ID_JOYPAD_L3;
-    if (strFeatureName == "righttrigger") return RETRO_DEVICE_ID_JOYPAD_R3;
-    if (strFeatureName == "leftstick")    return RETRO_DEVICE_INDEX_ANALOG_LEFT;
-    if (strFeatureName == "rightstick")   return RETRO_DEVICE_INDEX_ANALOG_RIGHT;
-  }
-
-  // Check buttonmap for other controllers
-  const TiXmlElement* pFeatureNode = GetFeatureNode(strControllerId, strFeatureName);
-  if (pFeatureNode)
-  {
-    const char* mapto = pFeatureNode->Attribute(BUTTONMAP_XML_ATTR_FEATURE_MAPTO);
-    if (!mapto)
+    // Handle default controller
+    if (strControllerId == DEFAULT_CONTROLLER_ID)
     {
-      m_addon->Log(ADDON::LOG_ERROR, "<%s> tag has no \"%s\" attribute", BUTTONMAP_XML_ELM_FEATURE, BUTTONMAP_XML_ATTR_FEATURE_MAPTO);
+      if (strFeatureName == "a")            return RETRO_DEVICE_ID_JOYPAD_A;
+      if (strFeatureName == "b")            return RETRO_DEVICE_ID_JOYPAD_B;
+      if (strFeatureName == "x")            return RETRO_DEVICE_ID_JOYPAD_X;
+      if (strFeatureName == "y")            return RETRO_DEVICE_ID_JOYPAD_Y;
+      if (strFeatureName == "start")        return RETRO_DEVICE_ID_JOYPAD_START;
+      if (strFeatureName == "back")         return RETRO_DEVICE_ID_JOYPAD_SELECT;
+      if (strFeatureName == "leftbumber")   return RETRO_DEVICE_ID_JOYPAD_L2;
+      if (strFeatureName == "rightbumper")  return RETRO_DEVICE_ID_JOYPAD_R2;
+      if (strFeatureName == "leftthumb")    return RETRO_DEVICE_ID_JOYPAD_L;
+      if (strFeatureName == "rightthumb")   return RETRO_DEVICE_ID_JOYPAD_R;
+      if (strFeatureName == "up")           return RETRO_DEVICE_ID_JOYPAD_UP;
+      if (strFeatureName == "down")         return RETRO_DEVICE_ID_JOYPAD_DOWN;
+      if (strFeatureName == "right")        return RETRO_DEVICE_ID_JOYPAD_RIGHT;
+      if (strFeatureName == "left")         return RETRO_DEVICE_ID_JOYPAD_LEFT;
+      if (strFeatureName == "lefttrigger")  return RETRO_DEVICE_ID_JOYPAD_L3;
+      if (strFeatureName == "righttrigger") return RETRO_DEVICE_ID_JOYPAD_R3;
+      if (strFeatureName == "leftstick")    return RETRO_DEVICE_INDEX_ANALOG_LEFT;
+      if (strFeatureName == "rightstick")   return RETRO_DEVICE_INDEX_ANALOG_RIGHT;
     }
-    else
+
+    // Check buttonmap for other controllers
+    const TiXmlElement* pFeatureNode = GetFeatureNode(strControllerId, strFeatureName);
+    if (pFeatureNode)
     {
-      return LibretroTranslator::GetFeatureIndex(mapto);
+      const char* mapto = pFeatureNode->Attribute(BUTTONMAP_XML_ATTR_FEATURE_MAPTO);
+      if (!mapto)
+      {
+        m_addon->Log(ADDON::LOG_ERROR, "<%s> tag has no \"%s\" attribute", BUTTONMAP_XML_ELM_FEATURE, BUTTONMAP_XML_ATTR_FEATURE_MAPTO);
+      }
+      else
+      {
+        return LibretroTranslator::GetFeatureIndex(mapto);
+      }
     }
   }
 
