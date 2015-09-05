@@ -54,10 +54,6 @@ CLibretroDevice::CLibretroDevice(const game_controller* controller /* = NULL */)
         m_relativePointers.resize(LIBRETRO_RELATIVE_POINTER_COUNT);
         break;
 
-      case RETRO_DEVICE_KEYBOARD:
-        // TODO
-        break;
-
       case RETRO_DEVICE_LIGHTGUN:
         m_buttons.resize(LIBRETRO_LIGHTGUN_BUTTON_COUNT);
         m_relativePointers.resize(LIBRETRO_RELATIVE_POINTER_COUNT);
