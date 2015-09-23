@@ -393,8 +393,8 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       const char** typedData = reinterpret_cast<const char**>(data);
       if (typedData)
       {
-        if (!m_client->GetLibraryDirectory().empty())
-          *typedData = m_client->GetLibraryDirectory().c_str();
+        if (!m_client->GetContentDirectory().empty())
+          *typedData = m_client->GetContentDirectory().c_str();
         else
           *typedData = NULL;
       }

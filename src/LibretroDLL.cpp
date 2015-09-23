@@ -48,22 +48,10 @@ void CLibretroDLL::Unload(void)
     m_libretroClient = NULL;
   }
 
-  m_strLibraryDirectory.clear();
+  m_strPath.clear();
   m_strSystemDirectory.clear();
   m_strContentDirectory.clear();
   m_strSaveDirectory.clear();
-}
-
-// Get directory part of path, or empty if path doesn't contain any directory separators
-std::string GetDirectory(const std::string& path)
-{
-  size_t pos = path.find_last_of("/\\");
-  if (pos != 0 && pos != std::string::npos)
-  {
-    // Don't include trailing slash, it causes some libretro clients to fail
-    return path.substr(0, pos);
-  }
-  return "";
 }
 
 // Convert functionPtr to a string literal
@@ -132,13 +120,12 @@ bool CLibretroDLL::Load(const game_client_properties* gameClientProps)
     return bSuccess;
   }
 
-  m_strLibraryDirectory = GetDirectory(gameClientProps->game_client_dll_path);
+  m_strPath             = gameClientProps->game_client_dll_path;
   m_strSystemDirectory  = gameClientProps->system_directory;
   m_strContentDirectory = gameClientProps->content_directory;
   m_strSaveDirectory    = gameClientProps->save_directory;
 
   // Trailing slash causes some libretro cores to fail
-  RemoveSlashAtEnd(m_strLibraryDirectory);
   RemoveSlashAtEnd(m_strSystemDirectory);
   RemoveSlashAtEnd(m_strContentDirectory);
   RemoveSlashAtEnd(m_strSaveDirectory);

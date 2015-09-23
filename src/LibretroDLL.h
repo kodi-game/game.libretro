@@ -40,7 +40,7 @@ namespace LIBRETRO
     void Unload(void);
     bool Load(const game_client_properties* gameClientProps);
 
-    const std::string& GetLibraryDirectory() const { return m_strLibraryDirectory; }
+    const std::string& GetPath() const { return m_strPath; }
     const std::string& GetSystemDirectory() const { return m_strSystemDirectory; }
     const std::string& GetContentDirectory() const { return m_strContentDirectory; }
     const std::string& GetSaveDirectory() const { return m_strSaveDirectory; }
@@ -74,7 +74,7 @@ namespace LIBRETRO
   private:
     ADDON::CHelper_libXBMC_addon* m_xbmc;
     void*                         m_libretroClient;
-    std::string                   m_strLibraryDirectory;
+    std::string                   m_strPath;
     std::string                   m_strSystemDirectory;
     std::string                   m_strContentDirectory;
     std::string                   m_strSaveDirectory;
