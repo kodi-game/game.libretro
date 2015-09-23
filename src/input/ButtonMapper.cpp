@@ -58,7 +58,7 @@ bool CButtonMapper::LoadButtonMap(void)
     {
       bool bSuccess = false;
 
-      std::string strFilename = client->GetLibraryDirectory() + "/" + BUTTONMAP_XML;
+      std::string strFilename = client->GetContentDirectory() + "/" + BUTTONMAP_XML;
 
       m_addon->Log(ADDON::LOG_INFO, "Loading libretro buttonmap %s", strFilename.c_str());
 
