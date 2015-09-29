@@ -28,7 +28,7 @@
 #include "kodi/libXBMC_addon.h"
 #include "tinyxml.h"
 
-#define BUTTONMAP_XML          "buttonmap.xml"
+#define BUTTONMAP_XML          "resources/buttonmap.xml"
 #define DEFAULT_CONTROLLER_ID  "game.controller.default"
 using namespace LIBRETRO;
 
