@@ -80,6 +80,7 @@ retro_mod LibretroTranslator::GetKeyModifiers(GAME_KEY_MOD modifiers)
   if (modifiers & GAME_KEY_MOD_SHIFT)      mods = mods | RETROKMOD_SHIFT;
   if (modifiers & GAME_KEY_MOD_CTRL)       mods = mods | RETROKMOD_CTRL;
   if (modifiers & GAME_KEY_MOD_ALT)        mods = mods | RETROKMOD_ALT;
+  if (modifiers & GAME_KEY_MOD_RALT)       mods = mods | RETROKMOD_ALT;
   if (modifiers & GAME_KEY_MOD_META)       mods = mods | RETROKMOD_META;
   if (modifiers & GAME_KEY_MOD_NUMLOCK)    mods = mods | RETROKMOD_NUMLOCK;
   if (modifiers & GAME_KEY_MOD_CAPSLOCK)   mods = mods | RETROKMOD_CAPSLOCK;
