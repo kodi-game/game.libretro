@@ -111,8 +111,8 @@ int CButtonMapper::GetLibretroIndex(const std::string& strControllerId, const st
 {
   if (!strControllerId.empty() && !strFeatureName.empty())
   {
-    // Handle default controller
-    if (strControllerId == DEFAULT_CONTROLLER_ID)
+    // Handle default controller unless it appears in buttonmap.xml
+    if (strControllerId == DEFAULT_CONTROLLER_ID && GetControllerNode(DEFAULT_CONTROLLER_ID) == NULL)
     {
       if (strFeatureName == "a")            return RETRO_DEVICE_ID_JOYPAD_A;
       if (strFeatureName == "b")            return RETRO_DEVICE_ID_JOYPAD_B;
