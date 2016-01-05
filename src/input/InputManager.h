@@ -22,7 +22,7 @@
 #include "LibretroDevice.h"
 
 #include "kodi/kodi_game_types.h"
-#include "platform/threads/mutex.h"
+#include "p8-platform/threads/mutex.h"
 
 #include <stdint.h>
 #include <string>
@@ -95,6 +95,6 @@ namespace LIBRETRO
 
     std::vector<CLibretroDevice> m_ports;
     std::vector<game_key_event>  m_pressedKeys;
-    PLATFORM::CMutex             m_keyMutex;
+    P8PLATFORM::CMutex             m_keyMutex;
   };
 }
