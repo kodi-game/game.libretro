@@ -27,7 +27,7 @@
 #include "kodi/libKODI_game.h"
 
 using namespace LIBRETRO;
-using namespace PLATFORM;
+using namespace P8PLATFORM;
 
 #define LIBRETRO_JOYPAD_BUTTON_COUNT     16
 #define LIBRETRO_ANALOG_STICK_COUNT      2

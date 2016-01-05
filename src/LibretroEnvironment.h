@@ -20,7 +20,7 @@
 #pragma once
 
 #include "kodi/kodi_game_types.h"
-#include "platform/threads/mutex.h"
+#include "p8-platform/threads/mutex.h"
 
 #include <map>
 #include <string>
@@ -80,6 +80,6 @@ namespace LIBRETRO
     std::map<std::string, std::vector<std::string> > m_variables; // Record the variables reported by libretro core (key -> values)
     std::map<std::string, std::string>               m_settings;  // Record the settings reported by XBMC (key -> current value)
     volatile bool                                    m_bSettingsChanged;
-    PLATFORM::CMutex                                 m_settingsMutex;
+    P8PLATFORM::CMutex                                 m_settingsMutex;
   };
 } // namespace LIBRETRO
