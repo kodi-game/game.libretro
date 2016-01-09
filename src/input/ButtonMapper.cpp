@@ -120,16 +120,16 @@ int CButtonMapper::GetLibretroIndex(const std::string& strControllerId, const st
       if (strFeatureName == "y")            return RETRO_DEVICE_ID_JOYPAD_Y;
       if (strFeatureName == "start")        return RETRO_DEVICE_ID_JOYPAD_START;
       if (strFeatureName == "back")         return RETRO_DEVICE_ID_JOYPAD_SELECT;
-      if (strFeatureName == "leftbumber")   return RETRO_DEVICE_ID_JOYPAD_L2;
-      if (strFeatureName == "rightbumper")  return RETRO_DEVICE_ID_JOYPAD_R2;
-      if (strFeatureName == "leftthumb")    return RETRO_DEVICE_ID_JOYPAD_L;
-      if (strFeatureName == "rightthumb")   return RETRO_DEVICE_ID_JOYPAD_R;
+      if (strFeatureName == "leftbumber")   return RETRO_DEVICE_ID_JOYPAD_L;
+      if (strFeatureName == "rightbumper")  return RETRO_DEVICE_ID_JOYPAD_R;
+      if (strFeatureName == "leftthumb")    return RETRO_DEVICE_ID_JOYPAD_L3;
+      if (strFeatureName == "rightthumb")   return RETRO_DEVICE_ID_JOYPAD_R3;
       if (strFeatureName == "up")           return RETRO_DEVICE_ID_JOYPAD_UP;
       if (strFeatureName == "down")         return RETRO_DEVICE_ID_JOYPAD_DOWN;
       if (strFeatureName == "right")        return RETRO_DEVICE_ID_JOYPAD_RIGHT;
       if (strFeatureName == "left")         return RETRO_DEVICE_ID_JOYPAD_LEFT;
-      if (strFeatureName == "lefttrigger")  return RETRO_DEVICE_ID_JOYPAD_L3;
-      if (strFeatureName == "righttrigger") return RETRO_DEVICE_ID_JOYPAD_R3;
+      if (strFeatureName == "lefttrigger")  return RETRO_DEVICE_ID_JOYPAD_L2;
+      if (strFeatureName == "righttrigger") return RETRO_DEVICE_ID_JOYPAD_R2;
       if (strFeatureName == "leftstick")    return RETRO_DEVICE_INDEX_ANALOG_LEFT;
       if (strFeatureName == "rightstick")   return RETRO_DEVICE_INDEX_ANALOG_RIGHT;
     }
