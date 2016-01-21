@@ -10,12 +10,12 @@ find_package(kodiplatform REQUIRED)
 find_package(p8-platform REQUIRED)
 
 include_directories(${INCLUDES}
-                    ${platform_INCLUDE_DIRS}
+                    ${p8-platform_INCLUDE_DIRS}
                     ${kodiplatform_INCLUDE_DIRS}
                     ${KODI_INCLUDE_DIR}
                     ${PROJECT_SOURCE_DIR}/src)
 
-list(APPEND DEPLIBS ${kodiplatform_LIBRARIES} ${platform_LIBRARIES})
+list(APPEND DEPLIBS ${kodiplatform_LIBRARIES} ${p8-platform_LIBRARIES})
 
 set(LIBRETRO_SOURCES src/client.cpp
                      src/ClientBridge.cpp
