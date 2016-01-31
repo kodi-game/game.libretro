@@ -20,6 +20,7 @@
 
 #include "ClientBridge.h"
 #include "GameInfoLoader.h"
+#include "input/ButtonMapper.h"
 #include "input/InputManager.h"
 #include "libretro.h"
 #include "LibretroDLL.h"
@@ -385,6 +386,14 @@ void UpdatePort(unsigned int port, bool connected, const game_controller* contro
 
   if (CLIENT)
     CLIENT->retro_set_controller_port_device(port, device);
+}
+
+bool HasFeature(const char* controller_id, const char* feature_name)
+{
+  if (controller_id == nullptr || feature_name == nullptr)
+    return false;
+
+  return CButtonMapper::Get().GetLibretroIndex(controller_id, feature_name) >= 0;
 }
 
 bool InputEvent(unsigned int port, const game_input_event* event)
