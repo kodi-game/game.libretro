@@ -23,6 +23,7 @@
 
 #include <string>
 
+// TODO: Make this class generic and move XML-specific stuff to xml subfolder
 class TiXmlDocument;
 class TiXmlElement;
 
