@@ -1,106 +1,67 @@
-# game.libretro
+# Libretro wrapper for Kodi's Game API
 
-Libretro compatibility layer for the Kodi Game API
+This add-on provides a wrapper that allows Libretro cores to be loaded as game add-ons. Libretro cores are shared libraries that use the Libretro API, so the wrapper is responsible for translating function calls between the Libretro API and the Game API.
 
-# Building out-of-tree (recommended)
+This add-on depends on the Game API, which is not part of Kodi yet. This most recent version of the Game API currently exists on garbear's `retroplayer-15.2` branch.
 
-## Linux
+## Loading mechanism
 
-Create and enter a build directory
+In Kodi, a game add-on can import another game add-on in its `addon.xml` file. The imported add-on will be loaded instead of the actual add-on, and it is given the original add-on's path as a parameter. If multiple game add-ons are imported, the first will be loaded and given the list of imports, starting with itself and ending with the original game add-on.
 
-```shell
-mkdir game.libretro-build
-cd game.libretro-build
-```
+Using this strategy, Libretro cores import game.libretro, so Kodi loads game.libretro's library in place of the libretro core and passes it the path to the core. game.libretro in turns loads the Libretro core and begins translating function calls to and from the core.
 
-Generate a build environment with config for debugging (assuming you cloned Kodi into the folder `$HOME/workspace/kodi`)
+## Building
 
-```shell
-cmake -DADDONS_TO_BUILD=game.libretro \
-      -DCMAKE_BUILD_TYPE=Debug \
-      -DCMAKE_INSTALL_PREFIX=$HOME/workspace/kodi/addons \
-      -DPACKAGE_ZIP=1 \
-      $HOME/workspace/kodi/project/cmake/addons
-```
+Building this add-on requires Kodi's internal CMake-based build system for binary add-ons. If you are cross-compiling or just packaging the add-on, it is recommended that you use the Makefile provided with Kodi.
 
-The add-on can then be built with `make`.
+The Makefile will download, build and install the add-on and its dependencies. There is no need to manually clone the add-on if Kodi's source is available.
 
-# Building stand-alone (development)
+The version fetched by Kodi's build system is defined by a text file included with Kodi at [project/cmake/addons/addons/game.libretro](https://github.com/garbear/xbmc/tree/retroplayer-15.2/project/cmake/addons/addons/game.libretro) or fetched from the [binary add-ons repo](https://github.com/xbmc/repo-binary-addons) specified in [project/cmake/addons/bootstrap/repositories/binary-addons.txt](https://github.com/xbmc/xbmc/blob/master/project/cmake/addons/bootstrap/repositories/binary-addons.txt).
 
-Stand-alone builds are closer to "normal" software builds. The build system looks for its dependencies, by default with `/usr` and `/usr/local` prefixes.
+### Building on Linux
 
-To provide these dependencies yourself in a local working directory (`$HOME/kodi`), build Kodi with an installation prefix
+First, make sure Kodi's add-on build system is installed somewhere. You can perform a system install (to `/usr/local`) or a local install (I prefer `$HOME/kodi`). Specify this when you build Kodi:
 
 ```shell
-cd $HOME/workspace/kodi
 ./bootstrap
 ./configure --prefix=$HOME/kodi
 make
 make install
 ```
 
-Clone kodi-platform and create a CMake build directory
+Now, run the Makefile with the path to the build system:
 
 ```shell
-git clone https://github.com/xbmc/kodi-platform.git
-cd kodi-platform
-mkdir build
-cd build
-cmake -DCMAKE_BUILD_TYPE=Debug \
-      -DCMAKE_INSTALL_PREFIX=$HOME/kodi \
-      ..
-make
-make install
+cd tools/depends/target/binary-addons
+make PREFIX=$HOME/kodi ADDONS="game.libretro"
 ```
 
-The platform library was split from kodi-platform. Do the same as above for the new platform library:
+You can specify multiple add-ons, and wildcards are accepted too. For example, `ADDONS="pvr.*"` will build all pvr add-ons.
 
-```
-git clone https://github.com/Pulse-Eight/platform.git
-...
-```
-
-With these dependencies in place, the add-on can be built. Use the CMake command for kodi-platform above, or use this command to copy add-ons to your Kodi source tree:
+On Linux this performs a cross-compile install, so to package the add-on you'll need to copy the library and add-on files manually:
 
 ```shell
-cmake -DCMAKE_BUILD_TYPE=Debug \
-      -DCMAKE_PREFIX_PATH=$HOME/kodi \
-      -DCMAKE_INSTALL_PREFIX=$HOME/workspace/kodi/addons \
-      -DPACKAGE_ZIP=1 \
-      ..
+mkdir game.libretro
+cp -r $HOME/kodi/share/kodi/addons/game.libretro/ .
+cp -r $HOME/kodi/lib/kodi/addons/game.libretro/ .
 ```
 
-# Building in-tree (cross-compiling)
-
-Kodi's build system will fetch the add-on from the GitHub URL and git hash specified in [game.libretro.txt](https://github.com/garbear/xbmc/blob/retroplayer-15.1/project/cmake/addons/addons/game.libretro/game.libretro.txt).
-
-## Linux
-
-Ensure that kodi has been built successfully with the desired prefix (`$HOME/kodi` for a local prefix, or omitted for the system prefix (usually `/usr` or `/usr/local`). Then, from the root of Kodi's source tree, run
+To rebuild the add-on or compile a different one, clean the build directory:
 
 ```shell
-make install
+make clean
 ```
 
-Build the add-on
+### Building on OSX
+
+Building on OSX is similar to Linux, but all the paths are determined for you. This command will download, build and install the add-on to the `addons/` directory in your Kodi repo:
 
 ```shell
-make -C tools/depends/target/binary-addons PREFIX=$HOME/kodi ADDONS="game.libretro"
+cd tools/depends/target/binary-addons
+make ADDONS="game.libretro"
 ```
 
-The compiled .so can be found at
-
-```
-$HOME/kodi/lib/kodi/addons/game.libretro/game.libretro.so
-```
-
-To rebuild the add-on or compile a different one, clean the build directory
-
-```shell
-make -C tools/depends/target/binary-addons clean
-```
-
-## Windows
+### Building on Windows
 
 First, download and install [CMake](http://www.cmake.org/download/).
 
@@ -110,33 +71,66 @@ To compile on windows, open a command prompt at `tools\buildsteps\win32` and run
 make-addons.bat install game.libretro
 ```
 
-Alternatively, generate the `kodi-addons.sln` Visual Studio solution and project files.
+## Developing
 
-```
-tools\windows\prepare-binary-addons-dev.bat
-```
+When developing, compiling from a git repo is more convenient than repeatedly pushing changes to a remote one for Kodi's Makefile.
 
-The generated solution can be found at
+### Developing on Linux
 
-```
-project\cmake\addons\build\kodi-addons.sln
-```
+The add-on requires several dependencies to build properly. Like Kodi's build system, you can perform a system install or a local one (demonstrated here).
 
-Add-ons can be built individually through their specific project, or all at once by building the solution.
-
-No source code is downloaded at the CMake stage; when the project is built, the add-on's source will be downloaded and compiled.
-
-## OSX
-
-Per [README.osx](https://github.com/garbear/xbmc/blob/retroplayer-15.1/docs/README.osx), enter the `tools/depends` directory and make the add-on:
+First, clone p8-platform and build per standard CMake:
 
 ```shell
-cd tools/depends
-make -C target/binary-addons ADDONS="game.libretro"
+git clone https://github.com/Pulse-Eight/platform.git
+cd platform
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Debug \
+      -DCMAKE_INSTALL_PREFIX=$HOME/kodi \
+      ..
+make
+make install
 ```
 
-To rebuild the add-on or compile a different one, clean the build directory
+The kodi-platform library was split from p8-platform. Do the same as above for this library:
+
+```
+git clone https://github.com/xbmc/kodi-platform.git
+cd kodi-platform
+...
+```
+
+With these dependencies in place, the add-on can be built:
 
 ```shell
-make -C target/binary-addons clean
+git clone https://github.com/kodi-game/game.libretro.git
+cd game.libretro
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Debug \
+      -DCMAKE_PREFIX_PATH=$HOME/kodi \
+      -DCMAKE_INSTALL_PREFIX=$HOME/workspace/kodi/addons \
+      -DPACKAGE_ZIP=1 \
+      ..
+make
+make install
 ```
+
+where `$HOME/workspace/kodi` symlinks to the directory you cloned Kodi into.
+
+### Developing on Windows
+
+This instructions here came from this helpful [forum post](http://forum.kodi.tv/showthread.php?tid=173361&pid=2097898#pid2097898).
+
+First, open `tools\windows\prepare-binary-addons-dev.bat` and change `-DCMAKE_BUILD_TYPE=Debug ^` to `-DCMAKE_BUILD_TYPE=Release ^`.
+
+Open a command prompt at `tools\windows` and run the script:
+
+```shell
+prepare-binary-addons-dev.bat game.libretro
+```
+
+Open `project\cmake\addons\build\kodi-addons.sln` and build the solution. This downloads the add-on from the version specified in its text file (see above) and creates a Visual Studio project for it. If the build fails, try running it twice.
+
+This should package and copy the add-on to the `addons/` directory. If not, you can try opening the solution `project\cmake\addons\build\<addon-id>-prefix\src\<addon-id>-build\<addon-id>.sln` and building the INSTALL project or, worse case, copy by hand.
