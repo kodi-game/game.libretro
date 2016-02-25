@@ -79,6 +79,8 @@ void CLibretroEnvironment::Initialize(CHelper_libXBMC_addon* xbmc, CHelper_libKO
   m_client       = client;
   m_clientBridge = clientBridge;
 
+  m_singleFrameAudio.Initialize(m_frontend);
+
   // Install environment callback
   m_client->retro_set_environment(EnvCallback);
 
@@ -94,6 +96,7 @@ void CLibretroEnvironment::Initialize(CHelper_libXBMC_addon* xbmc, CHelper_libKO
 
 void CLibretroEnvironment::Deinitialize()
 {
+  m_singleFrameAudio.Deinitialize();
 }
 
 void CLibretroEnvironment::SetSetting(const char* name, const char* value)
@@ -130,7 +133,7 @@ void CLibretroEnvironment::SetSetting(const char* name, const char* value)
 
 void CLibretroEnvironment::AudioFrame(int16_t left, int16_t right)
 {
-  // TODO
+  m_singleFrameAudio.AddFrame(left, right);
 }
 
 bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)

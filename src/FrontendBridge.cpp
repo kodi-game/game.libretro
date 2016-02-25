@@ -31,7 +31,7 @@
 using namespace ADDON;
 using namespace LIBRETRO;
 
-#define S16NE_FRAMESIZE  4
+#define S16NE_FRAMESIZE  4 // int16 L + int16 R
 
 void CFrontendBridge::LogFrontend(retro_log_level level, const char *fmt, ...)
 {

@@ -19,6 +19,8 @@
  */
 #pragma once
 
+#include "audio/SingleFrameAudio.h"
+
 #include "kodi/kodi_game_types.h"
 #include "p8-platform/threads/mutex.h"
 
@@ -73,6 +75,7 @@ namespace LIBRETRO
     CHelper_libKODI_game*         m_frontend;
     CLibretroDLL*                 m_client;
     CClientBridge*                m_clientBridge;
+    CSingleFrameAudio             m_singleFrameAudio;
 
     game_system_av_info m_systemInfo;
     GAME_RENDER_FORMAT  m_renderFormat;

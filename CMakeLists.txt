@@ -18,6 +18,7 @@ include_directories(${INCLUDES}
 list(APPEND DEPLIBS ${kodiplatform_LIBRARIES} ${p8-platform_LIBRARIES})
 
 set(LIBRETRO_SOURCES src/client.cpp
+                     src/audio/SingleFrameAudio.cpp
                      src/ClientBridge.cpp
                      src/FrontendBridge.cpp
                      src/GameInfoLoader.cpp
