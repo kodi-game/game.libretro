@@ -20,6 +20,7 @@
 
 #include "ClientBridge.h"
 #include "GameInfoLoader.h"
+#include "GameLoop.h"
 #include "input/ButtonMapper.h"
 #include "input/InputManager.h"
 #include "libretro.h"
@@ -229,7 +230,11 @@ GAME_ERROR LoadGame(const char* url)
   }
 
   if (bResult)
+  {
     CInputManager::Get().OpenPort(0);
+
+    CGameLoop::GetInstance().Start(0.0, CLIENT); // TODO: fps
+  }
 
   return bResult ? GAME_ERROR_NO_ERROR : GAME_ERROR_FAILED;
 }
@@ -284,12 +289,16 @@ GAME_ERROR LoadStandalone(void)
   if (!CLIENT->retro_load_game(&empty))
     return GAME_ERROR_FAILED;
 
+  CGameLoop::GetInstance().Start(0.0, CLIENT); // TODO: fps
+
   return GAME_ERROR_NO_ERROR;
 }
 
 GAME_ERROR UnloadGame(void)
 {
   GAME_ERROR error = GAME_ERROR_FAILED;
+
+  CGameLoop::GetInstance().Stop();
 
   if (CLIENT)
   {
@@ -336,14 +345,6 @@ GAME_REGION GetRegion(void)
     return GAME_REGION_UNKNOWN;
 
   return CLIENT->retro_get_region() == RETRO_REGION_NTSC ? GAME_REGION_NTSC : GAME_REGION_PAL;
-}
-
-void FrameEvent(void)
-{
-  if (!CLIENT)
-    return;
-
-  CLIENT->retro_run();
 }
 
 GAME_ERROR Reset(void)
