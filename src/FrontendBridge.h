@@ -36,6 +36,7 @@ namespace LIBRETRO
 
     // Forward to XBMC game API
     static void VideoRefresh(const void* data, unsigned int width, unsigned int height, size_t pitch);
+    static void AudioFrame(int16_t left, int16_t right);
     static size_t AudioFrames(const int16_t* data, size_t frames);
     static void InputPoll(void);
     static int16_t InputState(unsigned int port, unsigned int device, unsigned int index, unsigned int id);

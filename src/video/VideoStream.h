@@ -19,22 +19,28 @@
  */
 #pragma once
 
-#include <stdint.h>
-#include <vector>
+#include "kodi/kodi_game_types.h"
+
+class CHelper_libKODI_game;
 
 namespace LIBRETRO
 {
-  class CAudioStream;
-
-  class CSingleFrameAudio
+  class CVideoStream
   {
   public:
-    CSingleFrameAudio(CAudioStream* audioStream);
+    CVideoStream();
 
-    void AddFrame(int16_t left, int16_t right);
+    void Initialize(CHelper_libKODI_game* frontend);
+    void Deinitialize();
+
+    void AddFrame(const uint8_t* data, unsigned int size, unsigned int width, unsigned int height, GAME_VIDEO_FORMAT format);
 
   private:
-    CAudioStream* const  m_audioStream;
-    std::vector<int16_t> m_data;
+    CHelper_libKODI_game* m_frontend;
+
+    bool              m_bVideoOpen;
+    GAME_VIDEO_FORMAT m_format;
+    unsigned int      m_width;
+    unsigned int      m_height;
   };
 }

@@ -46,18 +46,18 @@ GAME_HW_CONTEXT_TYPE LibretroTranslator::GetHWContextType(retro_hw_context_type 
   return GAME_HW_CONTEXT_NONE;
 }
 
-GAME_RENDER_FORMAT LibretroTranslator::GetRenderFormat(retro_pixel_format format)
+GAME_VIDEO_FORMAT LibretroTranslator::GetVideoFormat(retro_pixel_format format)
 {
   switch (format)
   {
-    case RETRO_PIXEL_FORMAT_0RGB1555: return GAME_RENDER_FMT_0RGB1555;
-    case RETRO_PIXEL_FORMAT_XRGB8888: return GAME_RENDER_FMT_0RGB8888;
-    case RETRO_PIXEL_FORMAT_RGB565:   return GAME_RENDER_FMT_RGB565;
+    case RETRO_PIXEL_FORMAT_0RGB1555: return GAME_VIDEO_FORMAT_0RGB1555;
+    case RETRO_PIXEL_FORMAT_XRGB8888: return GAME_VIDEO_FORMAT_0RGB8888;
+    case RETRO_PIXEL_FORMAT_RGB565:   return GAME_VIDEO_FORMAT_RGB565;
     case RETRO_PIXEL_FORMAT_UNKNOWN:
     default:
       break;
   }
-  return GAME_RENDER_FMT_NONE;
+  return GAME_VIDEO_FORMAT_UNKNOWN;
 }
 
 GAME_RUMBLE_EFFECT LibretroTranslator::GetRumbleEffect(retro_rumble_effect effect)

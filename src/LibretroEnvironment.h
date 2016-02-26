@@ -19,7 +19,8 @@
  */
 #pragma once
 
-#include "audio/SingleFrameAudio.h"
+#include "audio/AudioStream.h"
+#include "video/VideoStream.h"
 
 #include "kodi/kodi_game_types.h"
 #include "p8-platform/threads/mutex.h"
@@ -49,6 +50,9 @@ namespace LIBRETRO
     CLibretroDLL*                 GetClient(void)       { return m_client; }
     CClientBridge*                GetClientBridge(void) { return m_clientBridge; }
 
+    CVideoStream& Video(void) { return m_videoStream; }
+    CAudioStream& Audio(void) { return m_audioStream; }
+
     game_system_av_info GetSystemInfo(void) const { return m_systemInfo; }
     void UpdateSystemInfo(game_system_av_info info) { m_systemInfo = info; }
 
@@ -57,14 +61,12 @@ namespace LIBRETRO
      * this to the frontend, we store the value and report it on calls to
      * VideoRefresh().
      */
-    GAME_RENDER_FORMAT GetRenderFormat(void) const { return m_renderFormat; }
+    GAME_VIDEO_FORMAT GetVideoFormat(void) const { return m_videoFormat; }
 
     /*!
      * Invoked when XBMC transfers a setting to the add-on.
      */
     void SetSetting(const char* name, const char* value);
-
-    void AudioFrame(int16_t left, int16_t right);
 
     bool EnvironmentCallback(unsigned cmd, void* data);
 
@@ -75,14 +77,15 @@ namespace LIBRETRO
     CHelper_libKODI_game*         m_frontend;
     CLibretroDLL*                 m_client;
     CClientBridge*                m_clientBridge;
-    CSingleFrameAudio             m_singleFrameAudio;
+    CVideoStream                  m_videoStream;
+    CAudioStream                  m_audioStream;
 
     game_system_av_info m_systemInfo;
-    GAME_RENDER_FORMAT  m_renderFormat;
+    GAME_VIDEO_FORMAT   m_videoFormat;
 
     std::map<std::string, std::vector<std::string> > m_variables; // Record the variables reported by libretro core (key -> values)
     std::map<std::string, std::string>               m_settings;  // Record the settings reported by XBMC (key -> current value)
     volatile bool                                    m_bSettingsChanged;
-    P8PLATFORM::CMutex                                 m_settingsMutex;
+    P8PLATFORM::CMutex                               m_settingsMutex;
   };
 } // namespace LIBRETRO

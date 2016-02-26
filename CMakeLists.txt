@@ -18,6 +18,7 @@ include_directories(${INCLUDES}
 list(APPEND DEPLIBS ${kodiplatform_LIBRARIES} ${p8-platform_LIBRARIES})
 
 set(LIBRETRO_SOURCES src/client.cpp
+                     src/audio/AudioStream.cpp
                      src/audio/SingleFrameAudio.cpp
                      src/ClientBridge.cpp
                      src/FrontendBridge.cpp
@@ -31,7 +32,8 @@ set(LIBRETRO_SOURCES src/client.cpp
                      src/log/Log.cpp
                      src/log/LogAddon.cpp
                      src/log/LogConsole.cpp
-                     src/settings/Settings.cpp)
+                     src/settings/Settings.cpp
+                     src/video/VideoStream.cpp)
 
 build_addon(game.libretro LIBRETRO DEPLIBS)
 

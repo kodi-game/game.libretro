@@ -17,31 +17,32 @@
  *  <http://www.gnu.org/licenses/>.
  *
  */
+#pragma once
 
 #include "SingleFrameAudio.h"
-#include "AudioStream.h"
 
-using namespace LIBRETRO;
+#include "kodi/kodi_game_types.h"
 
-#define FRAMES_PER_PACKET  100 // This can be calculated from CLibretroEnvironment::GetSystemInfo().timing.sample_rate
-#define SAMPLES_PER_FRAME  2 // L + R
-#define SAMPLE_SIZE        sizeof(int16_t)
+class CHelper_libKODI_game;
 
-CSingleFrameAudio::CSingleFrameAudio(CAudioStream* audioStream) :
-  m_audioStream(audioStream)
+namespace LIBRETRO
 {
-  m_data.reserve(FRAMES_PER_PACKET * SAMPLES_PER_FRAME);
-}
-
-void CSingleFrameAudio::AddFrame(int16_t left, int16_t right)
-{
-  m_data.push_back(left);
-  m_data.push_back(right);
-
-  const unsigned int frameCount = m_data.size() / SAMPLES_PER_FRAME;
-  if (frameCount >= FRAMES_PER_PACKET)
+  class CAudioStream
   {
-    m_audioStream->AddFrames_S16NE(reinterpret_cast<const uint8_t*>(m_data.data()), m_data.size() * SAMPLE_SIZE);
-    m_data.clear();
-  }
+  public:
+    CAudioStream();
+
+    void Initialize(CHelper_libKODI_game* frontend);
+    void Deinitialize();
+
+    void AddFrame_S16NE(int16_t left, int16_t right) { m_singleFrameAudio.AddFrame(left, right); }
+
+    void AddFrames_S16NE(const uint8_t* data, unsigned int size);
+
+  private:
+    CHelper_libKODI_game* m_frontend;
+    CSingleFrameAudio     m_singleFrameAudio;
+
+    bool m_bAudioOpen;
+  };
 }

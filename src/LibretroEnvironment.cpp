@@ -49,11 +49,6 @@ namespace LIBRETRO
   {
     return CLibretroEnvironment::Get().EnvironmentCallback(cmd, data);
   }
-
-  void AudioFrame(int16_t left, int16_t right)
-  {
-    CLibretroEnvironment::Get().AudioFrame(left, right);
-  }
 }
 
 CLibretroEnvironment::CLibretroEnvironment(void) :
@@ -61,7 +56,7 @@ CLibretroEnvironment::CLibretroEnvironment(void) :
   m_frontend(NULL),
   m_client(NULL),
   m_clientBridge(NULL),
-  m_renderFormat(GAME_RENDER_FMT_0RGB1555), // Default libretro format
+  m_videoFormat(GAME_VIDEO_FORMAT_0RGB1555), // Default libretro format
   m_bSettingsChanged(false)
 {
 }
@@ -79,16 +74,15 @@ void CLibretroEnvironment::Initialize(CHelper_libXBMC_addon* xbmc, CHelper_libKO
   m_client       = client;
   m_clientBridge = clientBridge;
 
-  m_singleFrameAudio.Initialize(m_frontend);
+  m_videoStream.Initialize(m_frontend);
+  m_audioStream.Initialize(m_frontend);
 
   // Install environment callback
   m_client->retro_set_environment(EnvCallback);
 
-  // Handle single-frame audio specially
-  m_client->retro_set_audio_sample(LIBRETRO::AudioFrame);
-
-  // Install other callbacks
+  // Install remaining callbacks
   m_client->retro_set_video_refresh(CFrontendBridge::VideoRefresh);
+  m_client->retro_set_audio_sample(CFrontendBridge::AudioFrame);
   m_client->retro_set_audio_sample_batch(CFrontendBridge::AudioFrames);
   m_client->retro_set_input_poll(CFrontendBridge::InputPoll);
   m_client->retro_set_input_state(CFrontendBridge::InputState);
@@ -96,7 +90,8 @@ void CLibretroEnvironment::Initialize(CHelper_libXBMC_addon* xbmc, CHelper_libKO
 
 void CLibretroEnvironment::Deinitialize()
 {
-  m_singleFrameAudio.Deinitialize();
+  m_videoStream.Deinitialize();
+  m_audioStream.Deinitialize();
 }
 
 void CLibretroEnvironment::SetSetting(const char* name, const char* value)
@@ -129,11 +124,6 @@ void CLibretroEnvironment::SetSetting(const char* name, const char* value)
     m_settings[name] = value;
     m_bSettingsChanged = true;
   }
-}
-
-void CLibretroEnvironment::AudioFrame(int16_t left, int16_t right)
-{
-  m_singleFrameAudio.AddFrame(left, right);
 }
 
 bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
@@ -209,7 +199,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       const retro_pixel_format* typedData = reinterpret_cast<const retro_pixel_format*>(data);
       if (!typedData)
         return false;
-      m_renderFormat = LibretroTranslator::GetRenderFormat(*typedData);
+      m_videoFormat = LibretroTranslator::GetVideoFormat(*typedData);
       break;
     }
   case RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS:

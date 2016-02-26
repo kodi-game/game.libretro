@@ -59,25 +59,22 @@ void CFrontendBridge::LogFrontend(retro_log_level level, const char *fmt, ...)
 
 void CFrontendBridge::VideoRefresh(const void* data, unsigned int width, unsigned int height, size_t pitch)
 {
-  if (!CLibretroEnvironment::Get().GetFrontend())
-    return;
+  CLibretroEnvironment::Get().Video().AddFrame(static_cast<const uint8_t*>(data),
+                                               pitch * height,
+                                               width,
+                                               height,
+                                               CLibretroEnvironment::Get().GetVideoFormat());
+}
 
-  CLibretroEnvironment::Get().GetFrontend()->VideoFrame(static_cast<const uint8_t*>(data),
-                                                        pitch * height,
-                                                        width,
-                                                        height,
-                                                        CLibretroEnvironment::Get().GetRenderFormat());
+void CFrontendBridge::AudioFrame(int16_t left, int16_t right)
+{
+  CLibretroEnvironment::Get().Audio().AddFrame_S16NE(left, right);
 }
 
 size_t CFrontendBridge::AudioFrames(const int16_t* data, size_t frames)
 {
-  if (!CLibretroEnvironment::Get().GetFrontend())
-    return 0;
-
-  CLibretroEnvironment::Get().GetFrontend()->AudioFrames(reinterpret_cast<const uint8_t*>(data),
-                                                         frames * S16NE_FRAMESIZE,
-                                                         frames,
-                                                         GAME_AUDIO_FMT_S16NE);
+  CLibretroEnvironment::Get().Audio().AddFrames_S16NE(reinterpret_cast<const uint8_t*>(data),
+                                                      frames * S16NE_FRAMESIZE);
 
   return frames;
 }
