@@ -397,12 +397,12 @@ bool HasFeature(const char* controller_id, const char* feature_name)
   return CButtonMapper::Get().GetLibretroIndex(controller_id, feature_name) >= 0;
 }
 
-bool InputEvent(unsigned int port, const game_input_event* event)
+bool InputEvent(const game_input_event* event)
 {
   if (!event)
     return false;
 
-  return CInputManager::Get().InputEvent(port, *event);
+  return CInputManager::Get().InputEvent(*event);
 }
 
 size_t SerializeSize(void)

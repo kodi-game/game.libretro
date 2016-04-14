@@ -60,19 +60,6 @@ GAME_VIDEO_FORMAT LibretroTranslator::GetVideoFormat(retro_pixel_format format)
   return GAME_VIDEO_FORMAT_UNKNOWN;
 }
 
-GAME_RUMBLE_EFFECT LibretroTranslator::GetRumbleEffect(retro_rumble_effect effect)
-{
-  switch (effect)
-  {
-    case RETRO_RUMBLE_STRONG: return GAME_RUMBLE_STRONG;
-    case RETRO_RUMBLE_WEAK:   return GAME_RUMBLE_WEAK;
-    case RETRO_RUMBLE_DUMMY:
-    default:
-      break;
-  }
-  return GAME_RUMBLE_STRONG;
-}
-
 retro_mod LibretroTranslator::GetKeyModifiers(GAME_KEY_MOD modifiers)
 {
   retro_mod mods = RETROKMOD_NONE;

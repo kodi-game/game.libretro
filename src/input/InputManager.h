@@ -75,7 +75,7 @@ namespace LIBRETRO
     /*!
      * \brief Called when an input event has occurred
      */
-    bool InputEvent(unsigned int port, const game_input_event& event);
+    bool InputEvent(const game_input_event& event);
 
     /*!
      * \brief Parse libretro input descriptors and output to the log

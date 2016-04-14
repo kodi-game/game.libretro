@@ -33,6 +33,13 @@ using namespace LIBRETRO;
 
 #define S16NE_FRAMESIZE  4 // int16 L + int16 R
 
+#define MAX_RUMBLE_STRENGTH  0xffff
+
+#ifndef CONSTRAIN
+  // Credit: https://stackoverflow.com/questions/8941262/constrain-function-port-from-arduino
+  #define CONSTRAIN(amt, low, high)  ((amt) < (low) ? (low) : ((amt) > (high) ? (high) : (amt)))
+#endif
+
 void CFrontendBridge::LogFrontend(retro_log_level level, const char *fmt, ...)
 {
   if (!CLibretroEnvironment::Get().GetXBMC())
@@ -188,7 +195,16 @@ bool CFrontendBridge::RumbleSetState(unsigned int port, retro_rumble_effect effe
   if (!CLibretroEnvironment::Get().GetFrontend())
     return false;
 
-  CLibretroEnvironment::Get().GetFrontend()->RumbleSetState(port, LibretroTranslator::GetRumbleEffect(effect), strength);
+  float magnitude = static_cast<float>(strength) / MAX_RUMBLE_STRENGTH;
+
+  game_input_event eventStruct;
+  eventStruct.type            = GAME_INPUT_EVENT_MOTOR;
+  eventStruct.port            = port;
+  eventStruct.controller_id   = nullptr; // TODO
+  eventStruct.feature_name    = nullptr; // TODO
+  eventStruct.motor.magnitude = CONSTRAIN(magnitude, 0.0f, 1.0f);
+
+  CLibretroEnvironment::Get().GetFrontend()->InputEvent(eventStruct);
   return true;
 }
 

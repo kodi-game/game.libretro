@@ -99,7 +99,7 @@ void CInputManager::EnableAnalogSensors(unsigned int port, bool bEnabled)
   // TODO
 }
 
-bool CInputManager::InputEvent(unsigned int port, const game_input_event& event)
+bool CInputManager::InputEvent(const game_input_event& event)
 {
   bool bHandled = false;
 
@@ -127,6 +127,8 @@ bool CInputManager::InputEvent(unsigned int port, const game_input_event& event)
   }
   else
   {
+    const unsigned int port = event.port;
+
     if (port < m_ports.size())
       bHandled = m_ports[port].InputEvent(event);
   }
