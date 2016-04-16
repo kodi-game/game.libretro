@@ -38,6 +38,7 @@ namespace LIBRETRO
     CLibretroDevice& operator=(const CLibretroDevice& rhs);
 
     libretro_device_t Type(void) const { return m_type; }
+    std::string ControllerID(void) const { return m_controllerId; }
 
     void Clear(void);
 
@@ -52,6 +53,7 @@ namespace LIBRETRO
 
   private:
     libretro_device_t                      m_type;
+    std::string                            m_controllerId;
     std::vector<game_digital_button_event> m_buttons;
     std::vector<game_analog_stick_event>   m_analogSticks;
     std::vector<game_accelerometer_event>  m_accelerometers;

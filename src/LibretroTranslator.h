@@ -38,6 +38,7 @@ namespace LIBRETRO
     static retro_mod            GetKeyModifiers(GAME_KEY_MOD modifiers);
     static libretro_device_t    GetDeviceType(const std::string& strType);
     static int                  GetFeatureIndex(const std::string& strFeatureName);
+    static std::string          GetMotorName(retro_rumble_effect effect);
     static retro_key            GetKeyCode(uint32_t character);
     static const char*          GetKeyName(uint32_t keycode);
   };

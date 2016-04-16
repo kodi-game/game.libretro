@@ -82,6 +82,11 @@ namespace LIBRETRO
      */
     void LogInputDescriptors(const retro_input_descriptor* descriptors);
 
+    /*!
+     * \brief Return the controller ID that the specified port is connected to
+     */
+    std::string ControllerID(unsigned int port) const;
+
     bool ButtonState(libretro_device_t device, unsigned int port, unsigned int buttonIndex);
     int DeltaX(libretro_device_t device, unsigned int port);
     int DeltaY(libretro_device_t device, unsigned int port);

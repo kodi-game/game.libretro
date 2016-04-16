@@ -41,7 +41,8 @@ CLibretroDevice::CLibretroDevice(const game_controller* controller /* = NULL */)
 {
   if (controller)
   {
-    m_type = CButtonMapper::Get().GetLibretroType(controller->controller_id);
+    m_controllerId = controller->controller_id ? controller->controller_id : "";
+    m_type = CButtonMapper::Get().GetLibretroType(m_controllerId);
 
     switch (m_type)
     {

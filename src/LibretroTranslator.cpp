@@ -115,8 +115,22 @@ int LibretroTranslator::GetFeatureIndex(const std::string& strFeatureName)
   if (strFeatureName == "turbo")        return RETRO_DEVICE_ID_LIGHTGUN_TURBO;
   if (strFeatureName == "pause")        return RETRO_DEVICE_ID_LIGHTGUN_PAUSE;
   if (strFeatureName == "start")        return RETRO_DEVICE_ID_LIGHTGUN_START;
+  if (strFeatureName == "strong")       return RETRO_RUMBLE_STRONG;
+  if (strFeatureName == "weak")         return RETRO_RUMBLE_WEAK;
 
   return -1;
+}
+
+std::string LibretroTranslator::GetMotorName(retro_rumble_effect effect)
+{
+  switch (effect)
+  {
+    case RETRO_RUMBLE_STRONG: return "strong";
+    case RETRO_RUMBLE_WEAK:   return "weak";
+    default:
+      break;
+  }
+  return "";
 }
 
 retro_key LibretroTranslator::GetKeyCode(uint32_t character)

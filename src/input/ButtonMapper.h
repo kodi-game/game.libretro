@@ -43,6 +43,8 @@ namespace LIBRETRO
 
     int GetLibretroIndex(const std::string& strControllerId, const std::string& strFeatureName);
 
+    std::string GetControllerFeature(const std::string& strControllerId, const std::string& strLibretroFeature);
+
   private:
     bool LoadButtonMap(void);
 

@@ -160,6 +160,16 @@ void CInputManager::LogInputDescriptors(const retro_input_descriptor* descriptor
   */
 }
 
+std::string CInputManager::ControllerID(unsigned int port) const
+{
+  std::string controllerId;
+
+  if (port < m_ports.size())
+    controllerId = m_ports[port].ControllerID();
+
+  return controllerId;
+}
+
 bool CInputManager::ButtonState(libretro_device_t device, unsigned int port, unsigned int buttonIndex)
 {
   bool bState = false;

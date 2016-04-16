@@ -21,6 +21,7 @@
 #include "FrontendBridge.h"
 #include "LibretroEnvironment.h"
 #include "LibretroTranslator.h"
+#include "input/ButtonMapper.h"
 #include "input/InputManager.h"
 
 #include "kodi/libXBMC_addon.h"
@@ -195,13 +196,16 @@ bool CFrontendBridge::RumbleSetState(unsigned int port, retro_rumble_effect effe
   if (!CLibretroEnvironment::Get().GetFrontend())
     return false;
 
-  float magnitude = static_cast<float>(strength) / MAX_RUMBLE_STRENGTH;
+  std::string controllerId  = CInputManager::Get().ControllerID(port);
+  std::string libretroMotor = LibretroTranslator::GetMotorName(effect);
+  std::string featureName   = CButtonMapper::Get().GetControllerFeature(controllerId, libretroMotor);
+  float       magnitude     = static_cast<float>(strength) / MAX_RUMBLE_STRENGTH;
 
   game_input_event eventStruct;
   eventStruct.type            = GAME_INPUT_EVENT_MOTOR;
   eventStruct.port            = port;
-  eventStruct.controller_id   = nullptr; // TODO
-  eventStruct.feature_name    = nullptr; // TODO
+  eventStruct.controller_id   = controllerId.c_str();
+  eventStruct.feature_name    = featureName.c_str();
   eventStruct.motor.magnitude = CONSTRAIN(magnitude, 0.0f, 1.0f);
 
   CLibretroEnvironment::Get().GetFrontend()->InputEvent(eventStruct);

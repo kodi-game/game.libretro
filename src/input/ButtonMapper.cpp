@@ -132,6 +132,8 @@ int CButtonMapper::GetLibretroIndex(const std::string& strControllerId, const st
       if (strFeatureName == "righttrigger") return RETRO_DEVICE_ID_JOYPAD_R2;
       if (strFeatureName == "leftstick")    return RETRO_DEVICE_INDEX_ANALOG_LEFT;
       if (strFeatureName == "rightstick")   return RETRO_DEVICE_INDEX_ANALOG_RIGHT;
+      if (strFeatureName == "leftmotor")    return RETRO_RUMBLE_STRONG;
+      if (strFeatureName == "rightmotor")   return RETRO_RUMBLE_WEAK;
     }
 
     // Check buttonmap for other controllers
@@ -151,6 +153,65 @@ int CButtonMapper::GetLibretroIndex(const std::string& strControllerId, const st
   }
 
   return -1;
+}
+
+std::string CButtonMapper::GetControllerFeature(const std::string& strControllerId, const std::string& strLibretroFeature)
+{
+  if (!strControllerId.empty() && !strLibretroFeature.empty())
+  {
+    // Handle default controller unless it appears in buttonmap.xml
+    if (strControllerId == DEFAULT_CONTROLLER_ID && GetControllerNode(DEFAULT_CONTROLLER_ID) == NULL)
+    {
+      if (strLibretroFeature == "a")           return "a";
+      if (strLibretroFeature == "b")           return "b";
+      if (strLibretroFeature == "x")           return "x";
+      if (strLibretroFeature == "y")           return "y";
+      if (strLibretroFeature == "start")       return "start";
+      if (strLibretroFeature == "select")      return "back";
+      if (strLibretroFeature == "up")          return "up";
+      if (strLibretroFeature == "down")        return "down";
+      if (strLibretroFeature == "right")       return "right";
+      if (strLibretroFeature == "left")        return "left";
+      if (strLibretroFeature == "l")           return "leftbumber";
+      if (strLibretroFeature == "r")           return "rightbumper";
+      if (strLibretroFeature == "l2")          return "lefttrigger";
+      if (strLibretroFeature == "r2")          return "righttrigger";
+      if (strLibretroFeature == "l3")          return "leftthumb";
+      if (strLibretroFeature == "r3")          return "rightthumb";
+      if (strLibretroFeature == "leftstick")   return "leftstick";
+      if (strLibretroFeature == "rightstick")  return "rightstick";
+      if (strLibretroFeature == "strong")      return "leftmotor";
+      if (strLibretroFeature == "weak")        return "rightmotor";
+    }
+
+    // Check buttonmap for other controllers
+    const TiXmlElement* pFeatureNode = NULL;
+
+    const TiXmlElement* pControllerNode = GetControllerNode(strControllerId);
+
+    if (pControllerNode)
+    {
+      const TiXmlElement* pFeatureNode = pControllerNode->FirstChildElement(BUTTONMAP_XML_ELM_FEATURE);
+
+      while (pFeatureNode)
+      {
+        const char* name = pFeatureNode->Attribute(BUTTONMAP_XML_ATTR_FEATURE_NAME);
+        if (!name)
+          break;
+
+        const char* mapto = pFeatureNode->Attribute(BUTTONMAP_XML_ATTR_FEATURE_MAPTO);
+        if (!mapto)
+          break;
+
+        if (mapto == strLibretroFeature)
+          return name;
+
+        pFeatureNode = pFeatureNode->NextSiblingElement(BUTTONMAP_XML_ELM_FEATURE);
+      }
+    }
+  }
+
+  return "";
 }
 
 const TiXmlElement* CButtonMapper::GetControllerNode(const std::string& strControllerId)
