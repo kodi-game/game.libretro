@@ -186,8 +186,8 @@ bool CLibretroDevice::AbsolutePointerState(unsigned int pointerIndex, float& x, 
 
 bool CLibretroDevice::InputEvent(const game_input_event& event)
 {
-  const std::string strControllerId = event.controller_id;
-  const std::string strFeatureName = event.feature_name;
+  const std::string strControllerId = event.controller_id ? event.controller_id : "";
+  const std::string strFeatureName = event.feature_name ? event.feature_name : "";
 
   int index = CButtonMapper::Get().GetLibretroIndex(strControllerId, strFeatureName);
   if (index >= 0)
