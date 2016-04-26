@@ -19,10 +19,10 @@
  */
 
 #include "InputManager.h"
-#include "ClientBridge.h"
-#include "libretro.h"
-#include "LibretroEnvironment.h"
-#include "LibretroTranslator.h"
+#include "libretro/ClientBridge.h"
+#include "libretro/libretro.h"
+#include "libretro/LibretroEnvironment.h"
+#include "libretro/LibretroTranslator.h"
 #include "log/Log.h"
 
 #include "kodi/libKODI_game.h"

@@ -20,8 +20,8 @@
 
 #include "LibretroDevice.h"
 #include "ButtonMapper.h"
-#include "libretro.h"
-#include "LibretroEnvironment.h"
+#include "libretro/libretro.h"
+#include "libretro/LibretroEnvironment.h"
 
 #include "kodi/libKODI_game.h"
 

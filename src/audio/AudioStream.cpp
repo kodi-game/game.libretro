@@ -19,7 +19,7 @@
  */
 
 #include "AudioStream.h"
-#include "LibretroEnvironment.h"
+#include "libretro/LibretroEnvironment.h"
 
 #include "kodi/libKODI_game.h"
 

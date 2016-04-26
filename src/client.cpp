@@ -18,17 +18,17 @@
  *
  */
 
-#include "ClientBridge.h"
-#include "GameInfoLoader.h"
-#include "GameLoop.h"
 #include "input/ButtonMapper.h"
 #include "input/InputManager.h"
-#include "libretro.h"
-#include "LibretroDLL.h"
-#include "LibretroEnvironment.h"
+#include "libretro/ClientBridge.h"
+#include "libretro/libretro.h"
+#include "libretro/LibretroDLL.h"
+#include "libretro/LibretroEnvironment.h"
 #include "log/Log.h"
 #include "log/LogAddon.h"
 #include "settings/Settings.h"
+#include "GameInfoLoader.h"
+#include "GameLoop.h"
 
 #include "kodi/libXBMC_addon.h"
 #include "kodi/libKODI_game.h"

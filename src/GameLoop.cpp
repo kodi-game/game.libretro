@@ -19,7 +19,7 @@
  */
 
 #include "GameLoop.h"
-#include "LibretroDLL.h"
+#include "libretro/LibretroDLL.h"
 
 #include "p8-platform/util/timeutils.h"
 

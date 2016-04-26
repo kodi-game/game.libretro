@@ -20,16 +20,16 @@ list(APPEND DEPLIBS ${kodiplatform_LIBRARIES} ${p8-platform_LIBRARIES})
 set(LIBRETRO_SOURCES src/client.cpp
                      src/audio/AudioStream.cpp
                      src/audio/SingleFrameAudio.cpp
-                     src/ClientBridge.cpp
-                     src/FrontendBridge.cpp
                      src/GameInfoLoader.cpp
                      src/GameLoop.cpp
                      src/input/ButtonMapper.cpp
                      src/input/InputManager.cpp
                      src/input/LibretroDevice.cpp
-                     src/LibretroDLL.cpp
-                     src/LibretroEnvironment.cpp
-                     src/LibretroTranslator.cpp
+                     src/libretro/ClientBridge.cpp
+                     src/libretro/FrontendBridge.cpp
+                     src/libretro/LibretroDLL.cpp
+                     src/libretro/LibretroEnvironment.cpp
+                     src/libretro/LibretroTranslator.cpp
                      src/log/Log.cpp
                      src/log/LogAddon.cpp
                      src/log/LogConsole.cpp

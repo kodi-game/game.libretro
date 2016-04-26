@@ -19,7 +19,7 @@
  */
 #pragma once
 
-#include "libretro.h"
+#include "libretro/libretro.h"
 
 #include <stdint.h>
 #include <string>

@@ -19,11 +19,11 @@
  */
 
 #include "ButtonMapper.h"
+#include "libretro/LibretroDLL.h"
+#include "libretro/LibretroEnvironment.h"
+#include "libretro/LibretroTranslator.h"
+#include "libretro/libretro.h"
 #include "LibretroDefinitions.h"
-#include "LibretroDLL.h"
-#include "LibretroEnvironment.h"
-#include "LibretroTranslator.h"
-#include "libretro.h"
 
 #include "kodi/libXBMC_addon.h"
 #include "tinyxml.h"
