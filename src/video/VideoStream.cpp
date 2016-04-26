@@ -37,6 +37,10 @@ CVideoStream::CVideoStream() :
 void CVideoStream::Initialize(CHelper_libKODI_game* frontend)
 {
   m_frontend = frontend;
+  m_bVideoOpen = false;
+  m_format = GAME_VIDEO_FORMAT_UNKNOWN;
+  m_width = 0;
+  m_height = 0;
 }
 
 void CVideoStream::Deinitialize()

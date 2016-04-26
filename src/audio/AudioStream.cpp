@@ -35,6 +35,7 @@ CAudioStream::CAudioStream() :
 void CAudioStream::Initialize(CHelper_libKODI_game* frontend)
 {
   m_frontend = frontend;
+  m_bAudioOpen = false;
 }
 
 void CAudioStream::Deinitialize()
