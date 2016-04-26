@@ -21,7 +21,6 @@ set(LIBRETRO_SOURCES src/client.cpp
                      src/audio/AudioStream.cpp
                      src/audio/SingleFrameAudio.cpp
                      src/GameInfoLoader.cpp
-                     src/GameLoop.cpp
                      src/input/ButtonMapper.cpp
                      src/input/InputManager.cpp
                      src/input/LibretroDevice.cpp
