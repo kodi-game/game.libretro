@@ -33,13 +33,13 @@ namespace LIBRETRO
     void Initialize(CHelper_libKODI_game* frontend);
     void Deinitialize();
 
-    void AddFrame(const uint8_t* data, unsigned int size, unsigned int width, unsigned int height, GAME_VIDEO_FORMAT format);
+    void AddFrame(const uint8_t* data, unsigned int size, unsigned int width, unsigned int height, GAME_PIXEL_FORMAT format);
 
   private:
     CHelper_libKODI_game* m_frontend;
 
     bool              m_bVideoOpen;
-    GAME_VIDEO_FORMAT m_format;
+    GAME_PIXEL_FORMAT m_format;
     unsigned int      m_width;
     unsigned int      m_height;
   };

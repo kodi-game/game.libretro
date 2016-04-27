@@ -56,7 +56,7 @@ CLibretroEnvironment::CLibretroEnvironment(void) :
   m_frontend(NULL),
   m_client(NULL),
   m_clientBridge(NULL),
-  m_videoFormat(GAME_VIDEO_FORMAT_0RGB1555), // Default libretro format
+  m_videoFormat(GAME_PIXEL_FORMAT_0RGB1555), // Default libretro format
   m_bSettingsChanged(false)
 {
 }

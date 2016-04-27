@@ -28,7 +28,7 @@ using namespace LIBRETRO;
 CVideoStream::CVideoStream() :
   m_frontend(nullptr),
   m_bVideoOpen(false),
-  m_format(GAME_VIDEO_FORMAT_UNKNOWN),
+  m_format(GAME_PIXEL_FORMAT_UNKNOWN),
   m_width(0),
   m_height(0)
 {
@@ -38,7 +38,7 @@ void CVideoStream::Initialize(CHelper_libKODI_game* frontend)
 {
   m_frontend = frontend;
   m_bVideoOpen = false;
-  m_format = GAME_VIDEO_FORMAT_UNKNOWN;
+  m_format = GAME_PIXEL_FORMAT_UNKNOWN;
   m_width = 0;
   m_height = 0;
 }
@@ -46,13 +46,13 @@ void CVideoStream::Initialize(CHelper_libKODI_game* frontend)
 void CVideoStream::Deinitialize()
 {
   if (m_bVideoOpen)
-    m_frontend->CloseVideoStream();
+    m_frontend->CloseStream(GAME_STREAM_VIDEO);
 
   m_frontend = nullptr;
   m_bVideoOpen = false;
 }
 
-void CVideoStream::AddFrame(const uint8_t* data, unsigned int size, unsigned int width, unsigned int height, GAME_VIDEO_FORMAT format)
+void CVideoStream::AddFrame(const uint8_t* data, unsigned int size, unsigned int width, unsigned int height, GAME_PIXEL_FORMAT format)
 {
   if (m_frontend)
   {
@@ -60,11 +60,11 @@ void CVideoStream::AddFrame(const uint8_t* data, unsigned int size, unsigned int
     {
       if (m_bVideoOpen)
       {
-        m_frontend->CloseVideoStream();
+        m_frontend->CloseStream(GAME_STREAM_VIDEO);
         m_bVideoOpen = false;
       }
 
-      if (m_frontend->OpenVideoStream(format, width, height))
+      if (m_frontend->OpenPixelStream(format, width, height))
       {
         m_bVideoOpen = true;
         m_format = format;
@@ -75,5 +75,5 @@ void CVideoStream::AddFrame(const uint8_t* data, unsigned int size, unsigned int
   }
 
   if (m_bVideoOpen)
-    m_frontend->AddVideoData(data, size);
+    m_frontend->AddStreamData(GAME_STREAM_VIDEO, data, size);
 }

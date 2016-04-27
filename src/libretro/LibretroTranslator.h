@@ -34,7 +34,7 @@ namespace LIBRETRO
   {
   public:
     static GAME_HW_CONTEXT_TYPE GetHWContextType(retro_hw_context_type type);
-    static GAME_VIDEO_FORMAT    GetVideoFormat(retro_pixel_format format);
+    static GAME_PIXEL_FORMAT    GetVideoFormat(retro_pixel_format format);
     static retro_mod            GetKeyModifiers(GAME_KEY_MOD modifiers);
     static libretro_device_t    GetDeviceType(const std::string& strType);
     static int                  GetFeatureIndex(const std::string& strFeatureName);

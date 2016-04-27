@@ -41,7 +41,7 @@ void CAudioStream::Initialize(CHelper_libKODI_game* frontend)
 void CAudioStream::Deinitialize()
 {
   if (m_bAudioOpen)
-    m_frontend->CloseAudioStream();
+    m_frontend->CloseStream(GAME_STREAM_AUDIO);
 
   m_frontend = nullptr;
   m_bAudioOpen = false;
@@ -55,11 +55,11 @@ void CAudioStream::AddFrames_S16NE(const uint8_t* data, unsigned int size)
 
     if (samplerate)
     {
-      if (m_frontend->OpenAudioStream(GAME_AUDIO_FORMAT_S16NE, static_cast<unsigned int>(samplerate + 0.5), CH_FL_FR))
+      if (m_frontend->OpenPCMStream(GAME_PCM_FORMAT_S16NE, static_cast<unsigned int>(samplerate + 0.5), CH_FL_FR))
         m_bAudioOpen = true;
     }
   }
 
   if (m_bAudioOpen)
-    m_frontend->AddAudioData(data, size);
+    m_frontend->AddStreamData(GAME_STREAM_AUDIO, data, size);
 }
