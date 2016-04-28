@@ -55,7 +55,8 @@ void CAudioStream::AddFrames_S16NE(const uint8_t* data, unsigned int size)
 
     if (samplerate)
     {
-      if (m_frontend->OpenPCMStream(GAME_PCM_FORMAT_S16NE, static_cast<unsigned int>(samplerate + 0.5), CH_FL_FR))
+      static const GAME_AUDIO_CHANNEL channelMap[] = { GAME_CH_FL, GAME_CH_FR, GAME_CH_NULL };
+      if (m_frontend->OpenPCMStream(GAME_PCM_FORMAT_S16NE, channelMap))
         m_bAudioOpen = true;
     }
   }
