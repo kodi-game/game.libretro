@@ -53,5 +53,5 @@ CLogAddon::CLogAddon(ADDON::CHelper_libXBMC_addon* frontend) :
 void CLogAddon::Log(SYS_LOG_LEVEL level, const char* logline)
 {
   if (m_frontend)
-    m_frontend->Log(TranslateLogLevel(level), logline);
+    m_frontend->Log(TranslateLogLevel(level), "%s", logline);
 }
