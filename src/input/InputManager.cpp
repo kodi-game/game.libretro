@@ -130,7 +130,7 @@ bool CInputManager::InputEvent(const game_input_event& event)
     const unsigned int port = event.port;
 
     if (port < m_ports.size())
-      bHandled = m_ports[port].InputEvent(event);
+      bHandled = m_ports[port].Input().InputEvent(event);
   }
 
   return bHandled;
@@ -182,7 +182,7 @@ bool CInputManager::ButtonState(libretro_device_t device, unsigned int port, uns
   {
     if (port < m_ports.size() || OpenPort(port))
     {
-      bState = m_ports[port].ButtonState(buttonIndex);
+      bState = m_ports[port].Input().ButtonState(buttonIndex);
     }
   }
 
@@ -195,7 +195,7 @@ int CInputManager::DeltaX(libretro_device_t device, unsigned int port)
 
   if (port < m_ports.size() || OpenPort(port))
   {
-    deltaX = m_ports[port].RelativePointerDeltaX();
+    deltaX = m_ports[port].Input().RelativePointerDeltaX();
   }
 
   return deltaX;
@@ -207,7 +207,7 @@ int CInputManager::DeltaY(libretro_device_t device, unsigned int port)
 
   if (port < m_ports.size() || OpenPort(port))
   {
-    deltaY = m_ports[port].RelativePointerDeltaY();
+    deltaY = m_ports[port].Input().RelativePointerDeltaY();
   }
 
   return deltaY;
@@ -219,7 +219,7 @@ bool CInputManager::AnalogStickState(unsigned int port, unsigned int analogStick
 
   if (port < m_ports.size() || OpenPort(port))
   {
-    bSuccess = m_ports[port].AnalogStickState(analogStickIndex, x, y);
+    bSuccess = m_ports[port].Input().AnalogStickState(analogStickIndex, x, y);
   }
 
   return bSuccess;
@@ -231,7 +231,7 @@ bool CInputManager::AbsolutePointerState(unsigned int port, unsigned int pointer
 
   if (port < m_ports.size() || OpenPort(port))
   {
-    bSuccess = m_ports[port].AbsolutePointerState(pointerIndex, x, y);
+    bSuccess = m_ports[port].Input().AbsolutePointerState(pointerIndex, x, y);
   }
 
   return bSuccess;
@@ -243,7 +243,7 @@ bool CInputManager::AccelerometerState(unsigned int port, float& x, float& y, fl
 
   if (port < m_ports.size() || OpenPort(port))
   {
-    bSuccess = m_ports[port].AccelerometerState(x, y, z);
+    bSuccess = m_ports[port].Input().AccelerometerState(x, y, z);
   }
 
   return bSuccess;

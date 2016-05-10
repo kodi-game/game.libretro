@@ -24,6 +24,7 @@ set(LIBRETRO_SOURCES src/client.cpp
                      src/input/ButtonMapper.cpp
                      src/input/InputManager.cpp
                      src/input/LibretroDevice.cpp
+                     src/input/LibretroDeviceInput.cpp
                      src/libretro/ClientBridge.cpp
                      src/libretro/FrontendBridge.cpp
                      src/libretro/LibretroDLL.cpp
