@@ -34,6 +34,7 @@
 #include "kodi/xbmc_addon_dll.h"
 #include "kodi/kodi_game_dll.h"
 
+#include <set>
 #include <string>
 #include <vector>
 
@@ -61,6 +62,7 @@ namespace LIBRETRO
   CLibretroDLL*                 CLIENT        = NULL;
   CClientBridge*                CLIENT_BRIDGE = NULL;
   std::vector<CGameInfoLoader*> GAME_INFO;
+  bool                          SUPPORTS_VFS = false; // TODO
 }
 
 extern "C"
@@ -107,6 +109,43 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
     CLibretroEnvironment::Get().Initialize(XBMC, FRONTEND, CLIENT, CLIENT_BRIDGE);
 
     CLIENT->retro_init();
+
+    // Log core info
+    retro_system_info systemInfo = { };
+    CLIENT->retro_get_system_info(&systemInfo);
+
+    // VFS support is derived from need_fullpath. This property means that the
+    // libretro cores requires a valid pathname. Conversely, if need_fullpath
+    // is false, the core can load from memory.
+    SUPPORTS_VFS = !systemInfo.need_fullpath;
+
+    std::string libraryName = systemInfo.library_name ? systemInfo.library_name : "";
+    std::string libraryVersion = systemInfo.library_version ? systemInfo.library_version : "";
+    std::string extensions = systemInfo.valid_extensions ? systemInfo.valid_extensions : "";
+
+    XBMC->Log(LOG_DEBUG, "CORE: ----------------------------------");
+    XBMC->Log(LOG_DEBUG, "CORE: Library name:    %s", libraryName.c_str());
+    XBMC->Log(LOG_DEBUG, "CORE: Library version: %s", libraryVersion.c_str());
+    XBMC->Log(LOG_DEBUG, "CORE: Extensions:      %s", extensions.c_str());
+    XBMC->Log(LOG_DEBUG, "CORE: Supports VFS:    %s", SUPPORTS_VFS ? "true" : "false");
+    XBMC->Log(LOG_DEBUG, "CORE: ----------------------------------");
+
+    // Reject invalid properties
+    std::set<std::string> coreExtensions; // TODO: Parse string from libretro API
+    std::set<std::string> addonExtensions; // TODO: Convert char** to set<string>
+
+    if (coreExtensions != addonExtensions)
+    {
+      std::string strAddonExtensions;// = StringUtils::Join(addonExtensions, "|"); // TODO
+      XBMC->Log(LOG_ERROR, "CORE: Extensions don't match addon.xml: %s", strAddonExtensions.c_str());
+      throw ADDON_STATUS_PERMANENT_FAILURE;
+    }
+
+    if (gameClientProps->supports_vfs != SUPPORTS_VFS)
+    {
+      XBMC->Log(LOG_ERROR, "CORE: VFS support doesn't match addon.xml: %s", gameClientProps->supports_vfs ? "true" : "false");
+      throw ADDON_STATUS_PERMANENT_FAILURE;
+    }
   }
   catch (const ADDON_STATUS& status)
   {
@@ -198,18 +237,9 @@ GAME_ERROR LoadGame(const char* url)
   if (url == NULL)
     return GAME_ERROR_INVALID_PARAMETERS;
 
-  retro_system_info systemInfo = { };
-  CLIENT->retro_get_system_info(&systemInfo);
-
-  // need_fullpath indicates that libretro requires a valid pathname in
-  // retro_game_info::path when calling retro_load_game(). Conversely, if
-  // need_fullpath is false, retro_load_game() can load from the memory
-  // block specified by retro_game_info::data.
-  const bool bSupportsVFS = !systemInfo.need_fullpath;
-
   // Build info loader vector
   SAFE_DELETE_GAME_INFO(GAME_INFO);
-  GAME_INFO.push_back(new CGameInfoLoader(url, XBMC, bSupportsVFS));
+  GAME_INFO.push_back(new CGameInfoLoader(url, XBMC, SUPPORTS_VFS));
 
   bool bResult = false;
 
