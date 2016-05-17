@@ -108,6 +108,8 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
     CLIENT_BRIDGE = new CClientBridge;
     CLibretroEnvironment::Get().Initialize(XBMC, FRONTEND, CLIENT, CLIENT_BRIDGE);
 
+    CButtonMapper::Get().LoadButtonMap();
+
     CLIENT->retro_init();
 
     // Log core info

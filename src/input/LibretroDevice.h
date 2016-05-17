@@ -21,16 +21,19 @@
 
 #include "kodi/kodi_game_types.h"
 
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
 
+class TiXmlElement;
+
 namespace LIBRETRO
 {
-  typedef unsigned int libretro_device_t;
-
   class CLibretroDevice;
-  typedef std::shared_ptr<CLibretroDevice> DevicePtr;
+  typedef std::shared_ptr<CLibretroDevice>   DevicePtr;
+  typedef unsigned int                       libretro_device_t;
+  typedef std::map<std::string, std::string> FeatureMap;
 
   class CLibretroDeviceInput;
 
@@ -38,15 +41,19 @@ namespace LIBRETRO
   {
   public:
     CLibretroDevice(const game_controller* controller);
+    ~CLibretroDevice();
 
     std::string ControllerID(void) const { return m_controllerId; }
     libretro_device_t Type(void) const { return m_type; }
+    const FeatureMap& Features(void) const { return m_featureMap; }
     CLibretroDeviceInput& Input() { return *m_input; }
+
+    bool Deserialize(const TiXmlElement* pElement);
 
   private:
     std::string                            m_controllerId;
     libretro_device_t                      m_type;
-    //CLibretroDeviceMap                     m_libretroMap;
+    FeatureMap                             m_featureMap;
     std::unique_ptr<CLibretroDeviceInput>  m_input;
   };
 }

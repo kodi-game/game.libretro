@@ -27,8 +27,6 @@
 class TiXmlDocument;
 class TiXmlElement;
 
-namespace ADDON { class CHelper_libXBMC_addon; }
-
 namespace LIBRETRO
 {
   class CButtonMapper
@@ -39,6 +37,8 @@ namespace LIBRETRO
   public:
     static CButtonMapper& Get(void);
 
+    bool LoadButtonMap(void);
+
     libretro_device_t GetLibretroType(const std::string& strControllerId);
 
     int GetLibretroIndex(const std::string& strControllerId, const std::string& strFeatureName);
@@ -46,13 +46,10 @@ namespace LIBRETRO
     std::string GetControllerFeature(const std::string& strControllerId, const std::string& strLibretroFeature);
 
   private:
-    bool LoadButtonMap(void);
+    bool HasController(const std::string& strControllerId) const;
+    std::string GetFeature(const std::string& strControllerId, const std::string& strFeatureName) const;
 
-    const TiXmlElement* GetControllerNode(const std::string& strControllerId);
-    const TiXmlElement* GetFeatureNode(const std::string& strControllerId, const std::string& strFeatureName);
-
-    bool                          m_bLoadAttempted;
-    TiXmlDocument*                m_buttonMapXml;
-    ADDON::CHelper_libXBMC_addon* m_addon;
+    bool                   m_bLoadAttempted;
+    std::vector<DevicePtr> m_devices;
   };
 }
