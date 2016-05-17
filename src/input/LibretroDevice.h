@@ -19,10 +19,9 @@
  */
 #pragma once
 
-#include "LibretroDeviceInput.h"
-
 #include "kodi/kodi_game_types.h"
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -30,24 +29,24 @@ namespace LIBRETRO
 {
   typedef unsigned int libretro_device_t;
 
+  class CLibretroDevice;
+  typedef std::shared_ptr<CLibretroDevice> DevicePtr;
+
+  class CLibretroDeviceInput;
+
   class CLibretroDevice
   {
   public:
-    CLibretroDevice(const game_controller* controller = NULL);
-    CLibretroDevice(const CLibretroDevice& other) { *this = other; }
-
-    CLibretroDevice& operator=(const CLibretroDevice& rhs);
+    CLibretroDevice(const game_controller* controller);
 
     std::string ControllerID(void) const { return m_controllerId; }
     libretro_device_t Type(void) const { return m_type; }
-    CLibretroDeviceInput& Input() { return m_input; }
-
-    void Clear(void);
+    CLibretroDeviceInput& Input() { return *m_input; }
 
   private:
     std::string                            m_controllerId;
     libretro_device_t                      m_type;
     //CLibretroDeviceMap                     m_libretroMap;
-    CLibretroDeviceInput                   m_input;
+    std::unique_ptr<CLibretroDeviceInput>  m_input;
   };
 }

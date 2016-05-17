@@ -32,12 +32,7 @@ namespace LIBRETRO
   class CLibretroDeviceInput
   {
   public:
-    CLibretroDeviceInput(const game_controller* controller = NULL);
-    CLibretroDeviceInput(const CLibretroDeviceInput& other) { *this = other; }
-
-    CLibretroDeviceInput& operator=(const CLibretroDeviceInput& rhs);
-
-    void Clear(void);
+    CLibretroDeviceInput(const game_controller* controller);
 
     bool  ButtonState(unsigned int buttonIndex) const;
     bool  AnalogStickState(unsigned int analogStickIndex, float& x, float& y) const;

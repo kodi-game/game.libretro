@@ -61,6 +61,7 @@ namespace LIBRETRO
     libretro_device_t GetDevice(unsigned int port) const;
 
     bool OpenPort(unsigned int port);
+    DevicePtr GetPort(unsigned int port);
     void ClosePort(unsigned int port);
     void ClosePorts(void);
 
@@ -98,7 +99,7 @@ namespace LIBRETRO
     void HandlePress(const game_key_event& key);
     bool IsPressed(uint32_t character);
 
-    std::vector<CLibretroDevice> m_ports;
+    std::vector<DevicePtr>       m_ports;
     std::vector<game_key_event>  m_pressedKeys;
     P8PLATFORM::CMutex             m_keyMutex;
   };

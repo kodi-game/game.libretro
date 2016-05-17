@@ -19,6 +19,8 @@
  */
 
 #include "InputManager.h"
+#include "LibretroDevice.h"
+#include "LibretroDeviceInput.h"
 #include "libretro/ClientBridge.h"
 #include "libretro/libretro.h"
 #include "libretro/LibretroEnvironment.h"
@@ -51,7 +53,7 @@ libretro_device_caps_t CInputManager::GetDeviceCaps(void) const
 void CInputManager::DeviceConnected(unsigned int port, bool bConnected, const game_controller* connectedDevice)
 {
   if (port < m_ports.size())
-    m_ports[port] = CLibretroDevice(bConnected ? connectedDevice : NULL);
+    m_ports[port] = std::make_shared<CLibretroDevice>(bConnected ? connectedDevice : NULL);
 }
 
 libretro_device_t CInputManager::GetDevice(unsigned int port) const
@@ -59,7 +61,7 @@ libretro_device_t CInputManager::GetDevice(unsigned int port) const
   libretro_device_t deviceType = 0;
 
   if (port < m_ports.size())
-    deviceType = m_ports[port].Type();
+    deviceType = m_ports[port]->Type();
 
   return deviceType;
 }
@@ -67,6 +69,10 @@ libretro_device_t CInputManager::GetDevice(unsigned int port) const
 bool CInputManager::OpenPort(unsigned int port)
 {
   if (!CLibretroEnvironment::Get().GetFrontend())
+    return false;
+
+  // Sanity check
+  if (port > 32)
     return false;
 
   if (port >= m_ports.size())
@@ -77,6 +83,16 @@ bool CInputManager::OpenPort(unsigned int port)
   return true;
 }
 
+DevicePtr CInputManager::GetPort(unsigned int port)
+{
+  DevicePtr device;
+
+  if (port < m_ports.size())
+    device = m_ports[port];
+
+  return device;
+}
+
 void CInputManager::ClosePort(unsigned int port)
 {
   if (!CLibretroEnvironment::Get().GetFrontend())
@@ -85,7 +101,7 @@ void CInputManager::ClosePort(unsigned int port)
   CLibretroEnvironment::Get().GetFrontend()->ClosePort(port);
 
   if (port < m_ports.size())
-    m_ports[port].Clear();
+    m_ports[port].reset();
 }
 
 void CInputManager::ClosePorts(void)
@@ -130,7 +146,7 @@ bool CInputManager::InputEvent(const game_input_event& event)
     const unsigned int port = event.port;
 
     if (port < m_ports.size())
-      bHandled = m_ports[port].Input().InputEvent(event);
+      bHandled = m_ports[port]->Input().InputEvent(event);
   }
 
   return bHandled;
@@ -165,7 +181,7 @@ std::string CInputManager::ControllerID(unsigned int port) const
   std::string controllerId;
 
   if (port < m_ports.size())
-    controllerId = m_ports[port].ControllerID();
+    controllerId = m_ports[port]->ControllerID();
 
   return controllerId;
 }
@@ -182,7 +198,7 @@ bool CInputManager::ButtonState(libretro_device_t device, unsigned int port, uns
   {
     if (port < m_ports.size() || OpenPort(port))
     {
-      bState = m_ports[port].Input().ButtonState(buttonIndex);
+      bState = m_ports[port]->Input().ButtonState(buttonIndex);
     }
   }
 
@@ -195,7 +211,7 @@ int CInputManager::DeltaX(libretro_device_t device, unsigned int port)
 
   if (port < m_ports.size() || OpenPort(port))
   {
-    deltaX = m_ports[port].Input().RelativePointerDeltaX();
+    deltaX = m_ports[port]->Input().RelativePointerDeltaX();
   }
 
   return deltaX;
@@ -207,7 +223,7 @@ int CInputManager::DeltaY(libretro_device_t device, unsigned int port)
 
   if (port < m_ports.size() || OpenPort(port))
   {
-    deltaY = m_ports[port].Input().RelativePointerDeltaY();
+    deltaY = m_ports[port]->Input().RelativePointerDeltaY();
   }
 
   return deltaY;
@@ -219,7 +235,7 @@ bool CInputManager::AnalogStickState(unsigned int port, unsigned int analogStick
 
   if (port < m_ports.size() || OpenPort(port))
   {
-    bSuccess = m_ports[port].Input().AnalogStickState(analogStickIndex, x, y);
+    bSuccess = m_ports[port]->Input().AnalogStickState(analogStickIndex, x, y);
   }
 
   return bSuccess;
@@ -231,7 +247,7 @@ bool CInputManager::AbsolutePointerState(unsigned int port, unsigned int pointer
 
   if (port < m_ports.size() || OpenPort(port))
   {
-    bSuccess = m_ports[port].Input().AbsolutePointerState(pointerIndex, x, y);
+    bSuccess = m_ports[port]->Input().AbsolutePointerState(pointerIndex, x, y);
   }
 
   return bSuccess;
@@ -243,7 +259,7 @@ bool CInputManager::AccelerometerState(unsigned int port, float& x, float& y, fl
 
   if (port < m_ports.size() || OpenPort(port))
   {
-    bSuccess = m_ports[port].Input().AccelerometerState(x, y, z);
+    bSuccess = m_ports[port]->Input().AccelerometerState(x, y, z);
   }
 
   return bSuccess;

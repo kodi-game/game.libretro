@@ -19,36 +19,19 @@
  */
 
 #include "LibretroDevice.h"
+#include "LibretroDeviceInput.h"
 #include "ButtonMapper.h"
 #include "libretro/libretro.h"
 
 using namespace LIBRETRO;
 
-CLibretroDevice::CLibretroDevice(const game_controller* controller /* = NULL */)
+CLibretroDevice::CLibretroDevice(const game_controller* controller)
   : m_type(RETRO_DEVICE_NONE),
-    m_input(controller)
+    m_input(new CLibretroDeviceInput(controller))
 {
   if (controller && controller->controller_id)
   {
     m_controllerId = controller->controller_id;
     m_type = CButtonMapper::Get().GetLibretroType(m_controllerId);
   }
-}
-
-CLibretroDevice& CLibretroDevice::operator=(const CLibretroDevice& rhs)
-{
-  if (this != &rhs)
-  {
-    m_controllerId = rhs.m_controllerId;
-    m_type         = rhs.m_type;
-    m_input        = rhs.m_input;
-  }
-  return *this;
-}
-
-void CLibretroDevice::Clear(void)
-{
-  m_controllerId.clear();
-  m_type = RETRO_DEVICE_NONE;
-  m_input.Clear();
 }

@@ -18,6 +18,7 @@
  *
  */
 
+#include "LibretroDeviceInput.h"
 #include "LibretroDevice.h"
 #include "ButtonMapper.h"
 #include "libretro/libretro.h"
@@ -33,7 +34,7 @@ using namespace P8PLATFORM;
 #define LIBRETRO_RELATIVE_POINTER_COUNT  1
 #define LIBRETRO_ABSOLUTE_POINTER_COUNT  10
 
-CLibretroDeviceInput::CLibretroDeviceInput(const game_controller* controller /* = NULL */)
+CLibretroDeviceInput::CLibretroDeviceInput(const game_controller* controller)
 {
   if (controller && controller->controller_id)
   {
@@ -70,28 +71,6 @@ CLibretroDeviceInput::CLibretroDeviceInput(const game_controller* controller /* 
 
     m_accelerometers.resize(LIBRETRO_ACCELEROMETER_COUNT);
   }
-}
-
-CLibretroDeviceInput& CLibretroDeviceInput::operator=(const CLibretroDeviceInput& rhs)
-{
-  if (this != &rhs)
-  {
-    m_buttons          = rhs.m_buttons;
-    m_analogSticks     = rhs.m_analogSticks;
-    m_accelerometers   = rhs.m_accelerometers;
-    m_relativePointers = rhs.m_relativePointers;
-    m_absolutePointers = rhs.m_absolutePointers;
-  }
-  return *this;
-}
-
-void CLibretroDeviceInput::Clear(void)
-{
-  m_buttons.clear();
-  m_analogSticks.clear();
-  m_accelerometers.clear();
-  m_relativePointers.clear();
-  m_absolutePointers.clear();
 }
 
 bool CLibretroDeviceInput::ButtonState(unsigned int buttonIndex) const
