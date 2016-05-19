@@ -71,7 +71,8 @@ void CFrontendBridge::VideoRefresh(const void* data, unsigned int width, unsigne
                                                pitch * height,
                                                width,
                                                height,
-                                               CLibretroEnvironment::Get().GetVideoFormat());
+                                               CLibretroEnvironment::Get().GetVideoFormat(),
+                                               CLibretroEnvironment::Get().GetVideoRotation());
 }
 
 void CFrontendBridge::AudioFrame(int16_t left, int16_t right)

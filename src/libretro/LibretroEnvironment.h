@@ -63,6 +63,8 @@ namespace LIBRETRO
      */
     GAME_PIXEL_FORMAT GetVideoFormat(void) const { return m_videoFormat; }
 
+    GAME_VIDEO_ROTATION GetVideoRotation() const { return m_videoRotation; }
+
     /*!
      * Invoked when XBMC transfers a setting to the add-on.
      */
@@ -82,6 +84,7 @@ namespace LIBRETRO
 
     game_system_av_info m_systemInfo;
     GAME_PIXEL_FORMAT   m_videoFormat;
+    GAME_VIDEO_ROTATION m_videoRotation;
 
     std::map<std::string, std::vector<std::string> > m_variables; // Record the variables reported by libretro core (key -> values)
     std::map<std::string, std::string>               m_settings;  // Record the settings reported by XBMC (key -> current value)

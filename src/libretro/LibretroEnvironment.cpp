@@ -57,6 +57,7 @@ CLibretroEnvironment::CLibretroEnvironment(void) :
   m_client(NULL),
   m_clientBridge(NULL),
   m_videoFormat(GAME_PIXEL_FORMAT_0RGB1555), // Default libretro format
+  m_videoRotation(GAME_VIDEO_ROTATION_0),
   m_bSettingsChanged(false)
 {
 }
@@ -135,7 +136,9 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   {
   case RETRO_ENVIRONMENT_SET_ROTATION:
     {
-      // Removed from frontend
+      unsigned* typedData = reinterpret_cast<unsigned*>(data);
+      if (typedData)
+        m_videoRotation = LibretroTranslator::GetVideoRotation(*typedData);
       break;
     }
   case RETRO_ENVIRONMENT_GET_OVERSCAN:

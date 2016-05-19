@@ -60,6 +60,20 @@ GAME_PIXEL_FORMAT LibretroTranslator::GetVideoFormat(retro_pixel_format format)
   return GAME_PIXEL_FORMAT_UNKNOWN;
 }
 
+GAME_VIDEO_ROTATION LibretroTranslator::GetVideoRotation(unsigned int rotation)
+{
+  switch (rotation)
+  {
+  case 0: return GAME_VIDEO_ROTATION_0;
+  case 1: return GAME_VIDEO_ROTATION_90;
+  case 2: return GAME_VIDEO_ROTATION_180;
+  case 3: return GAME_VIDEO_ROTATION_270;
+  default:
+    break;
+  }
+  return GAME_VIDEO_ROTATION_0;
+}
+
 retro_mod LibretroTranslator::GetKeyModifiers(GAME_KEY_MOD modifiers)
 {
   retro_mod mods = RETROKMOD_NONE;

@@ -52,11 +52,11 @@ void CVideoStream::Deinitialize()
   m_bVideoOpen = false;
 }
 
-void CVideoStream::AddFrame(const uint8_t* data, unsigned int size, unsigned int width, unsigned int height, GAME_PIXEL_FORMAT format)
+void CVideoStream::AddFrame(const uint8_t* data, unsigned int size, unsigned int width, unsigned int height, GAME_PIXEL_FORMAT format, GAME_VIDEO_ROTATION rotation)
 {
   if (m_frontend)
   {
-    if (m_format != format || m_width != width || m_height != height)
+    if (m_format != format || m_width != width || m_height != height || rotation != m_rotation)
     {
       if (m_bVideoOpen)
       {
@@ -64,12 +64,13 @@ void CVideoStream::AddFrame(const uint8_t* data, unsigned int size, unsigned int
         m_bVideoOpen = false;
       }
 
-      if (m_frontend->OpenPixelStream(format, width, height))
+      if (m_frontend->OpenPixelStream(format, width, height, rotation))
       {
         m_bVideoOpen = true;
         m_format = format;
         m_width = width;
         m_height = height;
+        m_rotation = rotation;
       }
     }
   }
