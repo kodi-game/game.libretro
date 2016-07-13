@@ -218,7 +218,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       if (typedData)
       {
         // Store callback from libretro client
-        m_clientBridge->m_retro_keyboard_event = typedData->callback;
+        m_clientBridge->SetKeyboardEvent(typedData->callback);
       }
       break;
     }
@@ -250,8 +250,8 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
         m_frontend->HwSetInfo(&hw_info);
 
         // Store callbacks from libretro client
-        m_clientBridge->m_retro_hw_context_reset   = typedData->context_reset;
-        m_clientBridge->m_retro_hw_context_destroy = typedData->context_destroy;
+        m_clientBridge->SetHwContextReset(typedData->context_reset);
+        m_clientBridge->SetHwContextDestroy(typedData->context_destroy);
 
         // Expose frontend callbacks to libretro client
         typedData->get_current_framebuffer = CFrontendBridge::HwGetCurrentFramebuffer;
@@ -402,8 +402,8 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       if (typedData)
       {
         // Store callbacks from libretro client
-        m_clientBridge->m_retro_audio_callback           = typedData->callback;
-        m_clientBridge->m_retro_audio_set_state_callback = typedData->set_state;
+        m_clientBridge->SetAudioAvailable(typedData->callback);
+        m_clientBridge->SetAudioEnable(typedData->set_state);
       }
       break;
     }

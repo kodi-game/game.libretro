@@ -48,13 +48,26 @@ namespace LIBRETRO
     GAME_ERROR AudioEnable(bool enabled);
     GAME_ERROR AudioAvailable(void);
 
+    typedef void (*KeyboardEventCallback)(bool down, unsigned keycode, uint32_t character, uint16_t key_modifiers);
+    typedef void (*HwContextResetCallback)(void);
+    typedef void (*HwContextDestroyCallback)(void);
+    typedef void (*AudioEnableCallback)(bool enabled);
+    typedef void (*AudioAvailableCallback)(void);
+
+    void SetKeyboardEvent(KeyboardEventCallback callback)       { m_retro_keyboard_event = callback; }
+    void SetHwContextReset(HwContextResetCallback callback)     { m_retro_hw_context_reset = callback; }
+    void SetHwContextDestroy(HwContextDestroyCallback callback) { m_retro_hw_context_destroy = callback; }
+    void SetAudioEnable(AudioEnableCallback callback)           { m_retro_audio_set_state_callback = callback; }
+    void SetAudioAvailable(AudioAvailableCallback callback)     { m_retro_audio_callback = callback; }
+
+  private:
     // The bridge is accomplished by invoking the callback provided by libretro's
     // enironment callback. The frontend can only invoke the commands above
     // if the client provides these callbacks at run-time.
-    void (*m_retro_keyboard_event)(bool down, unsigned keycode, uint32_t character, uint16_t key_modifiers);
-    void (*m_retro_hw_context_reset)(void);
-    void (*m_retro_hw_context_destroy)(void);
-    void (*m_retro_audio_set_state_callback)(bool enabled);
-    void (*m_retro_audio_callback)(void);
+    KeyboardEventCallback    m_retro_keyboard_event;
+    HwContextResetCallback   m_retro_hw_context_reset;
+    HwContextDestroyCallback m_retro_hw_context_destroy;
+    AudioEnableCallback      m_retro_audio_set_state_callback;
+    AudioAvailableCallback   m_retro_audio_callback;
   };
 } // namespace LIBRETRO
