@@ -67,12 +67,24 @@ void CFrontendBridge::LogFrontend(retro_log_level level, const char *fmt, ...)
 
 void CFrontendBridge::VideoRefresh(const void* data, unsigned int width, unsigned int height, size_t pitch)
 {
-  CLibretroEnvironment::Get().Video().AddFrame(static_cast<const uint8_t*>(data),
-                                               pitch * height,
-                                               width,
-                                               height,
-                                               CLibretroEnvironment::Get().GetVideoFormat(),
-                                               CLibretroEnvironment::Get().GetVideoRotation());
+  if (data == RETRO_HW_FRAME_BUFFER_VALID)
+  {
+    if (CLibretroEnvironment::Get().GetFrontend())
+      CLibretroEnvironment::Get().GetFrontend()->RenderFrame();
+  }
+  else if (data == nullptr)
+  {
+    // Libretro is sending a frame dupe command
+  }
+  else
+  {
+    CLibretroEnvironment::Get().Video().AddFrame(static_cast<const uint8_t*>(data),
+                                                 pitch * height,
+                                                 width,
+                                                 height,
+                                                 CLibretroEnvironment::Get().GetVideoFormat(),
+                                                 CLibretroEnvironment::Get().GetVideoRotation());
+  }
 }
 
 void CFrontendBridge::AudioFrame(int16_t left, int16_t right)
