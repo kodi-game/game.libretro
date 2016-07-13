@@ -148,6 +148,11 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
       XBMC->Log(LOG_ERROR, "CORE: VFS support doesn't match addon.xml: %s", gameClientProps->supports_vfs ? "true" : "false");
       throw ADDON_STATUS_PERMANENT_FAILURE;
     }
+
+    /* TODO
+    // Initialize libretro's extended audio interface
+    CLIENT_BRIDGE->AudioSetState(true);
+    */
   }
   catch (const ADDON_STATUS& status)
   {
@@ -167,6 +172,11 @@ void ADDON_Stop(void)
 
 void ADDON_Destroy(void)
 {
+  /* TODO
+  if (CLIENT_BRIDGE)
+    CLIENT_BRIDGE->AudioSetState(false);
+  */
+
   if (CLIENT)
     CLIENT->retro_deinit();
 
@@ -396,6 +406,30 @@ GAME_ERROR Reset(void)
   CLIENT->retro_reset();
 
   return GAME_ERROR_NO_ERROR;
+}
+
+/*!
+ * \Brief Notify a core about audio being available for writing
+ *
+ * This enables finer-grained audio control by allowing the frontend to
+ * control when audio data is sent to the frontend.
+ *
+ * When this function is called, audio data should be written to the
+ * frontend via the AddStreamData() Game API callback in the same thread
+ * that invoked AudioAvailable().
+ *
+ * This extended interface is not recommended for use with emulators which
+ * have highly synchronous audio.
+ *
+ * This function is not part of the Game API yet. It has been implemented
+ * here in case a libretro core requires the extended audio interface.
+ */
+GAME_ERROR AudioAvailable()
+{
+  if (!CLIENT_BRIDGE)
+    return GAME_ERROR_FAILED;
+
+  return CLIENT_BRIDGE->AudioAvailable();
 }
 
 GAME_ERROR HwContextReset()
