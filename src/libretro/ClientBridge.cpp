@@ -34,8 +34,8 @@ CClientBridge::CClientBridge()
   : m_retro_keyboard_event(NULL),
     m_retro_hw_context_reset(NULL),
     m_retro_hw_context_destroy(NULL),
-    m_retro_audio_callback(NULL),
-    m_retro_audio_set_state_callback(NULL)
+    m_retro_audio_set_state_callback(NULL),
+    m_retro_audio_callback(NULL)
 {
 }
 
@@ -69,22 +69,22 @@ GAME_ERROR CClientBridge::HwContextDestroy(void)
   return GAME_ERROR_NO_ERROR;
 }
 
+GAME_ERROR CClientBridge::AudioEnable(bool enabled)
+{
+  if (!m_retro_audio_set_state_callback)
+    return GAME_ERROR_FAILED;
+
+  m_retro_audio_set_state_callback(enabled);
+
+  return GAME_ERROR_NO_ERROR;
+}
+
 GAME_ERROR CClientBridge::AudioAvailable(void)
 {
   if (!m_retro_audio_callback)
     return GAME_ERROR_FAILED;
 
   m_retro_audio_callback();
-
-  return GAME_ERROR_NO_ERROR;
-}
-
-GAME_ERROR CClientBridge::AudioSetState(bool enabled)
-{
-  if (!m_retro_audio_set_state_callback)
-    return GAME_ERROR_FAILED;
-
-  m_retro_audio_set_state_callback(enabled);
 
   return GAME_ERROR_NO_ERROR;
 }

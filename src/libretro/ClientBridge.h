@@ -45,8 +45,8 @@ namespace LIBRETRO
     GAME_ERROR KeyboardEvent(bool down, unsigned keycode, uint32_t character, uint16_t key_modifiers);
     GAME_ERROR HwContextReset(void);
     GAME_ERROR HwContextDestroy(void);
+    GAME_ERROR AudioEnable(bool enabled);
     GAME_ERROR AudioAvailable(void);
-    GAME_ERROR AudioSetState(bool enabled);
 
     // The bridge is accomplished by invoking the callback provided by libretro's
     // enironment callback. The frontend can only invoke the commands above
@@ -54,7 +54,7 @@ namespace LIBRETRO
     void (*m_retro_keyboard_event)(bool down, unsigned keycode, uint32_t character, uint16_t key_modifiers);
     void (*m_retro_hw_context_reset)(void);
     void (*m_retro_hw_context_destroy)(void);
-    void (*m_retro_audio_callback)(void);
     void (*m_retro_audio_set_state_callback)(bool enabled);
+    void (*m_retro_audio_callback)(void);
   };
 } // namespace LIBRETRO

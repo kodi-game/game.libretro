@@ -151,7 +151,7 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
 
     /* TODO
     // Initialize libretro's extended audio interface
-    CLIENT_BRIDGE->AudioSetState(true);
+    CLIENT_BRIDGE->AudioEnable(true);
     */
   }
   catch (const ADDON_STATUS& status)
@@ -174,7 +174,7 @@ void ADDON_Destroy(void)
 {
   /* TODO
   if (CLIENT_BRIDGE)
-    CLIENT_BRIDGE->AudioSetState(false);
+    CLIENT_BRIDGE->AudioEnable(false);
   */
 
   if (CLIENT)
