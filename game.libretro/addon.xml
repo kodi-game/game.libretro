@@ -18,5 +18,6 @@
     <summary lang="en">Libretro compatibility layer for Kodi's Game API</summary>
     <description>This add-on provides a wrapper for libretro cores, allowing them to be loaded as game add-ons.</description>
     <platform>all</platform>
+    <nofanart>true</nofanart>
   </extension>
 </addon>
