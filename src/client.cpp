@@ -370,6 +370,14 @@ GAME_REGION GetRegion(void)
   return CLIENT->retro_get_region() == RETRO_REGION_NTSC ? GAME_REGION_NTSC : GAME_REGION_PAL;
 }
 
+bool RequiresGameLoop(void)
+{
+  if (!CLIENT)
+    return false;
+
+  return true;
+}
+
 GAME_ERROR RunFrame(void)
 {
   if (!CLIENT)
