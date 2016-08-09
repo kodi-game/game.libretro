@@ -271,7 +271,14 @@ GAME_ERROR LoadGame(const char* url)
   }
 
   if (bResult)
+  {
     CInputManager::Get().OpenPort(0);
+
+    // TODO
+    CInputManager::Get().OpenPort(1);
+    CInputManager::Get().OpenPort(2);
+    CInputManager::Get().OpenPort(3);
+  }
 
   return bResult ? GAME_ERROR_NO_ERROR : GAME_ERROR_FAILED;
 }
