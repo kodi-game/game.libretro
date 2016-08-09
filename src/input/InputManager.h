@@ -58,7 +58,7 @@ namespace LIBRETRO
      * \brief Get the libretro device abstraction for the device connected to
      *        the specified port
      */
-    libretro_device_t GetDevice(unsigned int port) const;
+    libretro_device_t GetDevice(unsigned int port);
 
     bool OpenPort(unsigned int port);
     DevicePtr GetPort(unsigned int port);
@@ -86,7 +86,7 @@ namespace LIBRETRO
     /*!
      * \brief Return the controller ID that the specified port is connected to
      */
-    std::string ControllerID(unsigned int port) const;
+    std::string ControllerID(unsigned int port);
 
     bool ButtonState(libretro_device_t device, unsigned int port, unsigned int buttonIndex);
     int DeltaX(libretro_device_t device, unsigned int port);
@@ -99,8 +99,8 @@ namespace LIBRETRO
     void HandlePress(const game_key_event& key);
     bool IsPressed(uint32_t character);
 
-    std::vector<DevicePtr>       m_ports;
-    std::vector<game_key_event>  m_pressedKeys;
-    P8PLATFORM::CMutex             m_keyMutex;
+    std::map<unsigned int, DevicePtr> m_devices;
+    std::vector<game_key_event>       m_pressedKeys;
+    P8PLATFORM::CMutex                m_keyMutex;
   };
 }

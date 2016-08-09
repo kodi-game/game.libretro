@@ -52,16 +52,18 @@ libretro_device_caps_t CInputManager::GetDeviceCaps(void) const
 
 void CInputManager::DeviceConnected(unsigned int port, bool bConnected, const game_controller* connectedDevice)
 {
-  if (port < m_ports.size())
-    m_ports[port] = std::make_shared<CLibretroDevice>(bConnected ? connectedDevice : NULL);
+  if (bConnected)
+    m_devices[port] = std::make_shared<CLibretroDevice>(connectedDevice);
+  else
+    m_devices[port].reset();
 }
 
-libretro_device_t CInputManager::GetDevice(unsigned int port) const
+libretro_device_t CInputManager::GetDevice(unsigned int port)
 {
   libretro_device_t deviceType = 0;
 
-  if (port < m_ports.size())
-    deviceType = m_ports[port]->Type();
+  if (m_devices[port])
+    deviceType = m_devices[port]->Type();
 
   return deviceType;
 }
@@ -75,9 +77,6 @@ bool CInputManager::OpenPort(unsigned int port)
   if (port > 32)
     return false;
 
-  if (port >= m_ports.size())
-    m_ports.resize(port + 1);
-
   CLibretroEnvironment::Get().GetFrontend()->OpenPort(port);
 
   return true;
@@ -85,29 +84,28 @@ bool CInputManager::OpenPort(unsigned int port)
 
 DevicePtr CInputManager::GetPort(unsigned int port)
 {
-  DevicePtr device;
-
-  if (port < m_ports.size())
-    device = m_ports[port];
-
-  return device;
+  return m_devices[port];
 }
 
 void CInputManager::ClosePort(unsigned int port)
 {
-  if (!CLibretroEnvironment::Get().GetFrontend())
-    return;
+  if (CLibretroEnvironment::Get().GetFrontend())
+    CLibretroEnvironment::Get().GetFrontend()->ClosePort(port);
 
-  CLibretroEnvironment::Get().GetFrontend()->ClosePort(port);
-
-  if (port < m_ports.size())
-    m_ports[port].reset();
+  m_devices[port].reset();
 }
 
 void CInputManager::ClosePorts(void)
 {
-  for (unsigned int i = 0; i < m_ports.size(); i++)
-    ClosePort(i);
+  std::vector<unsigned int> ports;
+  for (auto it = m_devices.begin(); it != m_devices.end(); ++it)
+  {
+    if (it->second)
+      ports.push_back(it->first);
+  }
+
+  for (auto port : ports)
+    ClosePort(port);
 }
 
 void CInputManager::EnableAnalogSensors(unsigned int port, bool bEnabled)
@@ -145,8 +143,8 @@ bool CInputManager::InputEvent(const game_input_event& event)
   {
     const unsigned int port = event.port;
 
-    if (port < m_ports.size())
-      bHandled = m_ports[port]->Input().InputEvent(event);
+    if (m_devices[port])
+      bHandled = m_devices[port]->Input().InputEvent(event);
   }
 
   return bHandled;
@@ -176,12 +174,12 @@ void CInputManager::LogInputDescriptors(const retro_input_descriptor* descriptor
   */
 }
 
-std::string CInputManager::ControllerID(unsigned int port) const
+std::string CInputManager::ControllerID(unsigned int port)
 {
   std::string controllerId;
 
-  if (port < m_ports.size())
-    controllerId = m_ports[port]->ControllerID();
+  if (m_devices[port])
+    controllerId = m_devices[port]->ControllerID();
 
   return controllerId;
 }
@@ -196,9 +194,9 @@ bool CInputManager::ButtonState(libretro_device_t device, unsigned int port, uns
   }
   else
   {
-    if (port < m_ports.size() || OpenPort(port))
+    if (m_devices[port])
     {
-      bState = m_ports[port]->Input().ButtonState(buttonIndex);
+      bState = m_devices[port]->Input().ButtonState(buttonIndex);
     }
   }
 
@@ -209,9 +207,9 @@ int CInputManager::DeltaX(libretro_device_t device, unsigned int port)
 {
   int deltaX = 0;
 
-  if (port < m_ports.size() || OpenPort(port))
+  if (m_devices[port])
   {
-    deltaX = m_ports[port]->Input().RelativePointerDeltaX();
+    deltaX = m_devices[port]->Input().RelativePointerDeltaX();
   }
 
   return deltaX;
@@ -221,9 +219,9 @@ int CInputManager::DeltaY(libretro_device_t device, unsigned int port)
 {
   int deltaY = 0;
 
-  if (port < m_ports.size() || OpenPort(port))
+  if (m_devices[port])
   {
-    deltaY = m_ports[port]->Input().RelativePointerDeltaY();
+    deltaY = m_devices[port]->Input().RelativePointerDeltaY();
   }
 
   return deltaY;
@@ -233,9 +231,9 @@ bool CInputManager::AnalogStickState(unsigned int port, unsigned int analogStick
 {
   bool bSuccess = false;
 
-  if (port < m_ports.size() || OpenPort(port))
+  if (m_devices[port])
   {
-    bSuccess = m_ports[port]->Input().AnalogStickState(analogStickIndex, x, y);
+    bSuccess = m_devices[port]->Input().AnalogStickState(analogStickIndex, x, y);
   }
 
   return bSuccess;
@@ -245,9 +243,9 @@ bool CInputManager::AbsolutePointerState(unsigned int port, unsigned int pointer
 {
   bool bSuccess = false;
 
-  if (port < m_ports.size() || OpenPort(port))
+  if (m_devices[port])
   {
-    bSuccess = m_ports[port]->Input().AbsolutePointerState(pointerIndex, x, y);
+    bSuccess = m_devices[port]->Input().AbsolutePointerState(pointerIndex, x, y);
   }
 
   return bSuccess;
@@ -257,9 +255,9 @@ bool CInputManager::AccelerometerState(unsigned int port, float& x, float& y, fl
 {
   bool bSuccess = false;
 
-  if (port < m_ports.size() || OpenPort(port))
+  if (m_devices[port])
   {
-    bSuccess = m_ports[port]->Input().AccelerometerState(x, y, z);
+    bSuccess = m_devices[port]->Input().AccelerometerState(x, y, z);
   }
 
   return bSuccess;
