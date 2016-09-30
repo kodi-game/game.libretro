@@ -1,3 +1,18 @@
+# IDE ignorables
+.build
 .cproject
+.deps
+.libs
 .project
+.settings
+
+# CMake ignorables
 build
+Build
+
+# Add-on specific files
+game.libretro/project/VS2010Express/Debug
+game.libretro/project/VS2010Express/Release
+game.libretro/*.so
+game.libretro/*.dll
+game.libretro/addon.xml
