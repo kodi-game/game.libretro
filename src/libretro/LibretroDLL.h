@@ -42,7 +42,7 @@ namespace LIBRETRO
 
     const std::string& GetPath() const { return m_strPath; }
     const std::string& GetSystemDirectory() const { return m_strSystemDirectory; }
-    const std::string& GetContentDirectory() const { return m_strContentDirectory; }
+    const std::string& GetContentDirectory() const { return GetSystemDirectory(); } // Use system directory
     const std::string& GetSaveDirectory() const { return m_strSaveDirectory; }
 
     void     (*retro_set_environment)(retro_environment_t);
@@ -76,7 +76,6 @@ namespace LIBRETRO
     void*                         m_libretroClient;
     std::string                   m_strPath;
     std::string                   m_strSystemDirectory;
-    std::string                   m_strContentDirectory;
     std::string                   m_strSaveDirectory;
   };
 } // namespace LIBRETRO

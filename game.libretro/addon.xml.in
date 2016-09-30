@@ -5,7 +5,7 @@
        provider-name="Team-Kodi">
   <backwards-compatibility abi="1.0.0"/>
   <requires>
-    <import addon="kodi.game" version="1.0.25"/>
+    <import addon="kodi.game" version="1.0.26"/>
   </requires>
   <extension point="kodi.gameclient"
        library_@PLATFORM@="@LIBRARY_FILENAME@">
