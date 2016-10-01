@@ -29,6 +29,8 @@ set(LIBRETRO_SOURCES src/client.cpp
                      src/libretro/FrontendBridge.cpp
                      src/libretro/LibretroDLL.cpp
                      src/libretro/LibretroEnvironment.cpp
+                     src/libretro/LibretroSetting.cpp
+                     src/libretro/LibretroSettings.cpp
                      src/libretro/LibretroTranslator.cpp
                      src/log/Log.cpp
                      src/log/LogAddon.cpp

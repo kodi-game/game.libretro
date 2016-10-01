@@ -19,11 +19,11 @@
  */
 #pragma once
 
+#include "LibretroSettings.h"
 #include "audio/AudioStream.h"
 #include "video/VideoStream.h"
 
 #include "kodi/kodi_game_types.h"
-#include "p8-platform/threads/mutex.h"
 
 #include <map>
 #include <string>
@@ -66,9 +66,9 @@ namespace LIBRETRO
     GAME_VIDEO_ROTATION GetVideoRotation() const { return m_videoRotation; }
 
     /*!
-     * Invoked when XBMC transfers a setting to the add-on.
+     * Invoked when the frontend transfers a setting to the add-on.
      */
-    void SetSetting(const char* name, const char* value);
+    void SetSetting(const std::string& name, const std::string& value);
 
     bool EnvironmentCallback(unsigned cmd, void* data);
 
@@ -86,9 +86,6 @@ namespace LIBRETRO
     GAME_PIXEL_FORMAT   m_videoFormat;
     GAME_VIDEO_ROTATION m_videoRotation;
 
-    std::map<std::string, std::vector<std::string> > m_variables; // Record the variables reported by libretro core (key -> values)
-    std::map<std::string, std::string>               m_settings;  // Record the settings reported by XBMC (key -> current value)
-    volatile bool                                    m_bSettingsChanged;
-    P8PLATFORM::CMutex                               m_settingsMutex;
+    CLibretroSettings m_settings;
   };
 } // namespace LIBRETRO

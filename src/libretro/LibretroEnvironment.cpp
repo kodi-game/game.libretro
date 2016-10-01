@@ -57,8 +57,7 @@ CLibretroEnvironment::CLibretroEnvironment(void) :
   m_client(NULL),
   m_clientBridge(NULL),
   m_videoFormat(GAME_PIXEL_FORMAT_0RGB1555), // Default libretro format
-  m_videoRotation(GAME_VIDEO_ROTATION_0),
-  m_bSettingsChanged(false)
+  m_videoRotation(GAME_VIDEO_ROTATION_0)
 {
 }
 
@@ -78,6 +77,8 @@ void CLibretroEnvironment::Initialize(CHelper_libXBMC_addon* xbmc, CHelper_libKO
   m_videoStream.Initialize(m_frontend);
   m_audioStream.Initialize(m_frontend);
 
+  m_settings.Initialize(xbmc);
+
   // Install environment callback
   m_client->retro_set_environment(EnvCallback);
 
@@ -91,40 +92,15 @@ void CLibretroEnvironment::Initialize(CHelper_libXBMC_addon* xbmc, CHelper_libKO
 
 void CLibretroEnvironment::Deinitialize()
 {
+  m_settings.Deinitialize();
+
   m_videoStream.Deinitialize();
   m_audioStream.Deinitialize();
 }
 
-void CLibretroEnvironment::SetSetting(const char* name, const char* value)
+void CLibretroEnvironment::SetSetting(const std::string& name, const std::string& value)
 {
-  CLockObject lock(m_settingsMutex);
-
-  if (m_variables.empty())
-  {
-    // RETRO_ENVIRONMENT_SET_VARIABLES hasn't been called yet. We don't need to
-    // record the setting now, because m_settings will be initialized along with
-    // m_variables.
-    return;
-  }
-
-  // Check to make sure value is a valid value reported by libretro
-  if (m_variables.find(name) == m_variables.end())
-  {
-    m_xbmc->Log(LOG_ERROR, "XBMC setting %s unknown to libretro!", name);
-    return;
-  }
-  std::vector<std::string>& values = m_variables[name];
-  if (std::find(values.begin(), values.end(), value) == values.end())
-  {
-    m_xbmc->Log(LOG_ERROR, "\"%s\" is not a valid value for setting %s", value, name);
-    return;
-  }
-
-  if (m_settings[name] != value)
-  {
-    m_settings[name] = value;
-    m_bSettingsChanged = true;
-  }
+  m_settings.SetCurrentValue(name, value);
 }
 
 bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
@@ -265,20 +241,13 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       if (typedData)
       {
         const char* strKey = typedData->key;
-         if (!strKey)
-           return false;
+        if (strKey == nullptr)
+          return false;
 
-         CLockObject lock(m_settingsMutex);
+        typedData->value = m_settings.GetCurrentValue(strKey);
 
-         if (m_settings.find(strKey) == m_settings.end())
-         {
-           m_xbmc->Log(LOG_ERROR, "Unknown setting ID: %s", strKey);
-           return false;
-         }
-
-         typedData->value = m_settings[strKey].c_str();
-
-         m_bSettingsChanged = false;
+        // Assume libretro core is retrieving all variables at a time
+        m_settings.SetUnchanged();
        }
        break;
     }
@@ -287,80 +256,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       const retro_variable* typedData = reinterpret_cast<const retro_variable*>(data);
       if (typedData)
       {
-        CLockObject lock(m_settingsMutex);
-
-        // Example retro_variable:
-        //      { "foo_option", "Speed hack coprocessor X; false|true" }
-
-        // Text before first ';' is description. This ';' must be followed by
-        // a space, and followed by a list of possible values split up with '|'.
-        // Here, we break up this horrible messy string into the m_variables
-        // data structure and initialize m_settings with XBMC's settings.
-        for (const retro_variable* variable = typedData; variable && variable->key && variable->value; variable++)
-        {
-          const std::string strKey = variable->key;
-          std::string strValues = variable->value;
-
-          // Look for ; separating the description from the pipe-separated values
-          size_t pos;
-          if ((pos = strValues.find(';')) != std::string::npos)
-          {
-            pos++;
-            while (pos < strValues.size() && strValues[pos] == ' ')
-              pos++;
-            strValues.erase(0, pos);
-          }
-
-          // Split the values on | delimiter and build m_variables array
-          std::vector<std::string> vecValues;
-          while (!strValues.empty())
-          {
-            std::string strValue;
-
-            if ((pos = strValues.find('|')) == std::string::npos)
-            {
-              strValue = strValues;
-              strValues.clear();
-            }
-            else
-            {
-              strValue = strValues.substr(0, pos);
-              strValues.erase(0, pos + 1);
-            }
-
-            vecValues.push_back(strValue);
-          }
-
-          if (vecValues.empty())
-            continue;
-
-          m_variables[strKey] = vecValues;
-
-          // Query value for setting in XBMC
-          char valueBuf[1024] = { };
-          if (m_xbmc->GetSetting(variable->key, valueBuf))
-          {
-            if (std::find(vecValues.begin(), vecValues.end(), valueBuf) != vecValues.end())
-            {
-              m_xbmc->Log(LOG_DEBUG, "Setting %s has value \"%s\" in XBMC", strKey.c_str(), valueBuf);
-              m_settings[strKey] = valueBuf;
-            }
-            else
-            {
-              m_xbmc->Log(LOG_ERROR, "Setting %s: invalid value \"%s\" (values are: %s)", strKey.c_str(), valueBuf, variable->value);
-              m_settings[strKey] = vecValues[0]; // Default to first value per libretro api
-            }
-          }
-          else
-          {
-            m_xbmc->Log(LOG_ERROR, "Setting %s not found by XBMC", strKey.c_str());
-            m_settings[strKey] = vecValues[0];
-          }
-
-          assert(m_settings.find(strKey) != m_settings.end());
-        }
-
-        m_bSettingsChanged = true;
+        m_settings.SetAllSettings(typedData);
       }
       break;
     }
@@ -369,7 +265,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       bool* typedData = reinterpret_cast<bool*>(data);
       if (typedData)
       {
-        *typedData = m_bSettingsChanged;
+        *typedData = m_settings.Changed();
       }
       break;
     }
