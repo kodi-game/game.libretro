@@ -296,7 +296,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
         // a space, and followed by a list of possible values split up with '|'.
         // Here, we break up this horrible messy string into the m_variables
         // data structure and initialize m_settings with XBMC's settings.
-        for (const retro_variable* variable = typedData; variable->key && variable->value; variable++)
+        for (const retro_variable* variable = typedData; variable && variable->key && variable->value; variable++)
         {
           const std::string strKey = variable->key;
           std::string strValues = variable->value;
