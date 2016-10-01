@@ -308,7 +308,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
             pos++;
             while (pos < strValues.size() && strValues[pos] == ' ')
               pos++;
-            strValues = strValues.substr(pos);
+            strValues.erase(0, pos);
           }
 
           // Split the values on | delimiter and build m_variables array
