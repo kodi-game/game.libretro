@@ -20,6 +20,7 @@
 #pragma once
 
 #include "LibretroSettings.h"
+#include "LibretroResources.h"
 #include "audio/AudioStream.h"
 #include "video/VideoStream.h"
 
@@ -42,7 +43,12 @@ namespace LIBRETRO
   public:
     static CLibretroEnvironment& Get(void);
 
-    void Initialize(ADDON::CHelper_libXBMC_addon* xbmc, CHelper_libKODI_game* frontend, CLibretroDLL* client, CClientBridge* clientBridge);
+    void Initialize(ADDON::CHelper_libXBMC_addon* xbmc,
+                    CHelper_libKODI_game*         frontend,
+                    CLibretroDLL*                 client,
+                    CClientBridge*                clientBridge,
+                    const game_client_properties* gameClientProps);
+
     void Deinitialize(void);
 
     ADDON::CHelper_libXBMC_addon* GetXBMC(void)         { return m_xbmc; }
@@ -70,6 +76,8 @@ namespace LIBRETRO
      */
     void SetSetting(const std::string& name, const std::string& value);
 
+    std::string GetResourcePath(const char* relPath);
+
     bool EnvironmentCallback(unsigned cmd, void* data);
 
   private:
@@ -87,5 +95,6 @@ namespace LIBRETRO
     GAME_VIDEO_ROTATION m_videoRotation;
 
     CLibretroSettings m_settings;
+    CLibretroResources m_resources;
   };
 } // namespace LIBRETRO

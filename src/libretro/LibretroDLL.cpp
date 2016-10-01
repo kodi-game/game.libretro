@@ -19,7 +19,6 @@
  */
 
 #include "LibretroDLL.h"
-#include "LibretroDefines.h"
 
 #include "kodi/libKODI_game.h"
 #include "kodi/kodi_game_types.h"
@@ -51,8 +50,6 @@ void CLibretroDLL::Unload(void)
   }
 
   m_strPath.clear();
-  m_strSystemDirectory.clear();
-  m_strSaveDirectory.clear();
 }
 
 // Convert functionPtr to a string literal
@@ -63,17 +60,6 @@ template <typename T>
 bool RegisterSymbol(void* dll, T& functionPtr, const char* strFunctionPtr)
 {
   return (functionPtr = (T)dlsym(dll, strFunctionPtr)) != NULL;
-}
-
-// Trailing slash causes some libretro cores to fail
-void RemoveSlashAtEnd(std::string& path)
-{
-  if (!path.empty())
-  {
-    char last = path[path.size() - 1];
-    if (last == '/' || last == '\\')
-      path.erase(path.size() - 1);
-  }
 }
 
 bool CLibretroDLL::Load(const game_client_properties* gameClientProps)
@@ -121,24 +107,7 @@ bool CLibretroDLL::Load(const game_client_properties* gameClientProps)
     return bSuccess;
   }
 
-  if (gameClientProps->game_client_dll_path != nullptr)
-    m_strPath = gameClientProps->game_client_dll_path;
-
-  if (gameClientProps->resource_directory_count > 0 &&
-      gameClientProps->resource_directories != nullptr &&
-      gameClientProps->resource_directories[0] != nullptr)
-  {
-    m_strSystemDirectory = gameClientProps->resource_directories[0];
-    RemoveSlashAtEnd(m_strSystemDirectory);
-    m_strSystemDirectory += "/" LIBRETRO_SYSTEM_DIRECTORY_NAME;
-  }
-
-  if (gameClientProps->save_directory != nullptr)
-    m_strSaveDirectory = gameClientProps->save_directory;
-
-  // Trailing slash causes some libretro cores to fail
-  RemoveSlashAtEnd(m_strSystemDirectory);
-  RemoveSlashAtEnd(m_strSaveDirectory);
+  m_strPath = gameClientProps->game_client_dll_path;
 
   return true;
 }

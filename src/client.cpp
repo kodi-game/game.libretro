@@ -106,7 +106,7 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
 
     // Environment must be initialized before calling retro_init()
     CLIENT_BRIDGE = new CClientBridge;
-    CLibretroEnvironment::Get().Initialize(XBMC, FRONTEND, CLIENT, CLIENT_BRIDGE);
+    CLibretroEnvironment::Get().Initialize(XBMC, FRONTEND, CLIENT, CLIENT_BRIDGE, gameClientProps);
 
     CButtonMapper::Get().LoadButtonMap();
 

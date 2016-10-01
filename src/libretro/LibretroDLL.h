@@ -41,9 +41,6 @@ namespace LIBRETRO
     bool Load(const game_client_properties* gameClientProps);
 
     const std::string& GetPath() const { return m_strPath; }
-    const std::string& GetSystemDirectory() const { return m_strSystemDirectory; }
-    const std::string& GetContentDirectory() const { return GetSystemDirectory(); } // Use system directory
-    const std::string& GetSaveDirectory() const { return m_strSaveDirectory; }
 
     void     (*retro_set_environment)(retro_environment_t);
     void     (*retro_set_video_refresh)(retro_video_refresh_t);
@@ -75,7 +72,5 @@ namespace LIBRETRO
     ADDON::CHelper_libXBMC_addon* m_xbmc;
     void*                         m_libretroClient;
     std::string                   m_strPath;
-    std::string                   m_strSystemDirectory;
-    std::string                   m_strSaveDirectory;
   };
 } // namespace LIBRETRO

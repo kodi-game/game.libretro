@@ -67,7 +67,11 @@ CLibretroEnvironment& CLibretroEnvironment::Get(void)
   return _instance;
 }
 
-void CLibretroEnvironment::Initialize(CHelper_libXBMC_addon* xbmc, CHelper_libKODI_game* frontend, CLibretroDLL* client, CClientBridge* clientBridge)
+void CLibretroEnvironment::Initialize(ADDON::CHelper_libXBMC_addon* xbmc,
+                                      CHelper_libKODI_game*         frontend,
+                                      CLibretroDLL*                 client,
+                                      CClientBridge*                clientBridge,
+                                      const game_client_properties* gameClientProps)
 {
   m_xbmc         = xbmc;
   m_frontend     = frontend;
@@ -78,6 +82,7 @@ void CLibretroEnvironment::Initialize(CHelper_libXBMC_addon* xbmc, CHelper_libKO
   m_audioStream.Initialize(m_frontend);
 
   m_settings.Initialize(xbmc);
+  m_resources.Initialize(gameClientProps);
 
   // Install environment callback
   m_client->retro_set_environment(EnvCallback);
@@ -92,6 +97,7 @@ void CLibretroEnvironment::Initialize(CHelper_libXBMC_addon* xbmc, CHelper_libKO
 
 void CLibretroEnvironment::Deinitialize()
 {
+  m_resources.Deinitialize();
   m_settings.Deinitialize();
 
   m_videoStream.Deinitialize();
@@ -101,6 +107,11 @@ void CLibretroEnvironment::Deinitialize()
 void CLibretroEnvironment::SetSetting(const std::string& name, const std::string& value)
 {
   m_settings.SetCurrentValue(name, value);
+}
+
+std::string CLibretroEnvironment::GetResourcePath(const char* relPath)
+{
+  return m_resources.GetFullPath(relPath);
 }
 
 bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
@@ -166,10 +177,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       const char** typedData = reinterpret_cast<const char**>(data);
       if (typedData)
       {
-        if (!m_client->GetSystemDirectory().empty())
-          *typedData = m_client->GetSystemDirectory().c_str();
-        else
-          *typedData = NULL;
+        *typedData = m_resources.GetSystemDirectory();
       }
       break;
     }
@@ -285,10 +293,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       const char** typedData = reinterpret_cast<const char**>(data);
       if (typedData)
       {
-        if (!m_client->GetContentDirectory().empty())
-          *typedData = m_client->GetContentDirectory().c_str();
-        else
-          *typedData = NULL;
+        *typedData = m_resources.GetContentDirectory();
       }
       break;
     }
@@ -397,10 +402,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       const char** typedData = reinterpret_cast<const char**>(data);
       if (typedData)
       {
-        if (!m_client->GetContentDirectory().empty())
-          *typedData = m_client->GetContentDirectory().c_str();
-        else
-          *typedData = NULL;
+        *typedData = m_resources.GetContentDirectory();
       }
       break;
     }
@@ -409,10 +411,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       const char** typedData = reinterpret_cast<const char**>(data);
       if (typedData)
       {
-        if (!m_client->GetSaveDirectory().empty())
-          *typedData = m_client->GetSaveDirectory().c_str();
-        else
-          *typedData = NULL;
+        *typedData = m_resources.GetSaveDirectory();
       }
       break;
     }
@@ -431,6 +430,19 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       m_systemInfo.timing.fps            = typedData->timing.fps;
       m_systemInfo.timing.sample_rate    = typedData->timing.sample_rate;
 
+      break;
+    }
+  case RETRO_ENVIRONMENT_GET_RESOURCE_DIRECTORY:
+    {
+      retro_resource* typedData = reinterpret_cast<retro_resource*>(data);
+      if (typedData)
+      {
+        const char* relPath = typedData->rel_path;
+        if (relPath == nullptr)
+          return false;
+
+        typedData->base_path = m_resources.GetBaseSystemPath(relPath);
+      }
       break;
     }
   default:

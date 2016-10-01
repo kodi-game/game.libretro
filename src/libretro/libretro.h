@@ -976,6 +976,19 @@ struct retro_hw_render_context_negotiation_interface
                                             * so it will be used after SET_HW_RENDER, but before the context_reset callback.
                                             */
 
+struct retro_resource
+{
+   const char *rel_path;
+   const char *base_path;
+};
+
+#define RETRO_ENVIRONMENT_GET_RESOURCE_DIRECTORY 44
+                                           /* struct retro_resource * --
+                                            * Interface to acquire resource paths by a relative filename.
+                                            * 'rel_path' should be set to a filename relative to the system path.
+                                            * 'base_path' will be set to the base path containing the resource or NULL if unknown.
+                                            */
+
 #define RETRO_MEMDESC_CONST     (1 << 0)   /* The frontend will never change this memory area once retro_load_game has returned. */
 #define RETRO_MEMDESC_BIGENDIAN (1 << 1)   /* The memory area contains big endian data. Default is little endian. */
 #define RETRO_MEMDESC_ALIGN_2   (1 << 16)  /* All memory access in this area is aligned to their own size, or 2, whichever is smaller. */

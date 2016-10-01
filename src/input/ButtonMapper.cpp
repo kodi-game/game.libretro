@@ -29,7 +29,7 @@
 
 #include "tinyxml.h"
 
-#define BUTTONMAP_XML          "resources/buttonmap.xml"
+#define BUTTONMAP_XML          "buttonmap.xml"
 #define DEFAULT_CONTROLLER_ID  "game.controller.default"
 
 using namespace LIBRETRO;
@@ -51,10 +51,12 @@ bool CButtonMapper::LoadButtonMap(void)
 
   m_devices.clear();
 
-  CLibretroDLL* client = CLibretroEnvironment::Get().GetClient();
+  CLibretroEnvironment::Get().GetResourcePath(BUTTONMAP_XML);
+
+  CLibretroDLL* client = CLibretroEnvironment::Get().GetClient(); // TODO: Remove me
   if (client)
   {
-    std::string strFilename = client->GetContentDirectory() + "/" + BUTTONMAP_XML;
+    std::string strFilename = CLibretroEnvironment::Get().GetResourcePath(BUTTONMAP_XML);
 
     dsyslog("Loading libretro buttonmap %s", strFilename.c_str());
 
