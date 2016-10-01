@@ -97,7 +97,7 @@ void CLibretroEnvironment::Deinitialize()
 
 void CLibretroEnvironment::SetSetting(const char* name, const char* value)
 {
-  //CLockObject lock(m_settingsMutex); // TODO
+  CLockObject lock(m_settingsMutex);
 
   if (m_variables.empty())
   {
@@ -268,7 +268,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
          if (!strKey)
            return false;
 
-         //CLockObject lock(m_settingsMutex); // TODO
+         CLockObject lock(m_settingsMutex);
 
          if (m_settings.find(strKey) == m_settings.end())
          {
@@ -287,7 +287,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       const retro_variable* typedData = reinterpret_cast<const retro_variable*>(data);
       if (typedData)
       {
-        //CLockObject lock(m_settingsMutex); // TODO
+        CLockObject lock(m_settingsMutex);
 
         // Example retro_variable:
         //      { "foo_option", "Speed hack coprocessor X; false|true" }
