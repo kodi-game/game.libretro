@@ -101,7 +101,7 @@ const char* CLibretroResources::GetBasePath(const std::string& relPath)
   {
     for (const auto& dir : m_resourceDirectories)
     {
-      std::string resourcePath = dir + relPath;
+      std::string resourcePath = dir + "/" + relPath;
 
       // Check for path existence
       if (m_addon->FileExists(resourcePath.c_str(), true))
