@@ -81,8 +81,8 @@ void CLibretroEnvironment::Initialize(ADDON::CHelper_libXBMC_addon* xbmc,
   m_videoStream.Initialize(m_frontend);
   m_audioStream.Initialize(m_frontend);
 
-  m_settings.Initialize(xbmc);
-  m_resources.Initialize(gameClientProps);
+  m_settings.Initialize(xbmc, gameClientProps);
+  m_resources.Initialize(xbmc, gameClientProps);
 
   // Install environment callback
   m_client->retro_set_environment(EnvCallback);

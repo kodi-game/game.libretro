@@ -21,6 +21,7 @@
 #include "LibretroSettings.h"
 #include "libretro.h"
 
+#include "kodi/kodi_game_types.h"
 #include "kodi/libXBMC_addon.h"
 
 #include <algorithm>
@@ -36,9 +37,12 @@ CLibretroSettings::CLibretroSettings() :
 {
 }
 
-void CLibretroSettings::Initialize(ADDON::CHelper_libXBMC_addon* addon)
+void CLibretroSettings::Initialize(ADDON::CHelper_libXBMC_addon* addon, const game_client_properties* props)
 {
   m_addon = addon;
+
+  if (props->profile_directory != nullptr)
+    m_profileDirectory = props->profile_directory;
 
   assert(m_addon != nullptr);
 }

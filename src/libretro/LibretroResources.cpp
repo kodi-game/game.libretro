@@ -22,6 +22,7 @@
 #include "LibretroDefines.h"
 
 #include "kodi/kodi_game_types.h"
+#include "kodi/libXBMC_addon.h"
 
 #include <utility>
 
@@ -41,7 +42,7 @@ namespace LIBRETRO
   }
 }
 
-void CLibretroResources::Initialize(const game_client_properties* gameClientProps)
+void CLibretroResources::Initialize(ADDON::CHelper_libXBMC_addon* addon, const game_client_properties* gameClientProps)
 {
   for (unsigned int i = 0; i < gameClientProps->resource_directory_count; i++)
   {
@@ -59,10 +60,21 @@ void CLibretroResources::Initialize(const game_client_properties* gameClientProp
     m_resourceDirectories.push_back(std::move(resourcePath));
   }
 
-  if (gameClientProps->save_directory != nullptr)
+  if (gameClientProps->profile_directory != nullptr)
   {
-    m_saveDirectory = gameClientProps->save_directory;
+    m_saveDirectory = gameClientProps->profile_directory;
     RemoveSlashAtEnd(m_saveDirectory);
+    m_saveDirectory += "/" LIBRETRO_SAVE_DIRECTORY_NAME;
+
+    // Ensure folder exists
+    if (addon)
+    {
+      if (!addon->DirectoryExists(m_saveDirectory.c_str()))
+      {
+        addon->Log(ADDON::LOG_DEBUG, "Creating save directory: %s", m_saveDirectory.c_str());
+        addon->CreateDirectory(m_saveDirectory.c_str());
+      }
+    }
   }
 }
 

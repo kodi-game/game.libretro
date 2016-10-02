@@ -23,6 +23,8 @@
 #include <string>
 #include <vector>
 
+namespace ADDON { class CHelper_libXBMC_addon; }
+
 struct game_client_properties;
 
 namespace LIBRETRO
@@ -32,7 +34,7 @@ namespace LIBRETRO
   public:
     CLibretroResources() = default;
 
-    void Initialize(const game_client_properties* gameClientProps);
+    void Initialize(ADDON::CHelper_libXBMC_addon* addon, const game_client_properties* gameClientProps);
     void Deinitialize() { }
 
     const char* GetSystemDirectory() const { return m_systemDirectory.c_str(); }
