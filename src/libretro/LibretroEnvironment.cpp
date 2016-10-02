@@ -441,7 +441,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
         if (relPath == nullptr)
           return false;
 
-        typedData->base_path = m_resources.GetBaseSystemPath(relPath);
+        typedData->base_directory = m_resources.GetBaseSystemPath(relPath);
       }
       break;
     }

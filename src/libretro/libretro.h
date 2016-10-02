@@ -979,14 +979,14 @@ struct retro_hw_render_context_negotiation_interface
 struct retro_resource
 {
    const char *rel_path;
-   const char *base_path;
+   const char *base_directory;
 };
 
-#define RETRO_ENVIRONMENT_GET_RESOURCE_DIRECTORY 44
+#define RETRO_ENVIRONMENT_GET_RESOURCE_DIRECTORY 99
                                            /* struct retro_resource * --
                                             * Interface to acquire resource paths by a relative filename.
                                             * 'rel_path' should be set to a filename relative to the system path.
-                                            * 'base_path' will be set to the base path containing the resource or NULL if unknown.
+                                            * 'base_directory' will be set to the base path containing the resource or NULL if unknown.
                                             */
 
 #define RETRO_MEMDESC_CONST     (1 << 0)   /* The frontend will never change this memory area once retro_load_game has returned. */
