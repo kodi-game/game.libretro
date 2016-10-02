@@ -24,6 +24,7 @@
 #include "kodi/kodi_game_types.h"
 #include "kodi/libXBMC_addon.h"
 
+#include <assert.h>
 #include <utility>
 
 using namespace LIBRETRO;
@@ -42,8 +43,17 @@ namespace LIBRETRO
   }
 }
 
+CLibretroResources::CLibretroResources() :
+  m_addon(nullptr)
+{
+}
+
 void CLibretroResources::Initialize(ADDON::CHelper_libXBMC_addon* addon, const game_client_properties* gameClientProps)
 {
+  m_addon = addon;
+
+  assert(m_addon != nullptr);
+
   for (unsigned int i = 0; i < gameClientProps->resource_directory_count; i++)
   {
     if (gameClientProps->resource_directories[i] == nullptr)
@@ -52,6 +62,9 @@ void CLibretroResources::Initialize(ADDON::CHelper_libXBMC_addon* addon, const g
     std::string resourcePath = gameClientProps->resource_directories[i];
 
     RemoveSlashAtEnd(resourcePath);
+
+    if (resourcePath.empty())
+      continue;
 
     // Set system path to first resource path discovered
     if (m_systemDirectory.empty())
@@ -67,15 +80,17 @@ void CLibretroResources::Initialize(ADDON::CHelper_libXBMC_addon* addon, const g
     m_saveDirectory += "/" LIBRETRO_SAVE_DIRECTORY_NAME;
 
     // Ensure folder exists
-    if (addon)
+    if (!m_addon->DirectoryExists(m_saveDirectory.c_str()))
     {
-      if (!addon->DirectoryExists(m_saveDirectory.c_str()))
-      {
-        addon->Log(ADDON::LOG_DEBUG, "Creating save directory: %s", m_saveDirectory.c_str());
-        addon->CreateDirectory(m_saveDirectory.c_str());
-      }
+      m_addon->Log(ADDON::LOG_DEBUG, "Creating save directory: %s", m_saveDirectory.c_str());
+      m_addon->CreateDirectory(m_saveDirectory.c_str());
     }
   }
+}
+
+void CLibretroResources::Deinitialize()
+{
+  m_addon = nullptr;
 }
 
 const char* CLibretroResources::GetBasePath(const std::string& relPath)
@@ -86,14 +101,15 @@ const char* CLibretroResources::GetBasePath(const std::string& relPath)
   {
     for (const auto& dir : m_resourceDirectories)
     {
-      std::string resourcePath = dir + relPath; // TODO: Check for path existence
+      std::string resourcePath = dir + relPath;
 
-      if (!dir.empty())
+      // Check for path existence
+      if (m_addon->FileExists(resourcePath.c_str(), true))
       {
         m_pathMap.insert(std::make_pair(relPath, std::move(dir)));
         it = m_pathMap.find(relPath);
+        break;
       }
-      break;
     }
   }
 

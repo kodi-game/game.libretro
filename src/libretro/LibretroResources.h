@@ -32,10 +32,11 @@ namespace LIBRETRO
   class CLibretroResources
   {
   public:
-    CLibretroResources() = default;
+    CLibretroResources();
+    ~CLibretroResources() { Deinitialize(); }
 
     void Initialize(ADDON::CHelper_libXBMC_addon* addon, const game_client_properties* gameClientProps);
-    void Deinitialize() { }
+    void Deinitialize();
 
     const char* GetSystemDirectory() const { return m_systemDirectory.c_str(); }
     const char* GetContentDirectory() { return GetSystemDirectory(); } // Use system directory
@@ -48,6 +49,8 @@ namespace LIBRETRO
 
   private:
     const char* ApendSystemFolder(const std::string& path);
+
+    ADDON::CHelper_libXBMC_addon* m_addon;
 
     std::vector<std::string>           m_resourceDirectories;
     std::map<std::string, std::string> m_pathMap;
