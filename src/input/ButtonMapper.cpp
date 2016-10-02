@@ -53,17 +53,19 @@ bool CButtonMapper::LoadButtonMap(void)
 
   CLibretroEnvironment::Get().GetResourcePath(BUTTONMAP_XML);
 
-  CLibretroDLL* client = CLibretroEnvironment::Get().GetClient(); // TODO: Remove me
-  if (client)
+  std::string strFilename = CLibretroEnvironment::Get().GetResourcePath(BUTTONMAP_XML);
+  if (strFilename.empty())
   {
-    std::string strFilename = CLibretroEnvironment::Get().GetResourcePath(BUTTONMAP_XML);
-
+    esyslog("Could not locate buttonmap \"%s\"", BUTTONMAP_XML);
+  }
+  else
+  {
     dsyslog("Loading libretro buttonmap %s", strFilename.c_str());
 
     TiXmlDocument buttonMapXml;
     if (!buttonMapXml.LoadFile(strFilename))
     {
-      esyslog("Failed to open file");
+      esyslog("Failed to open file: %s", strFilename.c_str());
     }
     else
     {
@@ -72,7 +74,7 @@ bool CButtonMapper::LoadButtonMap(void)
           pRootElement->NoChildren() ||
           pRootElement->ValueStr() != BUTTONMAP_XML_ROOT)
       {
-        esyslog("Can't find root <%s> tag", BUTTONMAP_XML_ROOT);
+        esyslog("Can't find root <%s> tag in %s", BUTTONMAP_XML_ROOT, strFilename.c_str());
       }
       else
       {
