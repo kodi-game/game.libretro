@@ -51,8 +51,6 @@ bool CButtonMapper::LoadButtonMap(void)
 
   m_devices.clear();
 
-  CLibretroEnvironment::Get().GetResourcePath(BUTTONMAP_XML);
-
   std::string strFilename = CLibretroEnvironment::Get().GetResourcePath(BUTTONMAP_XML);
   if (strFilename.empty())
   {
