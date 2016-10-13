@@ -1,9 +1,7 @@
+cmake_minimum_required(VERSION 3.1)
 project(game.libretro)
 
-cmake_minimum_required(VERSION 2.6)
-enable_language(CXX)
-
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR})
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR})
 
 find_package(Kodi REQUIRED)
 find_package(kodiplatform REQUIRED)
@@ -39,6 +37,4 @@ set(LIBRETRO_SOURCES src/client.cpp
                      src/settings/Settings.cpp
                      src/video/VideoStream.cpp)
 
-build_addon(game.libretro LIBRETRO DEPLIBS)
-
-include(CPack)
+build_addon(${PROJECT_NAME} LIBRETRO DEPLIBS)
