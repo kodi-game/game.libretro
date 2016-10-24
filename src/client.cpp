@@ -329,8 +329,7 @@ GAME_ERROR LoadStandalone(void)
   if (!CLIENT)
     return GAME_ERROR_FAILED;
 
-  retro_game_info empty = { "", NULL, 0, NULL };
-  if (!CLIENT->retro_load_game(&empty))
+  if (!CLIENT->retro_load_game(NULL))
     return GAME_ERROR_FAILED;
 
   return GAME_ERROR_NO_ERROR;
