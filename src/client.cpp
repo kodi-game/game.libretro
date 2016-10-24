@@ -329,9 +329,15 @@ GAME_ERROR LoadStandalone(void)
   if (!CLIENT)
     return GAME_ERROR_FAILED;
 
-  retro_game_info empty = { "", NULL, 0, NULL };
-  if (!CLIENT->retro_load_game(&empty))
+  if (!CLIENT->retro_load_game(NULL))
     return GAME_ERROR_FAILED;
+
+  CInputManager::Get().OpenPort(0);
+
+  // TODO
+  CInputManager::Get().OpenPort(1);
+  CInputManager::Get().OpenPort(2);
+  CInputManager::Get().OpenPort(3);
 
   return GAME_ERROR_NO_ERROR;
 }
