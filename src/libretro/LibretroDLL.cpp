@@ -34,9 +34,34 @@
 using namespace ADDON;
 using namespace LIBRETRO;
 
-CLibretroDLL::CLibretroDLL(CHelper_libXBMC_addon* xbmc)
- : m_xbmc(xbmc),
-   m_libretroClient(NULL)
+CLibretroDLL::CLibretroDLL(CHelper_libXBMC_addon* xbmc) :
+  retro_set_environment(nullptr),
+  retro_set_video_refresh(nullptr),
+  retro_set_audio_sample(nullptr),
+  retro_set_audio_sample_batch(nullptr),
+  retro_set_input_poll(nullptr),
+  retro_set_input_state(nullptr),
+  retro_init(nullptr),
+  retro_deinit(nullptr),
+  retro_api_version(nullptr),
+  retro_get_system_info(nullptr),
+  retro_get_system_av_info(nullptr),
+  retro_set_controller_port_device(nullptr),
+  retro_reset(nullptr),
+  retro_run(nullptr),
+  retro_serialize_size(nullptr),
+  retro_serialize(nullptr),
+  retro_unserialize(nullptr),
+  retro_cheat_reset(nullptr),
+  retro_cheat_set(nullptr),
+  retro_load_game(nullptr),
+  retro_load_game_special(nullptr),
+  retro_unload_game(nullptr),
+  retro_get_region(nullptr),
+  retro_get_memory_data(nullptr),
+  retro_get_memory_size(nullptr),
+  m_xbmc(xbmc),
+  m_libretroClient(nullptr)
 {
   assert(m_xbmc);
 }
