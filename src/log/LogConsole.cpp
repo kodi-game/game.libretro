@@ -1,6 +1,5 @@
 /*
- *      Copyright (C) 2014-2015 Garrett Brown
- *      Copyright (C) 2014-2015 Team XBMC
+ *      Copyright (C) 2014-2016 Team Kodi
  *      Portions Copyright (C) 2013-2014 Lars Op den Kamp
  *
  *  This Program is free software; you can redistribute it and/or modify
@@ -14,7 +13,7 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with XBMC; see the file COPYING.  If not, see
+ *  along with this Program; see the file COPYING.  If not, see
  *  <http://www.gnu.org/licenses/>.
  *
  */
