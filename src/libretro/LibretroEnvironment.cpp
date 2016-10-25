@@ -149,13 +149,6 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       if (typedData)
       {
         const char* msg = typedData->msg;
-
-        // Convert frame count to duration
-        unsigned int notificationTimeMs = DEFAULT_NOTIFICATION_TIME_MS;
-        if (m_systemInfo.timing.fps != 0.0f)
-          notificationTimeMs = (unsigned int)(1000 * typedData->frames / m_systemInfo.timing.fps);
-
-        // TODO: Include notification time parameter in QueueNotification()
         m_xbmc->QueueNotification(QUEUE_INFO, msg);
       }
       break;
