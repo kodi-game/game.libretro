@@ -52,10 +52,10 @@ namespace LIBRETRO
 }
 
 CLibretroEnvironment::CLibretroEnvironment(void) :
-  m_xbmc(NULL),
-  m_frontend(NULL),
-  m_client(NULL),
-  m_clientBridge(NULL),
+  m_xbmc(nullptr),
+  m_frontend(nullptr),
+  m_client(nullptr),
+  m_clientBridge(nullptr),
   m_videoFormat(GAME_PIXEL_FORMAT_0RGB1555), // Default libretro format
   m_videoRotation(GAME_VIDEO_ROTATION_0)
 {

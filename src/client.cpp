@@ -45,7 +45,7 @@ using namespace LIBRETRO;
 #define GAME_CLIENT_VERSION_UNKNOWN   "0.0.0"
 
 #ifndef SAFE_DELETE
-#define SAFE_DELETE(x)  do { delete x; x = NULL; } while (0)
+#define SAFE_DELETE(x)  do { delete x; x = nullptr; } while (0)
 #endif
 
 void SAFE_DELETE_GAME_INFO(std::vector<CGameInfoLoader*>& vec)
@@ -57,10 +57,10 @@ void SAFE_DELETE_GAME_INFO(std::vector<CGameInfoLoader*>& vec)
 
 namespace LIBRETRO
 {
-  CHelper_libXBMC_addon*        XBMC          = NULL;
-  CHelper_libKODI_game*         FRONTEND      = NULL;
-  CLibretroDLL*                 CLIENT        = NULL;
-  CClientBridge*                CLIENT_BRIDGE = NULL;
+  CHelper_libXBMC_addon*        XBMC          = nullptr;
+  CHelper_libKODI_game*         FRONTEND      = nullptr;
+  CLibretroDLL*                 CLIENT        = nullptr;
+  CClientBridge*                CLIENT_BRIDGE = nullptr;
   std::vector<CGameInfoLoader*> GAME_INFO;
   bool                          SUPPORTS_VFS = false; // TODO
 }
@@ -77,7 +77,7 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
 
     game_client_properties* gameClientProps = static_cast<game_client_properties*>(props);
 
-    if (gameClientProps->game_client_dll_path == NULL)
+    if (gameClientProps->game_client_dll_path == nullptr)
       throw ADDON_STATUS_UNKNOWN;
 
     XBMC = new CHelper_libXBMC_addon;
@@ -246,7 +246,7 @@ GAME_ERROR LoadGame(const char* url)
   if (!CLIENT)
     return GAME_ERROR_FAILED;
 
-  if (url == NULL)
+  if (url == nullptr)
     return GAME_ERROR_INVALID_PARAMETERS;
 
   // Build info loader vector
@@ -288,7 +288,7 @@ GAME_ERROR LoadGameSpecial(SPECIAL_GAME_TYPE type, const char** urls, size_t url
   if (!CLIENT)
     return GAME_ERROR_FAILED;
 
-  if (urls == NULL || urlCount == 0)
+  if (urls == nullptr || urlCount == 0)
     return GAME_ERROR_INVALID_PARAMETERS;
 
   // TODO
@@ -329,7 +329,7 @@ GAME_ERROR LoadStandalone(void)
   if (!CLIENT)
     return GAME_ERROR_FAILED;
 
-  if (!CLIENT->retro_load_game(NULL))
+  if (!CLIENT->retro_load_game(nullptr))
     return GAME_ERROR_FAILED;
 
   CInputManager::Get().OpenPort(0);
@@ -365,7 +365,7 @@ GAME_ERROR GetGameInfo(game_system_av_info* info)
   if (!CLIENT)
     return GAME_ERROR_FAILED;
 
-  if (info == NULL)
+  if (info == nullptr)
     return GAME_ERROR_INVALID_PARAMETERS;
 
   retro_system_av_info retro_info = { };
@@ -469,7 +469,7 @@ void UpdatePort(unsigned int port, bool connected, const game_controller* contro
       return;
   }
 
-  CInputManager::Get().DeviceConnected(port, connected, connected ? controller : NULL);
+  CInputManager::Get().DeviceConnected(port, connected, connected ? controller : nullptr);
 
   const unsigned int device = CInputManager::Get().GetDevice(port);
 
@@ -506,7 +506,7 @@ GAME_ERROR Serialize(uint8_t* data, size_t size)
   if (!CLIENT)
     return GAME_ERROR_FAILED;
 
-  if (data == NULL)
+  if (data == nullptr)
     return GAME_ERROR_INVALID_PARAMETERS;
 
   bool result = CLIENT->retro_serialize(data, size);
@@ -519,7 +519,7 @@ GAME_ERROR Deserialize(const uint8_t* data, size_t size)
   if (!CLIENT)
     return GAME_ERROR_FAILED;
 
-  if (data == NULL)
+  if (data == nullptr)
     return GAME_ERROR_INVALID_PARAMETERS;
 
   bool result = CLIENT->retro_unserialize(data, size);
@@ -542,7 +542,7 @@ GAME_ERROR GetMemory(GAME_MEMORY type, const uint8_t** data, size_t* size)
   if (!CLIENT)
     return GAME_ERROR_FAILED;
 
-  if (data == NULL || size == NULL)
+  if (data == nullptr || size == nullptr)
     return GAME_ERROR_INVALID_PARAMETERS;
 
   *data = static_cast<const uint8_t*>(CLIENT->retro_get_memory_data(type));

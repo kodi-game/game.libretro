@@ -71,7 +71,7 @@ void CLibretroDLL::Unload(void)
   if (m_libretroClient)
   {
     dlclose(m_libretroClient);
-    m_libretroClient = NULL;
+    m_libretroClient = nullptr;
   }
 
   m_strPath.clear();
@@ -84,7 +84,7 @@ void CLibretroDLL::Unload(void)
 template <typename T>
 bool RegisterSymbol(void* dll, T& functionPtr, const char* strFunctionPtr)
 {
-  return (functionPtr = (T)dlsym(dll, strFunctionPtr)) != NULL;
+  return (functionPtr = (T)dlsym(dll, strFunctionPtr)) != nullptr;
 }
 
 bool CLibretroDLL::Load(const game_client_properties* gameClientProps)
@@ -92,7 +92,7 @@ bool CLibretroDLL::Load(const game_client_properties* gameClientProps)
   Unload();
 
   m_libretroClient = dlopen(gameClientProps->game_client_dll_path, RTLD_LAZY);
-  if (m_libretroClient == NULL)
+  if (m_libretroClient == nullptr)
   {
     m_xbmc->Log(LOG_ERROR, "Unable to load %s", dlerror());
     return false;

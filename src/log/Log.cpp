@@ -44,7 +44,7 @@ CLog& CLog::Get(void)
 
 CLog::~CLog(void)
 {
-  SetPipe(NULL);
+  SetPipe(nullptr);
 }
 
 bool CLog::SetType(SYS_LOG_TYPE type)
@@ -59,7 +59,7 @@ bool CLog::SetType(SYS_LOG_TYPE type)
     SetPipe(new CLogConsole);
     break;
   case SYS_LOG_TYPE_NULL:
-    SetPipe(NULL);
+    SetPipe(nullptr);
     break;
   case SYS_LOG_TYPE_ADDON: // Must be set through SetPipe() because CLogAddon has no default constructor
   default:

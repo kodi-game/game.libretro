@@ -31,11 +31,11 @@
 using namespace LIBRETRO;
 
 CClientBridge::CClientBridge()
-  : m_retro_keyboard_event(NULL),
-    m_retro_hw_context_reset(NULL),
-    m_retro_hw_context_destroy(NULL),
-    m_retro_audio_set_state_callback(NULL),
-    m_retro_audio_callback(NULL)
+  : m_retro_keyboard_event(nullptr),
+    m_retro_hw_context_reset(nullptr),
+    m_retro_hw_context_destroy(nullptr),
+    m_retro_audio_set_state_callback(nullptr),
+    m_retro_audio_callback(nullptr)
 {
 }
 

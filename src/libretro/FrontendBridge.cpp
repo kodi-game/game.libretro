@@ -199,7 +199,7 @@ uintptr_t CFrontendBridge::HwGetCurrentFramebuffer(void)
 retro_proc_address_t CFrontendBridge::HwGetProcAddress(const char *sym)
 {
   if (!CLibretroEnvironment::Get().GetFrontend())
-    return NULL;
+    return nullptr;
 
   return CLibretroEnvironment::Get().GetFrontend()->HwGetProcAddress(sym);
 }

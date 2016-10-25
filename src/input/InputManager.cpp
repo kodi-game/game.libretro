@@ -153,7 +153,7 @@ bool CInputManager::InputEvent(const game_input_event& event)
 void CInputManager::LogInputDescriptors(const retro_input_descriptor* descriptors)
 {
   /* TODO
-  for (const retro_input_descriptor* descriptor = descriptors; descriptor->description != NULL; descriptor++)
+  for (const retro_input_descriptor* descriptor = descriptors; descriptor->description != nullptr; descriptor++)
   {
     switch (descriptor->device)
     {

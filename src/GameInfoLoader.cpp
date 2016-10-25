@@ -124,10 +124,10 @@ bool CGameInfoLoader::GetMemoryStruct(retro_game_info& info) const
 {
   if (!m_dataBuffer.empty())
   {
-    info.path = NULL;
+    info.path = nullptr;
     info.data = m_dataBuffer.data();
     info.size = m_dataBuffer.size();
-    info.meta = NULL;
+    info.meta = nullptr;
     return true;
   }
   return false;
@@ -136,8 +136,8 @@ bool CGameInfoLoader::GetMemoryStruct(retro_game_info& info) const
 bool CGameInfoLoader::GetPathStruct(retro_game_info& info) const
 {
   info.path = m_path.c_str();
-  info.data = NULL;
+  info.data = nullptr;
   info.size = 0;
-  info.meta = NULL;
+  info.meta = nullptr;
   return true;
 }
