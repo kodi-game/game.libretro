@@ -19,9 +19,9 @@
  */
 #pragma once
 
-#include "LibretroSettings.h"
 #include "LibretroResources.h"
 #include "audio/AudioStream.h"
+#include "settings/LibretroSettings.h"
 #include "video/VideoStream.h"
 
 #include "kodi/kodi_game_types.h"

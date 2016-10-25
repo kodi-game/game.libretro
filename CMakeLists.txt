@@ -28,12 +28,12 @@ set(LIBRETRO_SOURCES src/client.cpp
                      src/libretro/LibretroDLL.cpp
                      src/libretro/LibretroEnvironment.cpp
                      src/libretro/LibretroResources.cpp
-                     src/libretro/LibretroSetting.cpp
-                     src/libretro/LibretroSettings.cpp
                      src/libretro/LibretroTranslator.cpp
                      src/log/Log.cpp
                      src/log/LogAddon.cpp
                      src/log/LogConsole.cpp
+                     src/settings/LibretroSetting.cpp
+                     src/settings/LibretroSettings.cpp
                      src/settings/Settings.cpp
                      src/video/VideoStream.cpp)
 

@@ -19,7 +19,7 @@
  */
 
 #include "LibretroSettings.h"
-#include "libretro.h"
+#include "libretro/libretro.h"
 
 #include "kodi/kodi_game_types.h"
 #include "kodi/libXBMC_addon.h"

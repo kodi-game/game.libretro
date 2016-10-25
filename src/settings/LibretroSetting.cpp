@@ -19,7 +19,7 @@
  */
 
 #include "LibretroSetting.h"
-#include "libretro.h"
+#include "libretro/libretro.h"
 
 using namespace LIBRETRO;
 
