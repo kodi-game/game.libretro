@@ -19,23 +19,20 @@
  */
 #pragma once
 
+#include "SettingsTypes.h"
+
 #include <string>
 
 namespace LIBRETRO
 {
-  class PathUtils
+  class CSettingsGenerator
   {
   public:
-    /*!
-     * \brief Remove the slash at the end of a path
-     *
-     * NOTE: Trailing slash causes some libretro cores to fail
-     */
-    static void RemoveSlashAtEnd(std::string& path);
+    CSettingsGenerator(const std::string& generatedDir);
 
-    /*!
-     * \brief Get the base filename, or empty if path ends in a / or \
-     */
-    static std::string GetBasename(const std::string& path);
+    bool GenerateSettings(const LibretroSettings& settings);
+
+  private:
+    std::string m_strFilePath;
   };
 }

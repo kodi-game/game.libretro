@@ -19,7 +19,7 @@
  */
 #pragma once
 
-#include "LibretroSetting.h"
+#include "SettingsTypes.h"
 
 #include "p8-platform/threads/mutex.h"
 
@@ -51,13 +51,19 @@ namespace LIBRETRO
     void SetCurrentValue(const std::string& name, const std::string& value);
 
   private:
+    /*!
+     * \brief Generate settings and language files for Kodi
+     */
+    void GenerateSettings();
+
     // Frontend variables
     ADDON::CHelper_libXBMC_addon* m_addon;
     std::string                   m_profileDirectory;
 
     // Settings variables
-    std::map<std::string, CLibretroSetting> m_settings;
-    bool                                    m_bChanged;
-    P8PLATFORM::CMutex                      m_mutex;
+    LibretroSettings   m_settings;
+    bool               m_bChanged;
+    bool               m_bGenerated; // True if settings and language files have been generated
+    P8PLATFORM::CMutex m_mutex;
   };
 } // namespace LIBRETRO

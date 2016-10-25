@@ -32,9 +32,11 @@ set(LIBRETRO_SOURCES src/client.cpp
                      src/log/Log.cpp
                      src/log/LogAddon.cpp
                      src/log/LogConsole.cpp
+                     src/settings/LanguageGenerator.cpp
                      src/settings/LibretroSetting.cpp
                      src/settings/LibretroSettings.cpp
                      src/settings/Settings.cpp
+                     src/settings/SettingsGenerator.cpp
                      src/utils/PathUtils.cpp
                      src/video/VideoStream.cpp)
 

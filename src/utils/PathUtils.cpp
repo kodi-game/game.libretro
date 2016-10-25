@@ -20,6 +20,8 @@
 
 #include "PathUtils.h"
 
+#include <string.h>
+
 using namespace LIBRETRO;
 
 void PathUtils::RemoveSlashAtEnd(std::string& path)
@@ -30,4 +32,19 @@ void PathUtils::RemoveSlashAtEnd(std::string& path)
     if (last == '/' || last == '\\')
       path.erase(path.size() - 1);
   }
+}
+
+std::string PathUtils::GetBasename(const std::string& path)
+{
+  char last = path[path.size() - 1];
+  if (last == '/' || last == '\\')
+    return "";
+
+  const char* s = strrchr(const_cast<char*>(path.c_str()), '/');
+  if (s == nullptr)
+    return path;
+
+  s++;
+
+  return s;
 }

@@ -107,4 +107,5 @@ void CLibretroSetting::Parse(const std::string& libretroValue)
 
   m_description = std::move(strDescription);
   m_values = std::move(vecValues);
+  m_valuesStr = std::move(strValues);
 }
