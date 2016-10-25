@@ -35,6 +35,7 @@ set(LIBRETRO_SOURCES src/client.cpp
                      src/settings/LibretroSetting.cpp
                      src/settings/LibretroSettings.cpp
                      src/settings/Settings.cpp
+                     src/utils/PathUtils.cpp
                      src/video/VideoStream.cpp)
 
 build_addon(${PROJECT_NAME} LIBRETRO DEPLIBS)

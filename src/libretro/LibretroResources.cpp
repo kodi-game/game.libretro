@@ -20,6 +20,7 @@
 
 #include "LibretroResources.h"
 #include "LibretroDefines.h"
+#include "utils/PathUtils.h"
 
 #include "kodi/kodi_game_types.h"
 #include "kodi/libXBMC_addon.h"
@@ -28,20 +29,6 @@
 #include <utility>
 
 using namespace LIBRETRO;
-
-namespace LIBRETRO
-{
-  // Trailing slash causes some libretro cores to fail
-  void RemoveSlashAtEnd(std::string& path)
-  {
-    if (!path.empty())
-    {
-      char last = path[path.size() - 1];
-      if (last == '/' || last == '\\')
-        path.erase(path.size() - 1);
-    }
-  }
-}
 
 CLibretroResources::CLibretroResources() :
   m_addon(nullptr)
@@ -61,7 +48,7 @@ void CLibretroResources::Initialize(ADDON::CHelper_libXBMC_addon* addon, const g
 
     std::string resourcePath = gameClientProps->resource_directories[i];
 
-    RemoveSlashAtEnd(resourcePath);
+    PathUtils::RemoveSlashAtEnd(resourcePath);
 
     if (resourcePath.empty())
       continue;
@@ -76,7 +63,7 @@ void CLibretroResources::Initialize(ADDON::CHelper_libXBMC_addon* addon, const g
   if (gameClientProps->profile_directory != nullptr)
   {
     m_saveDirectory = gameClientProps->profile_directory;
-    RemoveSlashAtEnd(m_saveDirectory);
+    PathUtils::RemoveSlashAtEnd(m_saveDirectory);
     m_saveDirectory += "/" LIBRETRO_SAVE_DIRECTORY_NAME;
 
     // Ensure folder exists
