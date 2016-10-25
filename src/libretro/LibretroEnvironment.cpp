@@ -355,7 +355,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       if (typedData)
       {
         // Expose callback to libretro core
-        typedData->log = CFrontendBridge::LogFrontend; // libretro logging forwards to XBMC add-on log function
+        typedData->log = CFrontendBridge::LogFrontend; // libretro logging forwards to Kodi add-on log function
       }
       break;
     }

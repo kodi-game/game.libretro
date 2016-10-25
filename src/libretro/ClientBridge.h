@@ -38,7 +38,7 @@ namespace LIBRETRO
   public:
     CClientBridge();
 
-    // These functions are invoked when the frontend calls the XBMC game API.
+    // These functions are invoked when the frontend calls the Kodi game API.
     // They do not have public methods exposed for them in the libretro API.
     // To maintain ABI, they were exposed through the generic EnvironmentCallback()
     // function in a tangled mess of callbacks for callbacks.

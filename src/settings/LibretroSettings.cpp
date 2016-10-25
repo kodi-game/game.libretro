@@ -136,7 +136,7 @@ void CLibretroSettings::SetCurrentValue(const std::string& name, const std::stri
   auto it = m_settings.find(name);
   if (it == m_settings.end())
   {
-    m_addon->Log(ADDON::LOG_ERROR, "XBMC setting %s unknown to libretro!", name.c_str());
+    m_addon->Log(ADDON::LOG_ERROR, "Kodi setting %s unknown to libretro!", name.c_str());
     return;
   }
 

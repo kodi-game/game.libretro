@@ -31,10 +31,10 @@ namespace LIBRETRO
   class CFrontendBridge
   {
   public:
-    // Forward to XBMC add-on API
+    // Forward to Kodi add-on API
     static void LogFrontend(retro_log_level level, const char *fmt, ...);
 
-    // Forward to XBMC game API
+    // Forward to Kodi game API
     static void VideoRefresh(const void* data, unsigned int width, unsigned int height, size_t pitch);
     static void AudioFrame(int16_t left, int16_t right);
     static size_t AudioFrames(const int16_t* data, size_t frames);
