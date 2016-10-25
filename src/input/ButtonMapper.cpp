@@ -19,13 +19,13 @@
  */
 
 #include "ButtonMapper.h"
+#include "InputDefinitions.h"
 #include "LibretroDevice.h"
 #include "libretro/LibretroDLL.h"
 #include "libretro/LibretroEnvironment.h"
 #include "libretro/LibretroTranslator.h"
 #include "libretro/libretro.h"
 #include "log/Log.h"
-#include "LibretroDefinitions.h"
 
 #include "tinyxml.h"
 
