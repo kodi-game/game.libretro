@@ -41,8 +41,6 @@ using namespace ADDON;
 using namespace LIBRETRO;
 using namespace P8PLATFORM;
 
-#define DEFAULT_NOTIFICATION_TIME_MS  3000 // Time to display toast dialogs, from AddonCallbacksAddon.cpp
-
 namespace LIBRETRO
 {
   bool EnvCallback(unsigned cmd, void* data)
