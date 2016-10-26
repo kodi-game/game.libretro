@@ -19,7 +19,11 @@
  */
 
 #include "LibretroSettings.h"
+#include "LanguageGenerator.h"
+#include "SettingsGenerator.h"
 #include "libretro/libretro.h"
+#include "log/Log.h"
+#include "utils/PathUtils.h"
 
 #include "kodi/kodi_game_types.h"
 #include "kodi/libXBMC_addon.h"
@@ -33,7 +37,8 @@ using namespace P8PLATFORM;
 
 CLibretroSettings::CLibretroSettings() :
   m_addon(nullptr),
-  m_bChanged(true)
+  m_bChanged(true),
+  m_bGenerated(false)
 {
 }
 
@@ -66,6 +71,9 @@ void CLibretroSettings::SetUnchanged()
 
 void CLibretroSettings::SetAllSettings(const retro_variable* libretroVariables)
 {
+  // Keep track of whether Kodi has the correct settings
+  bool bValid = true;
+
   CLockObject lock(m_mutex);
 
   if (m_settings.empty())
@@ -92,11 +100,13 @@ void CLibretroSettings::SetAllSettings(const retro_variable* libretroVariables)
         else
         {
           m_addon->Log(ADDON::LOG_ERROR, "Setting %s: invalid value \"%s\" (values are: %s)", setting.Key().c_str(), valueBuf, variable->value);
+          bValid = false;
         }
       }
       else
       {
         m_addon->Log(ADDON::LOG_ERROR, "Setting %s not found by Kodi", setting.Key().c_str());
+        bValid = false;
       }
 
       m_settings.insert(std::make_pair(setting.Key(), std::move(setting)));
@@ -104,6 +114,9 @@ void CLibretroSettings::SetAllSettings(const retro_variable* libretroVariables)
 
     m_bChanged = true;
   }
+
+  if (!bValid)
+    GenerateSettings();
 }
 
 const char* CLibretroSettings::GetCurrentValue(const std::string& settingName)
@@ -132,17 +145,64 @@ void CLibretroSettings::SetCurrentValue(const std::string& name, const std::stri
     return;
   }
 
+  // Keep track of whether Kodi has the correct settings
+  bool bValid = true;
+
   // Check to make sure value is a valid value reported by libretro
   auto it = m_settings.find(name);
   if (it == m_settings.end())
   {
     m_addon->Log(ADDON::LOG_ERROR, "Kodi setting %s unknown to libretro!", name.c_str());
-    return;
+    bValid = false;
   }
-
-  if (it->second.CurrentValue() != value)
+  else if (it->second.CurrentValue() != value)
   {
     it->second.SetCurrentValue(value);
     m_bChanged = true;
+  }
+
+  if (!bValid)
+    GenerateSettings();
+}
+
+void CLibretroSettings::GenerateSettings()
+{
+  if (!m_bGenerated && !m_settings.empty())
+  {
+    isyslog("Invalid settings detected, generating new settings and language files");
+
+    std::string generatedPath = m_profileDirectory;
+
+    PathUtils::RemoveSlashAtEnd(generatedPath);
+
+    std::string addonId = PathUtils::GetBasename(generatedPath);
+
+    generatedPath += "/" SETTINGS_GENERATED_DIRECTORY_NAME;
+
+    // Ensure folder exists
+    if (!m_addon->DirectoryExists(generatedPath.c_str()))
+    {
+      m_addon->Log(ADDON::LOG_DEBUG, "Creating directory for settings and language files: %s", generatedPath.c_str());
+      m_addon->CreateDirectory(generatedPath.c_str());
+    }
+
+    bool bSuccess = false;
+
+    CSettingsGenerator settingsGen(generatedPath);
+    if (!settingsGen.GenerateSettings(m_settings))
+      esyslog("Failed to generate %s", SETTINGS_GENERATED_SETTINGS_NAME);
+    else
+      bSuccess = true;
+
+    CLanguageGenerator languageGen(addonId, generatedPath);
+    if (!languageGen.GenerateLanguage(m_settings))
+      esyslog("Failed to generate %s", SETTINGS_GENERATED_LANGUAGE_NAME);
+    else
+      bSuccess = true;
+
+    if (bSuccess)
+      isyslog("Settings and language files have been placed in %s", generatedPath.c_str());
+
+    m_bGenerated = true;
   }
 }

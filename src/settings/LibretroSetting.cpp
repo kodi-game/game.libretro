@@ -56,9 +56,17 @@ void CLibretroSetting::Parse(const std::string& libretroValue)
       size_t pos;
       if ((pos = retroVal.find(';')) != std::string::npos)
       {
+        // Set description
+        description = retroVal.substr(0, pos);
+
+        // Advance past semicolon
         pos++;
+
+        // Advance past spaces
         while (pos < retroVal.size() && retroVal[pos] == ' ')
           pos++;
+
+        // Set values
         values = retroVal.substr(pos);
       }
       else
@@ -107,4 +115,5 @@ void CLibretroSetting::Parse(const std::string& libretroValue)
 
   m_description = std::move(strDescription);
   m_values = std::move(vecValues);
+  m_valuesStr = std::move(strValues);
 }

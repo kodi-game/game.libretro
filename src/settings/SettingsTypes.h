@@ -19,23 +19,30 @@
  */
 #pragma once
 
+#include "LibretroSetting.h"
+
+#include <map>
 #include <string>
+
+/*!
+ * \brief Directory name for generated settings and language files
+ */
+#define SETTINGS_GENERATED_DIRECTORY_NAME  "generated"
+
+/*!
+ * \brief File name of the generated settings.xml file
+ */
+#define SETTINGS_GENERATED_SETTINGS_NAME  "settings.xml"
+
+/*!
+ * \brief File name of the generated language file
+ */
+#define SETTINGS_GENERATED_LANGUAGE_NAME  "strings.po"
+
+#define SETTING_ID_START  30000
 
 namespace LIBRETRO
 {
-  class PathUtils
-  {
-  public:
-    /*!
-     * \brief Remove the slash at the end of a path
-     *
-     * NOTE: Trailing slash causes some libretro cores to fail
-     */
-    static void RemoveSlashAtEnd(std::string& path);
-
-    /*!
-     * \brief Get the base filename, or empty if path ends in a / or \
-     */
-    static std::string GetBasename(const std::string& path);
-  };
+  typedef std::string SettingKey;
+  typedef std::map<SettingKey, CLibretroSetting> LibretroSettings;
 }
