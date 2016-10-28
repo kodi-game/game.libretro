@@ -194,6 +194,24 @@ void CLibretroSettings::GenerateSettings()
     else
       bSuccess = true;
 
+    generatedPath += "/" SETTINGS_GENERATED_LANGUAGE_SUBDIR;
+
+    // Ensure language folder exists
+    if (!m_addon->DirectoryExists(generatedPath.c_str()))
+    {
+      m_addon->Log(ADDON::LOG_DEBUG, "Creating directory for settings and language files: %s", generatedPath.c_str());
+      m_addon->CreateDirectory(generatedPath.c_str());
+    }
+
+    generatedPath += "/" SETTINGS_GENERATED_LANGUAGE_ENGLISH_SUBDIR;
+
+    // Ensure English folder exists
+    if (!m_addon->DirectoryExists(generatedPath.c_str()))
+    {
+      m_addon->Log(ADDON::LOG_DEBUG, "Creating directory for settings and language files: %s", generatedPath.c_str());
+      m_addon->CreateDirectory(generatedPath.c_str());
+    }
+
     CLanguageGenerator languageGen(addonId, generatedPath);
     if (!languageGen.GenerateLanguage(m_settings))
       esyslog("Failed to generate %s", SETTINGS_GENERATED_LANGUAGE_NAME);
