@@ -21,7 +21,7 @@
 
 #include "LibretroDevice.h"
 
-#include "kodi/kodi_game_types.h"
+#include "kodi_game_types.h"
 #include "p8-platform/threads/mutex.h"
 
 #include <stdint.h>

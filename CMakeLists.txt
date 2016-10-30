@@ -7,10 +7,9 @@ find_package(Kodi REQUIRED)
 find_package(kodiplatform REQUIRED)
 find_package(p8-platform REQUIRED)
 
-include_directories(${INCLUDES}
-                    ${p8-platform_INCLUDE_DIRS}
+include_directories(${KODI_INCLUDE_DIR}
                     ${kodiplatform_INCLUDE_DIRS}
-                    ${KODI_INCLUDE_DIR}
+                    ${p8-platform_INCLUDE_DIRS}
                     ${PROJECT_SOURCE_DIR}/src)
 
 list(APPEND DEPLIBS ${kodiplatform_LIBRARIES} ${p8-platform_LIBRARIES})

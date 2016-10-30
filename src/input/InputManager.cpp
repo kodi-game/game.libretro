@@ -27,7 +27,7 @@
 #include "libretro/LibretroTranslator.h"
 #include "log/Log.h"
 
-#include "kodi/libKODI_game.h"
+#include "libKODI_game.h"
 
 #include <algorithm>
 

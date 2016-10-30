@@ -24,8 +24,8 @@
 #include "input/ButtonMapper.h"
 #include "input/InputManager.h"
 
-#include "kodi/libXBMC_addon.h"
-#include "kodi/libKODI_game.h"
+#include "libXBMC_addon.h"
+#include "libKODI_game.h"
 
 #include <assert.h>
 

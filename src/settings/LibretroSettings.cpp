@@ -25,8 +25,8 @@
 #include "log/Log.h"
 #include "utils/PathUtils.h"
 
-#include "kodi/kodi_game_types.h"
-#include "kodi/libXBMC_addon.h"
+#include "kodi_game_types.h"
+#include "libXBMC_addon.h"
 
 #include <algorithm>
 #include <assert.h>

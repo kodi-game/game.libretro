@@ -29,10 +29,10 @@
 #include "settings/Settings.h"
 #include "GameInfoLoader.h"
 
-#include "kodi/libXBMC_addon.h"
-#include "kodi/libKODI_game.h"
-#include "kodi/xbmc_addon_dll.h"
-#include "kodi/kodi_game_dll.h"
+#include "libXBMC_addon.h"
+#include "libKODI_game.h"
+#include "xbmc_addon_dll.h"
+#include "kodi_game_dll.h"
 
 #include <set>
 #include <string>

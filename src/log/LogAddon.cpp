@@ -20,7 +20,7 @@
 
 #include "LogAddon.h"
 
-#include "kodi/libXBMC_addon.h"
+#include "libXBMC_addon.h"
 
 #include <assert.h>
 

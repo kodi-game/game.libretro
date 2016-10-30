@@ -22,8 +22,8 @@
 #include "LibretroDefines.h"
 #include "utils/PathUtils.h"
 
-#include "kodi/kodi_game_types.h"
-#include "kodi/libXBMC_addon.h"
+#include "kodi_game_types.h"
+#include "libXBMC_addon.h"
 
 #include <assert.h>
 #include <utility>

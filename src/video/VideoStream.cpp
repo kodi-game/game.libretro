@@ -21,7 +21,7 @@
 #include "VideoStream.h"
 #include "libretro/LibretroEnvironment.h"
 
-#include "kodi/libKODI_game.h"
+#include "libKODI_game.h"
 
 using namespace LIBRETRO;
 
