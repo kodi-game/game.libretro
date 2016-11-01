@@ -25,8 +25,8 @@
 #include "libretro.h"
 #include "LibretroDLL.h"
 #include "LibretroTranslator.h"
-#include "kodi/libXBMC_addon.h"
-#include "kodi/libKODI_game.h"
+#include "libXBMC_addon.h"
+#include "libKODI_game.h"
 #include "settings/Settings.h"
 
 #include <algorithm>

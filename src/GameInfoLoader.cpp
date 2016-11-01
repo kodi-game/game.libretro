@@ -21,7 +21,7 @@
 #include "GameInfoLoader.h"
 #include "log/Log.h"
 
-#include "kodi/libXBMC_addon.h"
+#include "libXBMC_addon.h"
 
 #include <stdint.h>
 

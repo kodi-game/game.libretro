@@ -20,8 +20,8 @@
 
 #include "LibretroDLL.h"
 
-#include "kodi/libKODI_game.h"
-#include "kodi/kodi_game_types.h"
+#include "libKODI_game.h"
+#include "kodi_game_types.h"
 
 #ifdef _WIN32
   #include "dlfcn-win32.h" // TODO: Use file from kodi-platform

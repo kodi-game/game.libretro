@@ -24,7 +24,7 @@
 #include "settings/LibretroSettings.h"
 #include "video/VideoStream.h"
 
-#include "kodi/kodi_game_types.h"
+#include "kodi_game_types.h"
 
 #include <map>
 #include <string>
