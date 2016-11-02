@@ -31,21 +31,7 @@ namespace LIBRETRO
   }
 }
 
-GAME_HW_CONTEXT_TYPE LibretroTranslator::GetHWContextType(retro_hw_context_type type)
-{
-  switch (type)
-  {
-    case RETRO_HW_CONTEXT_OPENGL:      return GAME_HW_CONTEXT_OPENGL;
-    case RETRO_HW_CONTEXT_OPENGLES2:   return GAME_HW_CONTEXT_OPENGLES2;
-    case RETRO_HW_CONTEXT_OPENGL_CORE: return GAME_HW_CONTEXT_OPENGL_CORE;
-    case RETRO_HW_CONTEXT_OPENGLES3:   return GAME_HW_CONTEXT_OPENGLES3;
-    case RETRO_HW_CONTEXT_NONE:
-    case RETRO_HW_CONTEXT_DUMMY:
-    default:
-      break;
-  }
-  return GAME_HW_CONTEXT_NONE;
-}
+// --- Audo/video translation ----------------------------------------------
 
 GAME_PIXEL_FORMAT LibretroTranslator::GetVideoFormat(retro_pixel_format format)
 {
@@ -75,21 +61,25 @@ GAME_VIDEO_ROTATION LibretroTranslator::GetVideoRotation(unsigned int rotation)
   return GAME_VIDEO_ROTATION_0;
 }
 
-retro_mod LibretroTranslator::GetKeyModifiers(GAME_KEY_MOD modifiers)
+// --- Hardware rendering translation --------------------------------------
+
+GAME_HW_CONTEXT_TYPE LibretroTranslator::GetHWContextType(retro_hw_context_type type)
 {
-  retro_mod mods = RETROKMOD_NONE;
-
-  if (modifiers & GAME_KEY_MOD_SHIFT)      mods = mods | RETROKMOD_SHIFT;
-  if (modifiers & GAME_KEY_MOD_CTRL)       mods = mods | RETROKMOD_CTRL;
-  if (modifiers & GAME_KEY_MOD_ALT)        mods = mods | RETROKMOD_ALT;
-  if (modifiers & GAME_KEY_MOD_RALT)       mods = mods | RETROKMOD_ALT;
-  if (modifiers & GAME_KEY_MOD_META)       mods = mods | RETROKMOD_META;
-  if (modifiers & GAME_KEY_MOD_NUMLOCK)    mods = mods | RETROKMOD_NUMLOCK;
-  if (modifiers & GAME_KEY_MOD_CAPSLOCK)   mods = mods | RETROKMOD_CAPSLOCK;
-  if (modifiers & GAME_KEY_MOD_SCROLLOCK)  mods = mods | RETROKMOD_SCROLLOCK;
-
-  return mods;
+  switch (type)
+  {
+    case RETRO_HW_CONTEXT_OPENGL:      return GAME_HW_CONTEXT_OPENGL;
+    case RETRO_HW_CONTEXT_OPENGLES2:   return GAME_HW_CONTEXT_OPENGLES2;
+    case RETRO_HW_CONTEXT_OPENGL_CORE: return GAME_HW_CONTEXT_OPENGL_CORE;
+    case RETRO_HW_CONTEXT_OPENGLES3:   return GAME_HW_CONTEXT_OPENGLES3;
+    case RETRO_HW_CONTEXT_NONE:
+    case RETRO_HW_CONTEXT_DUMMY:
+    default:
+      break;
+  }
+  return GAME_HW_CONTEXT_NONE;
 }
+
+// --- Input translation --------------------------------------------------
 
 libretro_device_t LibretroTranslator::GetDeviceType(const std::string& strType)
 {
@@ -152,6 +142,22 @@ std::string LibretroTranslator::GetMotorName(retro_rumble_effect effect)
       break;
   }
   return "";
+}
+
+retro_mod LibretroTranslator::GetKeyModifiers(GAME_KEY_MOD modifiers)
+{
+  retro_mod mods = RETROKMOD_NONE;
+
+  if (modifiers & GAME_KEY_MOD_SHIFT)      mods = mods | RETROKMOD_SHIFT;
+  if (modifiers & GAME_KEY_MOD_CTRL)       mods = mods | RETROKMOD_CTRL;
+  if (modifiers & GAME_KEY_MOD_ALT)        mods = mods | RETROKMOD_ALT;
+  if (modifiers & GAME_KEY_MOD_RALT)       mods = mods | RETROKMOD_ALT;
+  if (modifiers & GAME_KEY_MOD_META)       mods = mods | RETROKMOD_META;
+  if (modifiers & GAME_KEY_MOD_NUMLOCK)    mods = mods | RETROKMOD_NUMLOCK;
+  if (modifiers & GAME_KEY_MOD_CAPSLOCK)   mods = mods | RETROKMOD_CAPSLOCK;
+  if (modifiers & GAME_KEY_MOD_SCROLLOCK)  mods = mods | RETROKMOD_SCROLLOCK;
+
+  return mods;
 }
 
 retro_key LibretroTranslator::GetKeyCode(XBMCVKey character)
