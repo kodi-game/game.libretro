@@ -75,11 +75,36 @@ namespace LIBRETRO
     static libretro_device_t GetDeviceType(const std::string& strType);
 
     /*!
+     * \brief Translate device type (libretro) to string representation (e.g. for logging).
+     * \param type The device type to stringify.
+     * \return String representation of device type.
+     */
+    static const char* GetDeviceName(libretro_device_t type);
+
+    /*!
      * \brief Translate button/feature name (libretro buttonmap "mapto" field) to libretro index value.
      * \param strFeatureName The feature name to translate.
      * \return Translated button/feature id.
      */
     static int GetFeatureIndex(const std::string& strFeatureName);
+
+    /*!
+     * \brief Translate identifiers to feature name (libretro buttonmap "mapto" field).
+     * \param type The libretro device type
+     * \param index The libretro index
+     * \param id The libretro ID
+     * \return Translated feature name
+     */
+    static const char* GetFeatureName(libretro_device_t type, unsigned int index, unsigned int id);
+
+    /*!
+     * \brief Translate identifiers to component name of a feature, e.g. individual axes
+     * \param type The libretro device type
+     * \param index The libretro index
+     * \param id The libretro ID
+     * \return Translated name of a feature's component
+     */
+    static const char* GetComponentName(libretro_device_t type, unsigned int index, unsigned int id);
 
     /*!
      * \brief Translate rumble motor name (libretro) to string representation (e.g. for logging).

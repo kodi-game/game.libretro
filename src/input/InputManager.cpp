@@ -148,26 +148,36 @@ bool CInputManager::InputEvent(const game_input_event& event)
 
 void CInputManager::LogInputDescriptors(const retro_input_descriptor* descriptors)
 {
-  /* TODO
-  for (const retro_input_descriptor* descriptor = descriptors; descriptor->description != nullptr; descriptor++)
+  dsyslog("------------------------------------------------------------");
+  dsyslog("Libretro input bindings");
+  dsyslog("");
+
+  for (const retro_input_descriptor* descriptor = descriptors;
+      descriptor != nullptr && descriptor->description != nullptr && !std::string(descriptor->description).empty();
+      descriptor++)
   {
-    switch (descriptor->device)
+    std::string component = LibretroTranslator::GetComponentName(descriptor->device, descriptor->index, descriptor->id);
+
+    if (component.empty())
     {
-    case RETRO_DEVICE_JOYPAD:
-    case RETRO_DEVICE_MOUSE:
-    case RETRO_DEVICE_KEYBOARD:
-    case RETRO_DEVICE_LIGHTGUN:
-    case RETRO_DEVICE_ANALOG:
-    case RETRO_DEVICE_POINTER:
-    case RETRO_DEVICE_JOYPAD_MULTITAP:
-    case RETRO_DEVICE_LIGHTGUN_SUPER_SCOPE:
-    case RETRO_DEVICE_LIGHTGUN_JUSTIFIER:
-    case RETRO_DEVICE_LIGHTGUN_JUSTIFIERS:
-    default:
-      break;
+      dsyslog("Port: %u, Device: %s, Feature: %s, Description: %s",
+          descriptor->port,
+          LibretroTranslator::GetDeviceName(descriptor->device),
+          LibretroTranslator::GetFeatureName(descriptor->device, descriptor->index, descriptor->id),
+          descriptor->description ? descriptor->description : "");
+    }
+    else
+    {
+      dsyslog("Port: %u, Device: %s, Feature: %s, Component: %s, Description: %s",
+          descriptor->port,
+          LibretroTranslator::GetDeviceName(descriptor->device),
+          LibretroTranslator::GetFeatureName(descriptor->device, descriptor->index, descriptor->id),
+          component.c_str(),
+          descriptor->description ? descriptor->description : "");
     }
   }
-  */
+
+  dsyslog("------------------------------------------------------------");
 }
 
 std::string CInputManager::ControllerID(unsigned int port)
