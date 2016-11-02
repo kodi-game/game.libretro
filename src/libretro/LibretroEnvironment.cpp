@@ -416,6 +416,15 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
 
       break;
     }
+  case RETRO_ENVIRONMENT_SET_CONTROLLER_INFO:
+    {
+      const retro_controller_info* typedData = reinterpret_cast<const retro_controller_info*>(data);
+      if (typedData)
+      {
+        CInputManager::Get().SetControllerInfo(typedData);
+      }
+      break;
+    }
   case RETRO_ENVIRONMENT_GET_RESOURCE_DIRECTORY:
     {
       retro_resource* typedData = reinterpret_cast<retro_resource*>(data);

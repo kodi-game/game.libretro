@@ -28,6 +28,7 @@
 #include <string>
 #include <vector>
 
+struct retro_controller_info;
 struct retro_input_descriptor;
 
 namespace LIBRETRO
@@ -94,6 +95,11 @@ namespace LIBRETRO
     bool AnalogStickState(unsigned int port, unsigned int analogStickIndex, float& x, float& y);
     bool AbsolutePointerState(unsigned int port, unsigned int pointerIndex, float& x, float& y);
     bool AccelerometerState(unsigned int port, float& x, float& y, float& z);
+
+    /*!
+     * \brief Inform the frontend of controller info
+     */
+    void SetControllerInfo(const retro_controller_info* info);
 
   private:
     void HandlePress(const game_key_event& key);

@@ -148,9 +148,8 @@ bool CInputManager::InputEvent(const game_input_event& event)
 
 void CInputManager::LogInputDescriptors(const retro_input_descriptor* descriptors)
 {
+  dsyslog("Libretro input bindings:");
   dsyslog("------------------------------------------------------------");
-  dsyslog("Libretro input bindings");
-  dsyslog("");
 
   for (const retro_input_descriptor* descriptor = descriptors;
       descriptor != nullptr && descriptor->description != nullptr && !std::string(descriptor->description).empty();
@@ -282,6 +281,26 @@ bool CInputManager::AccelerometerState(unsigned int port, float& x, float& y, fl
   }
 
   return bSuccess;
+}
+
+void CInputManager::SetControllerInfo(const retro_controller_info* info)
+{
+  dsyslog("Libretro controller info:");
+  dsyslog("------------------------------------------------------------");
+
+  for (unsigned int i = 0; i < info->num_types; i++)
+  {
+    const retro_controller_description& type = info->types[i];
+
+    libretro_device_t baseType = type.id & RETRO_DEVICE_MASK;
+    unsigned int subclass = type.id >> RETRO_DEVICE_TYPE_SHIFT;
+    std::string description = type.desc ? type.desc : "";
+
+    dsyslog("Device: %s, Subclass: %u, Description: %s",
+        LibretroTranslator::GetDeviceName(baseType), subclass, description.c_str());
+  }
+
+  dsyslog("------------------------------------------------------------");
 }
 
 void CInputManager::HandlePress(const game_key_event& key)
