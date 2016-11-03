@@ -20,6 +20,7 @@
 
 #include "LibretroResources.h"
 #include "LibretroDefines.h"
+#include "log/Log.h"
 #include "utils/PathUtils.h"
 
 #include "kodi_game_types.h"
@@ -69,7 +70,7 @@ void CLibretroResources::Initialize(ADDON::CHelper_libXBMC_addon* addon, const g
     // Ensure folder exists
     if (!m_addon->DirectoryExists(m_saveDirectory.c_str()))
     {
-      m_addon->Log(ADDON::LOG_DEBUG, "Creating save directory: %s", m_saveDirectory.c_str());
+      dsyslog("Creating save directory: %s", m_saveDirectory.c_str());
       m_addon->CreateDirectory(m_saveDirectory.c_str());
     }
   }

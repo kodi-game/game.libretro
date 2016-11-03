@@ -19,6 +19,7 @@
  */
 
 #include "LibretroDLL.h"
+#include "log/Log.h"
 
 #include "libKODI_game.h"
 #include "kodi_game_types.h"
@@ -34,7 +35,7 @@
 using namespace ADDON;
 using namespace LIBRETRO;
 
-CLibretroDLL::CLibretroDLL(CHelper_libXBMC_addon* xbmc) :
+CLibretroDLL::CLibretroDLL(void) :
   retro_set_environment(nullptr),
   retro_set_video_refresh(nullptr),
   retro_set_audio_sample(nullptr),
@@ -60,10 +61,8 @@ CLibretroDLL::CLibretroDLL(CHelper_libXBMC_addon* xbmc) :
   retro_get_region(nullptr),
   retro_get_memory_data(nullptr),
   retro_get_memory_size(nullptr),
-  m_xbmc(xbmc),
   m_libretroClient(nullptr)
 {
-  assert(m_xbmc);
 }
 
 void CLibretroDLL::Unload(void)
@@ -94,7 +93,7 @@ bool CLibretroDLL::Load(const game_client_properties* gameClientProps)
   m_libretroClient = dlopen(gameClientProps->game_client_dll_path, RTLD_LAZY);
   if (m_libretroClient == nullptr)
   {
-    m_xbmc->Log(LOG_ERROR, "Unable to load %s", dlerror());
+    esyslog("Unable to load: %s", dlerror());
     return false;
   }
 
@@ -128,7 +127,7 @@ bool CLibretroDLL::Load(const game_client_properties* gameClientProps)
   }
   catch (const bool& bSuccess)
   {
-    m_xbmc->Log(LOG_ERROR, "Unable to assign function %s", dlerror());
+    esyslog("Unable to assign function: %s", dlerror());
     return bSuccess;
   }
 

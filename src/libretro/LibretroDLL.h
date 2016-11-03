@@ -25,8 +25,6 @@
 #include <stdint.h>
 #include <string>
 
-namespace ADDON { class CHelper_libXBMC_addon; }
-
 struct game_client_properties;
 
 namespace LIBRETRO
@@ -34,7 +32,7 @@ namespace LIBRETRO
   class CLibretroDLL
   {
   public:
-    CLibretroDLL(ADDON::CHelper_libXBMC_addon* xbmc);
+    CLibretroDLL(void);
     ~CLibretroDLL(void) { Unload(); }
 
     void Unload(void);
@@ -69,8 +67,7 @@ namespace LIBRETRO
     size_t   (*retro_get_memory_size)(unsigned id);
 
   private:
-    ADDON::CHelper_libXBMC_addon* m_xbmc;
-    void*                         m_libretroClient;
-    std::string                   m_strPath;
+    void* m_libretroClient;
+    std::string m_strPath;
   };
 } // namespace LIBRETRO

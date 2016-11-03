@@ -90,17 +90,17 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
     if (!FRONTEND || !FRONTEND->RegisterMe(callbacks))
       throw ADDON_STATUS_PERMANENT_FAILURE;
 
-    CLIENT = new CLibretroDLL(XBMC);
+    CLIENT = new CLibretroDLL();
     if (!CLIENT->Load(gameClientProps))
     {
-      XBMC->Log(LOG_ERROR, "Failed to load %s", gameClientProps->game_client_dll_path);
+      esyslog("Failed to load %s", gameClientProps->game_client_dll_path);
       throw ADDON_STATUS_PERMANENT_FAILURE;
     }
 
     unsigned int version = CLIENT->retro_api_version();
     if (version != 1)
     {
-      XBMC->Log(LOG_ERROR, "Expected libretro api v1, found version %u", version);
+      esyslog("Expected libretro api v1, found version %u", version);
       throw ADDON_STATUS_PERMANENT_FAILURE;
     }
 
@@ -125,12 +125,12 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
     std::string libraryVersion = systemInfo.library_version ? systemInfo.library_version : "";
     std::string extensions = systemInfo.valid_extensions ? systemInfo.valid_extensions : "";
 
-    XBMC->Log(LOG_DEBUG, "CORE: ----------------------------------");
-    XBMC->Log(LOG_DEBUG, "CORE: Library name:    %s", libraryName.c_str());
-    XBMC->Log(LOG_DEBUG, "CORE: Library version: %s", libraryVersion.c_str());
-    XBMC->Log(LOG_DEBUG, "CORE: Extensions:      %s", extensions.c_str());
-    XBMC->Log(LOG_DEBUG, "CORE: Supports VFS:    %s", SUPPORTS_VFS ? "true" : "false");
-    XBMC->Log(LOG_DEBUG, "CORE: ----------------------------------");
+    dsyslog("CORE: ----------------------------------");
+    dsyslog("CORE: Library name:    %s", libraryName.c_str());
+    dsyslog("CORE: Library version: %s", libraryVersion.c_str());
+    dsyslog("CORE: Extensions:      %s", extensions.c_str());
+    dsyslog("CORE: Supports VFS:    %s", SUPPORTS_VFS ? "true" : "false");
+    dsyslog("CORE: ----------------------------------");
 
     // Reject invalid properties
     std::set<std::string> coreExtensions; // TODO: Parse string from libretro API
@@ -139,13 +139,13 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
     if (coreExtensions != addonExtensions)
     {
       std::string strAddonExtensions;// = StringUtils::Join(addonExtensions, "|"); // TODO
-      XBMC->Log(LOG_ERROR, "CORE: Extensions don't match addon.xml: %s", strAddonExtensions.c_str());
+      esyslog("CORE: Extensions don't match addon.xml: %s", strAddonExtensions.c_str());
       throw ADDON_STATUS_PERMANENT_FAILURE;
     }
 
     if (gameClientProps->supports_vfs != SUPPORTS_VFS)
     {
-      XBMC->Log(LOG_ERROR, "CORE: VFS support doesn't match addon.xml: %s", gameClientProps->supports_vfs ? "true" : "false");
+      esyslog("CORE: VFS support doesn't match addon.xml: %s", gameClientProps->supports_vfs ? "true" : "false");
       throw ADDON_STATUS_PERMANENT_FAILURE;
     }
 

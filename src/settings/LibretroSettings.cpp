@@ -84,7 +84,7 @@ void CLibretroSettings::SetAllSettings(const retro_variable* libretroVariables)
 
       if (setting.Values().empty())
       {
-        m_addon->Log(ADDON::LOG_ERROR, "Setting \"%s\": No pipe-delimited options: \"%s\"", variable->key, variable->value);
+        esyslog("Setting \"%s\": No pipe-delimited options: \"%s\"", variable->key, variable->value);
         continue;
       }
 
@@ -94,18 +94,18 @@ void CLibretroSettings::SetAllSettings(const retro_variable* libretroVariables)
       {
         if (std::find(setting.Values().begin(), setting.Values().end(), valueBuf) != setting.Values().end())
         {
-          m_addon->Log(ADDON::LOG_DEBUG, "Setting %s has value \"%s\" in Kodi",  setting.Key().c_str(), valueBuf);
+          dsyslog("Setting %s has value \"%s\" in Kodi",  setting.Key().c_str(), valueBuf);
           setting.SetCurrentValue(valueBuf);
         }
         else
         {
-          m_addon->Log(ADDON::LOG_ERROR, "Setting %s: invalid value \"%s\" (values are: %s)", setting.Key().c_str(), valueBuf, variable->value);
+          esyslog("Setting %s: invalid value \"%s\" (values are: %s)", setting.Key().c_str(), valueBuf, variable->value);
           bValid = false;
         }
       }
       else
       {
-        m_addon->Log(ADDON::LOG_ERROR, "Setting %s not found by Kodi", setting.Key().c_str());
+        esyslog("Setting %s not found by Kodi", setting.Key().c_str());
         bValid = false;
       }
 
@@ -126,7 +126,7 @@ const char* CLibretroSettings::GetCurrentValue(const std::string& settingName)
   auto it = m_settings.find(settingName);
   if (it == m_settings.end())
   {
-    m_addon->Log(ADDON::LOG_ERROR, "Unknown setting ID: %s", settingName.c_str());
+    esyslog("Unknown setting ID: %s", settingName.c_str());
     return "";
   }
 
@@ -152,7 +152,7 @@ void CLibretroSettings::SetCurrentValue(const std::string& name, const std::stri
   auto it = m_settings.find(name);
   if (it == m_settings.end())
   {
-    m_addon->Log(ADDON::LOG_ERROR, "Kodi setting %s unknown to libretro!", name.c_str());
+    esyslog("Kodi setting %s unknown to libretro!", name.c_str());
     bValid = false;
   }
   else if (it->second.CurrentValue() != value)
@@ -182,7 +182,7 @@ void CLibretroSettings::GenerateSettings()
     // Ensure folder exists
     if (!m_addon->DirectoryExists(generatedPath.c_str()))
     {
-      m_addon->Log(ADDON::LOG_DEBUG, "Creating directory for settings and language files: %s", generatedPath.c_str());
+      dsyslog("Creating directory for settings and language files: %s", generatedPath.c_str());
       m_addon->CreateDirectory(generatedPath.c_str());
     }
 
@@ -199,7 +199,7 @@ void CLibretroSettings::GenerateSettings()
     // Ensure language folder exists
     if (!m_addon->DirectoryExists(generatedPath.c_str()))
     {
-      m_addon->Log(ADDON::LOG_DEBUG, "Creating directory for settings and language files: %s", generatedPath.c_str());
+      dsyslog("Creating directory for settings and language files: %s", generatedPath.c_str());
       m_addon->CreateDirectory(generatedPath.c_str());
     }
 
@@ -208,7 +208,7 @@ void CLibretroSettings::GenerateSettings()
     // Ensure English folder exists
     if (!m_addon->DirectoryExists(generatedPath.c_str()))
     {
-      m_addon->Log(ADDON::LOG_DEBUG, "Creating directory for settings and language files: %s", generatedPath.c_str());
+      dsyslog("Creating directory for settings and language files: %s", generatedPath.c_str());
       m_addon->CreateDirectory(generatedPath.c_str());
     }
 
