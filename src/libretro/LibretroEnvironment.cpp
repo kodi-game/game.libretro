@@ -21,21 +21,14 @@
 #include "LibretroEnvironment.h"
 #include "ClientBridge.h"
 #include "FrontendBridge.h"
-#include "input/InputManager.h"
 #include "libretro.h"
 #include "LibretroDLL.h"
 #include "LibretroTranslator.h"
-#include "libXBMC_addon.h"
-#include "libKODI_game.h"
+#include "input/InputManager.h"
 #include "settings/Settings.h"
 
-#include <algorithm>
-#include <assert.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <string>
-#include <string.h>
-#include <vector>
+#include "libKODI_game.h"
+#include "libXBMC_addon.h"
 
 using namespace ADDON;
 using namespace LIBRETRO;

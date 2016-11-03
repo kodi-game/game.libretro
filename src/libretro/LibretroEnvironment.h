@@ -26,9 +26,7 @@
 
 #include "kodi_game_types.h"
 
-#include <map>
 #include <string>
-#include <vector>
 
 namespace ADDON { class CHelper_libXBMC_addon; }
 class CHelper_libKODI_game;
