@@ -50,7 +50,7 @@ libretro_device_caps_t CInputManager::GetDeviceCaps(void) const
          1 << RETRO_DEVICE_POINTER;
 }
 
-void CInputManager::DeviceConnected(unsigned int port, bool bConnected, const game_controller* connectedDevice)
+void CInputManager::DeviceConnected(int port, bool bConnected, const game_controller* connectedDevice)
 {
   if (bConnected)
     m_devices[port] = std::make_shared<CLibretroDevice>(connectedDevice);
@@ -71,10 +71,6 @@ libretro_device_t CInputManager::GetDevice(unsigned int port)
 bool CInputManager::OpenPort(unsigned int port)
 {
   if (!CLibretroEnvironment::Get().GetFrontend())
-    return false;
-
-  // Sanity check
-  if (port > 32)
     return false;
 
   CLibretroEnvironment::Get().GetFrontend()->OpenPort(port);
@@ -128,8 +124,8 @@ bool CInputManager::InputEvent(const game_input_event& event)
       const uint32_t  character     = event.key.character;
       const retro_mod key_modifiers = LibretroTranslator::GetKeyModifiers(event.key.modifiers);
 
-      dsyslog("Key %s: %s (0x%04x)", down ? "down" : "up",
-          LibretroTranslator::GetKeyName(character), character);
+      dsyslog("Key %s: %s (XBMCVKey: 0x%04x, RETROK: 0x%04x, Modifier: 0x%02x)", down ? "down" : "up",
+          LibretroTranslator::GetKeyName(event.key.character), character, keycode, key_modifiers);
 
       clientBridge->KeyboardEvent(down, keycode, character, key_modifiers);
     }
@@ -141,7 +137,7 @@ bool CInputManager::InputEvent(const game_input_event& event)
   }
   else
   {
-    const unsigned int port = event.port;
+    const int port = event.port;
 
     if (m_devices[port])
       bHandled = m_devices[port]->Input().InputEvent(event);
@@ -152,26 +148,35 @@ bool CInputManager::InputEvent(const game_input_event& event)
 
 void CInputManager::LogInputDescriptors(const retro_input_descriptor* descriptors)
 {
-  /* TODO
-  for (const retro_input_descriptor* descriptor = descriptors; descriptor->description != nullptr; descriptor++)
+  dsyslog("Libretro input bindings:");
+  dsyslog("------------------------------------------------------------");
+
+  for (const retro_input_descriptor* descriptor = descriptors;
+      descriptor != nullptr && descriptor->description != nullptr && !std::string(descriptor->description).empty();
+      descriptor++)
   {
-    switch (descriptor->device)
+    std::string component = LibretroTranslator::GetComponentName(descriptor->device, descriptor->index, descriptor->id);
+
+    if (component.empty())
     {
-    case RETRO_DEVICE_JOYPAD:
-    case RETRO_DEVICE_MOUSE:
-    case RETRO_DEVICE_KEYBOARD:
-    case RETRO_DEVICE_LIGHTGUN:
-    case RETRO_DEVICE_ANALOG:
-    case RETRO_DEVICE_POINTER:
-    case RETRO_DEVICE_JOYPAD_MULTITAP:
-    case RETRO_DEVICE_LIGHTGUN_SUPER_SCOPE:
-    case RETRO_DEVICE_LIGHTGUN_JUSTIFIER:
-    case RETRO_DEVICE_LIGHTGUN_JUSTIFIERS:
-    default:
-      break;
+      dsyslog("Port: %u, Device: %s, Feature: %s, Description: %s",
+          descriptor->port,
+          LibretroTranslator::GetDeviceName(descriptor->device),
+          LibretroTranslator::GetFeatureName(descriptor->device, descriptor->index, descriptor->id),
+          descriptor->description ? descriptor->description : "");
+    }
+    else
+    {
+      dsyslog("Port: %u, Device: %s, Feature: %s, Component: %s, Description: %s",
+          descriptor->port,
+          LibretroTranslator::GetDeviceName(descriptor->device),
+          LibretroTranslator::GetFeatureName(descriptor->device, descriptor->index, descriptor->id),
+          component.c_str(),
+          descriptor->description ? descriptor->description : "");
     }
   }
-  */
+
+  dsyslog("------------------------------------------------------------");
 }
 
 std::string CInputManager::ControllerID(unsigned int port)
@@ -194,9 +199,14 @@ bool CInputManager::ButtonState(libretro_device_t device, unsigned int port, uns
   }
   else
   {
-    if (m_devices[port])
+    int iPort = port;
+
+    if (device == RETRO_DEVICE_MOUSE)
+      iPort = GAME_INPUT_PORT_MOUSE;
+
+    if (m_devices[iPort])
     {
-      bState = m_devices[port]->Input().ButtonState(buttonIndex);
+      bState = m_devices[iPort]->Input().ButtonState(buttonIndex);
     }
   }
 
@@ -207,9 +217,14 @@ int CInputManager::DeltaX(libretro_device_t device, unsigned int port)
 {
   int deltaX = 0;
 
-  if (m_devices[port])
+  int iPort = port;
+
+  if (device == RETRO_DEVICE_MOUSE)
+    iPort = GAME_INPUT_PORT_MOUSE;
+
+  if (m_devices[iPort])
   {
-    deltaX = m_devices[port]->Input().RelativePointerDeltaX();
+    deltaX = m_devices[iPort]->Input().RelativePointerDeltaX();
   }
 
   return deltaX;
@@ -219,9 +234,14 @@ int CInputManager::DeltaY(libretro_device_t device, unsigned int port)
 {
   int deltaY = 0;
 
-  if (m_devices[port])
+  int iPort = port;
+
+  if (device == RETRO_DEVICE_MOUSE)
+    iPort = GAME_INPUT_PORT_MOUSE;
+
+  if (m_devices[iPort])
   {
-    deltaY = m_devices[port]->Input().RelativePointerDeltaY();
+    deltaY= m_devices[iPort]->Input().RelativePointerDeltaY();
   }
 
   return deltaY;
@@ -261,6 +281,26 @@ bool CInputManager::AccelerometerState(unsigned int port, float& x, float& y, fl
   }
 
   return bSuccess;
+}
+
+void CInputManager::SetControllerInfo(const retro_controller_info* info)
+{
+  dsyslog("Libretro controller info:");
+  dsyslog("------------------------------------------------------------");
+
+  for (unsigned int i = 0; i < info->num_types; i++)
+  {
+    const retro_controller_description& type = info->types[i];
+
+    libretro_device_t baseType = type.id & RETRO_DEVICE_MASK;
+    unsigned int subclass = type.id >> RETRO_DEVICE_TYPE_SHIFT;
+    std::string description = type.desc ? type.desc : "";
+
+    dsyslog("Device: %s, Subclass: %u, Description: %s",
+        LibretroTranslator::GetDeviceName(baseType), subclass, description.c_str());
+  }
+
+  dsyslog("------------------------------------------------------------");
 }
 
 void CInputManager::HandlePress(const game_key_event& key)

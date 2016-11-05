@@ -134,8 +134,7 @@ int16_t CFrontendBridge::InputState(unsigned int port, unsigned int device, unsi
         break;
       default:
       {
-        const unsigned int buttonIndex = id - 2;
-        inputState = CInputManager::Get().ButtonState(device, port, buttonIndex) ? 1 : 0;
+        inputState = CInputManager::Get().ButtonState(device, port, id) ? 1 : 0;
         break;
       }
     }

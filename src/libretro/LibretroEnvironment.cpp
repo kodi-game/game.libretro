@@ -416,6 +416,65 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
 
       break;
     }
+  case RETRO_ENVIRONMENT_SET_PROC_ADDRESS_CALLBACK:
+  {
+    const retro_get_proc_address_interface* typedData = reinterpret_cast<const retro_get_proc_address_interface*>(data);
+    if (typedData)
+    {
+      // get_proc_address() interface not implemented
+      return false;
+    }
+    break;
+  }
+  case RETRO_ENVIRONMENT_SET_SUBSYSTEM_INFO:
+  {
+    const retro_subsystem_info* typedData = reinterpret_cast<const retro_subsystem_info*>(data);
+    if (typedData)
+    {
+      // Not implemented
+      return false;
+    }
+    break;
+  }
+  case RETRO_ENVIRONMENT_SET_CONTROLLER_INFO:
+    {
+      const retro_controller_info* typedData = reinterpret_cast<const retro_controller_info*>(data);
+      if (typedData)
+      {
+        CInputManager::Get().SetControllerInfo(typedData);
+      }
+      break;
+    }
+  case RETRO_ENVIRONMENT_SET_GEOMETRY:
+  {
+    const retro_game_geometry* typedData = reinterpret_cast<const retro_game_geometry*>(data);
+    if (typedData)
+    {
+      // Not implemented
+      return false;
+    }
+    break;
+  }
+  case RETRO_ENVIRONMENT_GET_USERNAME:
+  {
+    const char** typedData = reinterpret_cast<const char**>(data);
+    if (typedData)
+    {
+      // Not implemented
+      return false;
+    }
+    break;
+  }
+  case RETRO_ENVIRONMENT_GET_LANGUAGE:
+  {
+    unsigned int* typedData = reinterpret_cast<unsigned int*>(data);
+    if (typedData)
+    {
+      // Not implemented
+      return false;
+    }
+    break;
+  }
   case RETRO_ENVIRONMENT_GET_RESOURCE_DIRECTORY:
     {
       retro_resource* typedData = reinterpret_cast<retro_resource*>(data);

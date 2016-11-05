@@ -461,7 +461,7 @@ GAME_ERROR HwContextDestroy()
   return CLIENT_BRIDGE->HwContextDestroy();
 }
 
-void UpdatePort(unsigned int port, bool connected, const game_controller* controller)
+void UpdatePort(int port, bool connected, const game_controller* controller)
 {
   if (connected)
   {
@@ -471,10 +471,13 @@ void UpdatePort(unsigned int port, bool connected, const game_controller* contro
 
   CInputManager::Get().DeviceConnected(port, connected, connected ? controller : nullptr);
 
-  const unsigned int device = CInputManager::Get().GetDevice(port);
+  if (port >= GAME_INPUT_PORT_JOYSTICK_START)
+  {
+    const unsigned int device = CInputManager::Get().GetDevice(port);
 
-  if (CLIENT)
-    CLIENT->retro_set_controller_port_device(port, device);
+    if (CLIENT)
+      CLIENT->retro_set_controller_port_device(port, device);
+  }
 }
 
 bool HasFeature(const char* controller_id, const char* feature_name)

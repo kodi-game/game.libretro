@@ -28,6 +28,7 @@
 #include <string>
 #include <vector>
 
+struct retro_controller_info;
 struct retro_input_descriptor;
 
 namespace LIBRETRO
@@ -52,7 +53,7 @@ namespace LIBRETRO
     /*!
      * \brief Called when a device has been connected to an open port
      */
-    void DeviceConnected(unsigned int port, bool bConnected, const game_controller* connectedController);
+    void DeviceConnected(int port, bool bConnected, const game_controller* connectedController);
 
     /*!
      * \brief Get the libretro device abstraction for the device connected to
@@ -95,11 +96,16 @@ namespace LIBRETRO
     bool AbsolutePointerState(unsigned int port, unsigned int pointerIndex, float& x, float& y);
     bool AccelerometerState(unsigned int port, float& x, float& y, float& z);
 
+    /*!
+     * \brief Inform the frontend of controller info
+     */
+    void SetControllerInfo(const retro_controller_info* info);
+
   private:
     void HandlePress(const game_key_event& key);
     bool IsPressed(uint32_t character);
 
-    std::map<unsigned int, DevicePtr> m_devices;
+    std::map<int, DevicePtr>          m_devices;
     std::vector<game_key_event>       m_pressedKeys;
     P8PLATFORM::CMutex                m_keyMutex;
   };
