@@ -161,7 +161,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       const char** typedData = reinterpret_cast<const char**>(data);
       if (typedData)
       {
-        *typedData = m_resources.GetSystemDirectory();
+        *typedData = m_resources.GetSystemDir();
       }
       break;
     }

@@ -38,8 +38,8 @@ namespace LIBRETRO
     void Initialize(ADDON::CHelper_libXBMC_addon* addon, const game_client_properties* gameClientProps);
     void Deinitialize();
 
-    const char* GetSystemDirectory() const { return m_systemDirectory.c_str(); }
-    const char* GetContentDirectory() { return GetSystemDirectory(); } // Use system directory
+    const char* GetSystemDir() const { return m_systemDirectory.c_str(); }
+    const char* GetContentDirectory() { return GetSystemDir(); } // Use system directory
     const char* GetSaveDirectory() const { return m_saveDirectory.c_str(); }
 
     const char* GetBasePath(const std::string& relPath);
