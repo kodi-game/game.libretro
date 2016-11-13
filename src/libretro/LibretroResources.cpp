@@ -56,7 +56,16 @@ void CLibretroResources::Initialize(ADDON::CHelper_libXBMC_addon* addon, const g
 
     // Set system path to first resource path discovered
     if (m_systemDirectory.empty())
+    {
       m_systemDirectory = resourcePath + "/" LIBRETRO_SYSTEM_DIRECTORY_NAME;
+
+      // Ensure folder exists
+      if (!m_addon->DirectoryExists(m_systemDirectory.c_str()))
+      {
+        dsyslog("Creating system directory: %s", m_systemDirectory.c_str());
+        m_addon->CreateDirectory(m_systemDirectory.c_str());
+      }
+    }
 
     m_resourceDirectories.push_back(std::move(resourcePath));
   }
