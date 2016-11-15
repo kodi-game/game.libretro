@@ -540,7 +540,7 @@ GAME_ERROR CheatReset(void)
   return GAME_ERROR_NO_ERROR;
 }
 
-GAME_ERROR GetMemory(GAME_MEMORY type, const uint8_t** data, size_t* size)
+GAME_ERROR GetMemory(GAME_MEMORY type, uint8_t** data, size_t* size)
 {
   if (!CLIENT)
     return GAME_ERROR_FAILED;
@@ -548,7 +548,7 @@ GAME_ERROR GetMemory(GAME_MEMORY type, const uint8_t** data, size_t* size)
   if (data == nullptr || size == nullptr)
     return GAME_ERROR_INVALID_PARAMETERS;
 
-  *data = static_cast<const uint8_t*>(CLIENT->retro_get_memory_data(type));
+  *data = static_cast<uint8_t*>(CLIENT->retro_get_memory_data(type));
   *size = CLIENT->retro_get_memory_size(type);
 
   return GAME_ERROR_NO_ERROR;
