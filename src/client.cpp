@@ -218,7 +218,7 @@ const char* GetGameAPIVersion(void)
   return GAME_API_VERSION;
 }
 
-const char* GetMininumGameAPIVersion(void)
+const char* GetMinimumGameAPIVersion(void)
 {
   return GAME_MIN_API_VERSION;
 }
