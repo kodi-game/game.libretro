@@ -39,4 +39,33 @@ set(LIBRETRO_SOURCES src/client.cpp
                      src/utils/PathUtils.cpp
                      src/video/VideoStream.cpp)
 
+set(LIBRETRO_HEADERS src/GameInfoLoader.h
+                     src/audio/AudioStream.h
+                     src/audio/SingleFrameAudio.h
+                     src/input/ButtonMapper.h
+                     src/input/InputDefinitions.h
+                     src/input/InputManager.h
+                     src/input/LibretroDevice.h
+                     src/input/LibretroDeviceInput.h
+                     src/libretro/ClientBridge.h
+                     src/libretro/FrontendBridge.h
+                     src/libretro/LibretroDefines.h
+                     src/libretro/LibretroDLL.h
+                     src/libretro/LibretroEnvironment.h
+                     src/libretro/libretro.h
+                     src/libretro/LibretroResources.h
+                     src/libretro/LibretroTranslator.h
+                     src/log/ILog.h
+                     src/log/LogAddon.h
+                     src/log/LogConsole.h
+                     src/log/Log.h
+                     src/settings/LanguageGenerator.h
+                     src/settings/LibretroSetting.h
+                     src/settings/LibretroSettings.h
+                     src/settings/SettingsGenerator.h
+                     src/settings/Settings.h
+                     src/settings/SettingsTypes.h
+                     src/utils/PathUtils.h
+                     src/video/VideoStream.h)
+
 build_addon(${PROJECT_NAME} LIBRETRO DEPLIBS)
