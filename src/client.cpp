@@ -213,16 +213,6 @@ ADDON_STATUS ADDON_SetSetting(const char* settingName, const void* settingValue)
   return ADDON_STATUS_OK;
 }
 
-const char* GetGameAPIVersion(void)
-{
-  return GAME_API_VERSION;
-}
-
-const char* GetMinimumGameAPIVersion(void)
-{
-  return GAME_MIN_API_VERSION;
-}
-
 GAME_ERROR LoadGame(const char* url)
 {
   if (!CLIENT)
