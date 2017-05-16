@@ -1,15 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addon id="game.libretro"
        name="Libretro Compatibility"
-       version="1.0.30"
+       version="1.0.31"
        provider-name="Team-Kodi">
   <backwards-compatibility abi="1.0.0"/>
-  <requires>
-    <import addon="kodi.game" version="1.0.29"/>
-  </requires>
+  <requires>@ADDON_DEPENDS@</requires>
   <extension point="kodi.gameclient"
        library_@PLATFORM@="@LIBRARY_FILENAME@">
-	</extension>
+  </extension>
   <extension point="xbmc.addon.metadata">
     <summary lang="en">Libretro compatibility layer for Kodi's Game API</summary>
     <description>This add-on provides a wrapper for libretro cores, allowing them to be loaded as game add-ons.</description>
