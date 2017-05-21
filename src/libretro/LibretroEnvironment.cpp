@@ -62,7 +62,7 @@ void CLibretroEnvironment::Initialize(ADDON::CHelper_libXBMC_addon* xbmc,
                                       CHelper_libKODI_game*         frontend,
                                       CLibretroDLL*                 client,
                                       CClientBridge*                clientBridge,
-                                      const game_client_properties* gameClientProps)
+                                      const AddonProps_Game*        gameClientProps)
 {
   m_xbmc         = xbmc;
   m_frontend     = frontend;

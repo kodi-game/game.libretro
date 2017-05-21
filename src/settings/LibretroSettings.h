@@ -28,7 +28,7 @@
 
 namespace ADDON { class CHelper_libXBMC_addon; }
 
-struct game_client_properties;
+struct AddonProps_Game;
 struct retro_variable;
 
 namespace LIBRETRO
@@ -38,7 +38,7 @@ namespace LIBRETRO
   public:
     CLibretroSettings();
 
-    void Initialize(ADDON::CHelper_libXBMC_addon* addon, const game_client_properties* props);
+    void Initialize(ADDON::CHelper_libXBMC_addon* addon, const AddonProps_Game* props);
     void Deinitialize();
 
     bool Changed();

@@ -45,7 +45,7 @@ namespace LIBRETRO
                     CHelper_libKODI_game*         frontend,
                     CLibretroDLL*                 client,
                     CClientBridge*                clientBridge,
-                    const game_client_properties* gameClientProps);
+                    const AddonProps_Game*        gameClientProps);
 
     void Deinitialize(void);
 

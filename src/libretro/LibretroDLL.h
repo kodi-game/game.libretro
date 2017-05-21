@@ -25,7 +25,7 @@
 #include <stdint.h>
 #include <string>
 
-struct game_client_properties;
+struct AddonProps_Game;
 
 namespace LIBRETRO
 {
@@ -36,7 +36,7 @@ namespace LIBRETRO
     ~CLibretroDLL(void) { Unload(); }
 
     void Unload(void);
-    bool Load(const game_client_properties* gameClientProps);
+    bool Load(const AddonProps_Game* gameClientProps);
 
     const std::string& GetPath() const { return m_strPath; }
 

@@ -25,7 +25,7 @@
 
 namespace ADDON { class CHelper_libXBMC_addon; }
 
-struct game_client_properties;
+struct AddonProps_Game;
 
 namespace LIBRETRO
 {
@@ -35,7 +35,7 @@ namespace LIBRETRO
     CLibretroResources();
     ~CLibretroResources() { Deinitialize(); }
 
-    void Initialize(ADDON::CHelper_libXBMC_addon* addon, const game_client_properties* gameClientProps);
+    void Initialize(ADDON::CHelper_libXBMC_addon* addon, const AddonProps_Game* gameClientProps);
     void Deinitialize();
 
     const char* GetSystemDir() const { return m_systemDirectory.c_str(); }
