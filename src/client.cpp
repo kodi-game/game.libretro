@@ -75,7 +75,7 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
     if (!callbacks || !props)
       throw ADDON_STATUS_UNKNOWN;
 
-    game_client_properties* gameClientProps = static_cast<game_client_properties*>(props);
+    AddonProps_Game* gameClientProps = static_cast<AddonProps_Game*>(props);
 
     if (gameClientProps->game_client_dll_path == nullptr)
       throw ADDON_STATUS_UNKNOWN;
@@ -164,10 +164,6 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
   }
 
   return ADDON_GetStatus();
-}
-
-void ADDON_Stop(void)
-{
 }
 
 void ADDON_Destroy(void)

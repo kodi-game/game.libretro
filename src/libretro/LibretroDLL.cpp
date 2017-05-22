@@ -86,7 +86,7 @@ bool RegisterSymbol(void* dll, T& functionPtr, const char* strFunctionPtr)
   return (functionPtr = (T)dlsym(dll, strFunctionPtr)) != nullptr;
 }
 
-bool CLibretroDLL::Load(const game_client_properties* gameClientProps)
+bool CLibretroDLL::Load(const AddonProps_Game* gameClientProps)
 {
   Unload();
 

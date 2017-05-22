@@ -36,7 +36,7 @@ CLibretroResources::CLibretroResources() :
 {
 }
 
-void CLibretroResources::Initialize(ADDON::CHelper_libXBMC_addon* addon, const game_client_properties* gameClientProps)
+void CLibretroResources::Initialize(ADDON::CHelper_libXBMC_addon* addon, const AddonProps_Game* gameClientProps)
 {
   m_addon = addon;
 

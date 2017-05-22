@@ -42,7 +42,7 @@ CLibretroSettings::CLibretroSettings() :
 {
 }
 
-void CLibretroSettings::Initialize(ADDON::CHelper_libXBMC_addon* addon, const game_client_properties* props)
+void CLibretroSettings::Initialize(ADDON::CHelper_libXBMC_addon* addon, const AddonProps_Game* props)
 {
   m_addon = addon;
 
