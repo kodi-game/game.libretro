@@ -166,10 +166,6 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
   return ADDON_GetStatus();
 }
 
-void ADDON_Stop(void)
-{
-}
-
 void ADDON_Destroy(void)
 {
   /* TODO
