@@ -16,7 +16,7 @@ Building this add-on requires Kodi's internal CMake-based build system for binar
 
 The Makefile will download, build and install the add-on and its dependencies. There is no need to manually clone the add-on if Kodi's source is available.
 
-The version fetched by Kodi's build system is defined by a text file included with Kodi at [project/cmake/addons/addons/game.libretro](https://github.com/garbear/xbmc/tree/retroplayer-15.2/project/cmake/addons/addons/game.libretro) or fetched from the [binary add-ons repo](https://github.com/xbmc/repo-binary-addons) specified in [project/cmake/addons/bootstrap/repositories/binary-addons.txt](https://github.com/xbmc/xbmc/blob/master/project/cmake/addons/bootstrap/repositories/binary-addons.txt).
+The version fetched by Kodi's build system is defined by a text file included with Kodi at [project/cmake/addons/addons/game.libretro](https://github.com/garbear/xbmc/tree/retroplayer-15.2/project/cmake/addons/addons/game.libretro) or fetched from the [binary add-ons repo](https://github.com/xbmc/repo-binary-addons) specified in [cmake/addons/bootstrap/repositories/binary-addons.txt](https://github.com/xbmc/xbmc/blob/master/cmake/addons/bootstrap/repositories/binary-addons.txt).
 
 ### Building on Linux
 
@@ -131,6 +131,6 @@ Open a command prompt at `tools\windows` and run the script:
 prepare-binary-addons-dev.bat game.libretro
 ```
 
-Open `project\cmake\addons\build\kodi-addons.sln` and build the solution. This downloads the add-on from the version specified in its text file (see above) and creates a Visual Studio project for it. If the build fails, try running it twice.
+Open `cmake\addons\build\kodi-addons.sln` and build the solution. This downloads the add-on from the version specified in its text file (see above) and creates a Visual Studio project for it. If the build fails, try running it twice.
 
-This should package and copy the add-on to the `addons/` directory. If not, you can try opening the solution `project\cmake\addons\build\<addon-id>-prefix\src\<addon-id>-build\<addon-id>.sln` and building the INSTALL project or, worse case, copy by hand.
+This should package and copy the add-on to the `addons/` directory. If not, you can try opening the solution `cmake\addons\build\<addon-id>-prefix\src\<addon-id>-build\<addon-id>.sln` and building the INSTALL project or, worse case, copy by hand.
