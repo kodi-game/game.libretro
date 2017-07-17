@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2015-2016 Team Kodi
+ *      Copyright (C) 2017 Team Kodi
  *      http://kodi.tv
  *
  *  This Program is free software; you can redistribute it and/or modify
@@ -19,15 +19,25 @@
  */
 #pragma once
 
-#define BUTTONMAP_XML_ROOT                  "buttonmap"
+#include <string>
 
-#define BUTTONMAP_XML_ELM_CONTROLLER        "controller"
-#define BUTTONMAP_XML_ELM_FEATURE           "feature"
+namespace LIBRETRO
+{
+  class CDefaultControllerTranslator
+  {
+  public:
+    /*!
+     * \brief Translate from Kodi feature name to libretro index
+     */
+    static int GetLibretroIndex(const std::string &strFeatureName);
 
-#define BUTTONMAP_XML_ATTR_VERSION          "version"
-
-#define BUTTONMAP_XML_ATTR_CONTROLLER_ID    "id"
-#define BUTTONMAP_XML_ATTR_CONTROLLER_TYPE  "type"
-
-#define BUTTONMAP_XML_ATTR_FEATURE_NAME     "name"
-#define BUTTONMAP_XML_ATTR_FEATURE_MAPTO    "mapto"
+    /*!
+     * \brief Translate from libretro feature (from libretro.h) to Kodi feature
+     *
+     * This is necessary because input doesn't just flow from Kodi to the
+     * add-on. Rumble feedback going from the add-on to Kodi makes use of this
+     * functionality.
+     */
+    static std::string GetControllerFeature(const std::string &strLibretroFeature);
+  };
+}

@@ -45,7 +45,7 @@ CLibretroDevice::~CLibretroDevice()
 {
 }
 
-bool CLibretroDevice::Deserialize(const TiXmlElement* pElement)
+bool CLibretroDevice::Deserialize(const TiXmlElement* pElement, unsigned int buttonMapVersion)
 {
   if (!pElement)
     return false;
@@ -65,7 +65,17 @@ bool CLibretroDevice::Deserialize(const TiXmlElement* pElement)
   }
 
   m_controllerId = controllerId;
-  m_type = LibretroTranslator::GetDeviceType(type);
+
+  if (buttonMapVersion == 1)
+    m_type = LibretroTranslator::GetDeviceTypeV1(type);
+  else
+    m_type = LibretroTranslator::GetDeviceTypeV2(type);
+
+  if (m_type == RETRO_DEVICE_NONE)
+  {
+    esyslog("<%s> tag has invalid device type: \"%s\"", BUTTONMAP_XML_ELM_CONTROLLER, type);
+    return false;
+  }
 
   const TiXmlElement* pFeature = pElement->FirstChildElement(BUTTONMAP_XML_ELM_FEATURE);
   if (!pFeature)
@@ -90,7 +100,21 @@ bool CLibretroDevice::Deserialize(const TiXmlElement* pElement)
       return false;
     }
 
-    m_featureMap[name] = mapto;
+    std::string libretroFeature;
+
+    if (buttonMapVersion == 1)
+      libretroFeature = LibretroTranslator::GetFeatureV2(mapto);
+    else
+      libretroFeature = mapto;
+
+    // Ensure feature is valid
+    if (LibretroTranslator::GetFeatureIndexV2(libretroFeature) < 0)
+    {
+      esyslog("<%s> tag has invalid \"%s\" attribute: \"%s\"", BUTTONMAP_XML_ELM_FEATURE, BUTTONMAP_XML_ATTR_FEATURE_MAPTO, mapto);
+      return false;
+    }
+
+    m_featureMap[name] = std::move(libretroFeature);
 
     pFeature = pFeature->NextSiblingElement(BUTTONMAP_XML_ELM_FEATURE);
   }

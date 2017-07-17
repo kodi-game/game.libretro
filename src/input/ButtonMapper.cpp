@@ -19,6 +19,7 @@
  */
 
 #include "ButtonMapper.h"
+#include "DefaultControllerTranslator.h"
 #include "InputDefinitions.h"
 #include "LibretroDevice.h"
 #include "libretro/LibretroDLL.h"
@@ -28,6 +29,8 @@
 #include "log/Log.h"
 
 #include "tinyxml.h"
+
+#include <sstream>
 
 #define BUTTONMAP_XML          "buttonmap.xml"
 #define DEFAULT_CONTROLLER_ID  "game.controller.default"
@@ -68,36 +71,7 @@ bool CButtonMapper::LoadButtonMap(void)
     else
     {
       TiXmlElement* pRootElement = buttonMapXml.RootElement();
-      if (pRootElement == nullptr ||
-          pRootElement->NoChildren() ||
-          pRootElement->ValueStr() != BUTTONMAP_XML_ROOT)
-      {
-        esyslog("Can't find root <%s> tag in %s", BUTTONMAP_XML_ROOT, strFilename.c_str());
-      }
-      else
-      {
-        const TiXmlElement* pChild = pRootElement->FirstChildElement(BUTTONMAP_XML_ELM_CONTROLLER);
-        if (!pChild)
-        {
-          esyslog("Can't find <%s> tag", BUTTONMAP_XML_ELM_CONTROLLER);
-        }
-        else
-        {
-          bSuccess = true;
-
-          while (pChild)
-          {
-            DevicePtr device = std::make_shared<CLibretroDevice>(nullptr);
-            if (!device->Deserialize(pChild))
-            {
-              bSuccess = false;
-              break;
-            }
-            m_devices.emplace_back(std::move(device));
-            pChild = pChild->NextSiblingElement(BUTTONMAP_XML_ELM_CONTROLLER);
-          }
-        }
-      }
+      bSuccess = Deserialize(pRootElement);
     }
   }
 
@@ -130,33 +104,12 @@ int CButtonMapper::GetLibretroIndex(const std::string& strControllerId, const st
   {
     // Handle default controller unless it appears in buttonmap.xml
     if (strControllerId == DEFAULT_CONTROLLER_ID && !HasController(DEFAULT_CONTROLLER_ID))
-    {
-      if (strFeatureName == "a")            return RETRO_DEVICE_ID_JOYPAD_A;
-      if (strFeatureName == "b")            return RETRO_DEVICE_ID_JOYPAD_B;
-      if (strFeatureName == "x")            return RETRO_DEVICE_ID_JOYPAD_X;
-      if (strFeatureName == "y")            return RETRO_DEVICE_ID_JOYPAD_Y;
-      if (strFeatureName == "start")        return RETRO_DEVICE_ID_JOYPAD_START;
-      if (strFeatureName == "back")         return RETRO_DEVICE_ID_JOYPAD_SELECT;
-      if (strFeatureName == "leftbumber")   return RETRO_DEVICE_ID_JOYPAD_L;
-      if (strFeatureName == "rightbumper")  return RETRO_DEVICE_ID_JOYPAD_R;
-      if (strFeatureName == "leftthumb")    return RETRO_DEVICE_ID_JOYPAD_L3;
-      if (strFeatureName == "rightthumb")   return RETRO_DEVICE_ID_JOYPAD_R3;
-      if (strFeatureName == "up")           return RETRO_DEVICE_ID_JOYPAD_UP;
-      if (strFeatureName == "down")         return RETRO_DEVICE_ID_JOYPAD_DOWN;
-      if (strFeatureName == "right")        return RETRO_DEVICE_ID_JOYPAD_RIGHT;
-      if (strFeatureName == "left")         return RETRO_DEVICE_ID_JOYPAD_LEFT;
-      if (strFeatureName == "lefttrigger")  return RETRO_DEVICE_ID_JOYPAD_L2;
-      if (strFeatureName == "righttrigger") return RETRO_DEVICE_ID_JOYPAD_R2;
-      if (strFeatureName == "leftstick")    return RETRO_DEVICE_INDEX_ANALOG_LEFT;
-      if (strFeatureName == "rightstick")   return RETRO_DEVICE_INDEX_ANALOG_RIGHT;
-      if (strFeatureName == "leftmotor")    return RETRO_RUMBLE_STRONG;
-      if (strFeatureName == "rightmotor")   return RETRO_RUMBLE_WEAK;
-    }
+      return CDefaultControllerTranslator::GetLibretroIndex(strFeatureName);
 
     // Check buttonmap for other controllers
     std::string mapto = GetFeature(strControllerId, strFeatureName);
     if (!mapto.empty())
-      return LibretroTranslator::GetFeatureIndex(mapto);
+      return LibretroTranslator::GetFeatureIndexV2(mapto);
   }
 
   return -1;
@@ -170,28 +123,7 @@ std::string CButtonMapper::GetControllerFeature(const std::string& strController
   {
     // Handle default controller unless it appears in buttonmap.xml
     if (strControllerId == DEFAULT_CONTROLLER_ID && !HasController(DEFAULT_CONTROLLER_ID))
-    {
-      if (strLibretroFeature == "a")           return "a";
-      if (strLibretroFeature == "b")           return "b";
-      if (strLibretroFeature == "x")           return "x";
-      if (strLibretroFeature == "y")           return "y";
-      if (strLibretroFeature == "start")       return "start";
-      if (strLibretroFeature == "select")      return "back";
-      if (strLibretroFeature == "up")          return "up";
-      if (strLibretroFeature == "down")        return "down";
-      if (strLibretroFeature == "right")       return "right";
-      if (strLibretroFeature == "left")        return "left";
-      if (strLibretroFeature == "l")           return "leftbumber";
-      if (strLibretroFeature == "r")           return "rightbumper";
-      if (strLibretroFeature == "l2")          return "lefttrigger";
-      if (strLibretroFeature == "r2")          return "righttrigger";
-      if (strLibretroFeature == "l3")          return "leftthumb";
-      if (strLibretroFeature == "r3")          return "rightthumb";
-      if (strLibretroFeature == "leftstick")   return "leftstick";
-      if (strLibretroFeature == "rightstick")  return "rightstick";
-      if (strLibretroFeature == "strong")      return "leftmotor";
-      if (strLibretroFeature == "weak")        return "rightmotor";
-    }
+      return CDefaultControllerTranslator::GetControllerFeature(strLibretroFeature);
 
     for (auto& device : m_devices)
     {
@@ -258,4 +190,60 @@ std::string CButtonMapper::GetFeature(const std::string& strControllerId, const 
   }
 
   return mapto;
+}
+
+bool CButtonMapper::Deserialize(TiXmlElement* pElement)
+{
+  bool bSuccess = false;
+
+  if (pElement == nullptr ||
+      pElement->ValueStr() != BUTTONMAP_XML_ROOT)
+  {
+    esyslog("Can't find root <%s> tag", BUTTONMAP_XML_ROOT);
+  }
+  else
+  {
+    // Check buttonmap version (assume v1 if unspecified)
+    unsigned int version = 1;
+
+    const char* strVersion = pElement->Attribute(BUTTONMAP_XML_ATTR_VERSION);
+    if (strVersion != nullptr)
+    {
+      std::istringstream ss(strVersion);
+      ss >> version;
+      dsyslog("Detected buttonmap version %u", version);
+    }
+    else
+    {
+      dsyslog("No version detected, defaulting to version 1");
+    }
+
+    const TiXmlElement* pChild = pElement->FirstChildElement(BUTTONMAP_XML_ELM_CONTROLLER);
+    if (!pChild)
+    {
+      esyslog("Can't find <%s> tag", BUTTONMAP_XML_ELM_CONTROLLER);
+    }
+    else
+    {
+      bSuccess = true;
+
+      for ( ; pChild != nullptr; pChild = pChild->NextSiblingElement(BUTTONMAP_XML_ELM_CONTROLLER))
+      {
+        DevicePtr device = std::make_shared<CLibretroDevice>(nullptr);
+
+        if (!device->Deserialize(pChild, version))
+        {
+          bSuccess = false;
+          break;
+        }
+
+        m_devices.emplace_back(std::move(device));
+      }
+
+      if (bSuccess)
+        dsyslog("Loaded buttonmap at version %u", version);
+    }
+  }
+
+  return bSuccess;
 }
