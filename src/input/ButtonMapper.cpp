@@ -169,7 +169,7 @@ std::string CButtonMapper::GetControllerFeature(const std::string& strController
   if (!strControllerId.empty() && !strLibretroFeature.empty())
   {
     // Handle default controller unless it appears in buttonmap.xml
-    if (strControllerId == DEFAULT_CONTROLLER_ID && HasController(DEFAULT_CONTROLLER_ID))
+    if (strControllerId == DEFAULT_CONTROLLER_ID && !HasController(DEFAULT_CONTROLLER_ID))
     {
       if (strLibretroFeature == "a")           return "a";
       if (strLibretroFeature == "b")           return "b";
