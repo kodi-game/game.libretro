@@ -19,8 +19,10 @@
  */
 
 #include "InputManager.h"
+#include "ControllerTopology.h"
 #include "LibretroDevice.h"
 #include "LibretroDeviceInput.h"
+#include "libretro/ClientBridge.h"
 #include "libretro/libretro.h"
 #include "libretro/LibretroEnvironment.h"
 #include "libretro/LibretroTranslator.h"
@@ -29,9 +31,12 @@
 #include "libKODI_game.h"
 
 #include <algorithm>
+#include <sstream>
 
 using namespace LIBRETRO;
 using namespace P8PLATFORM;
+
+#define PORT_MAX_COUNT  32 // Large enough
 
 CInputManager& CInputManager::Get(void)
 {
@@ -53,15 +58,25 @@ bool CInputManager::EnableKeyboard(const game_controller &controller)
 {
   bool bSuccess = false;
 
-  DevicePtr device(new CLibretroDevice(controller));
-  m_keyboard = std::move(device);
-  bSuccess = true;
+  const std::string controllerId  = controller.controller_id != nullptr ? controller.controller_id : "";
+
+  if (!CControllerTopology::GetInstance().SetDevice(GAME_PORT_KEYBOARD, controllerId))
+  {
+    esyslog("Error: Keyboard \"%s\" not supported", controllerId.c_str());
+  }
+  else
+  {
+    DevicePtr device(new CLibretroDevice(controller));
+    m_keyboard = std::move(device);
+    bSuccess = true;
+  }
 
   return bSuccess;
 }
 
 void CInputManager::DisableKeyboard()
 {
+  CControllerTopology::GetInstance().RemoveDevice(GAME_PORT_KEYBOARD);
   m_keyboard.reset();
 }
 
@@ -69,37 +84,110 @@ bool CInputManager::EnableMouse(const game_controller &controller)
 {
   bool bSuccess = false;
 
-  DevicePtr device(new CLibretroDevice(controller));
-  m_mouse = std::move(device);
-  bSuccess = true;
+  const std::string controllerId  = controller.controller_id != nullptr ? controller.controller_id : "";
+
+  if (!CControllerTopology::GetInstance().SetDevice(GAME_PORT_MOUSE, controllerId))
+  {
+    esyslog("Error: Mouse \"%s\" not supported", controllerId.c_str());
+  }
+  else
+  {
+    DevicePtr device(new CLibretroDevice(controller));
+    m_mouse = std::move(device);
+    bSuccess = true;
+  }
 
   return bSuccess;
 }
 
 void CInputManager::DisableMouse()
 {
+  CControllerTopology::GetInstance().RemoveDevice(GAME_PORT_MOUSE);
   m_mouse.reset();
 }
 
-void CInputManager::DeviceConnected(int port, bool bConnected, const game_controller* connectedDevice)
+libretro_device_t CInputManager::ConnectController(const std::string &address, const game_controller &controller)
 {
-  if (bConnected)
-    m_devices[port] = std::make_shared<CLibretroDevice>(*connectedDevice);
-  else
-    m_devices[port].reset();
+  unsigned int deviceType = RETRO_DEVICE_NONE; // Unmasked device type
+
+  const int port = GetPortIndex(address);
+  if (port < 0)
+  {
+    esyslog("Failed to connect controller, invalid port address: %s", address.c_str());
+  }
+  else if (controller.controller_id)
+  {
+    const bool bProvidesInput = controller.provides_input;
+
+    if (!CControllerTopology::GetInstance().SetController(address, controller.controller_id, bProvidesInput))
+    {
+      esyslog("Error: Controller port \"%s\" (libretro port %d) does not accept %s",
+          address.c_str(), port, controller.controller_id);
+    }
+    else
+    {
+      DevicePtr device(new CLibretroDevice(controller));
+
+      if (device->Subclass() != RETRO_SUBCLASS_NONE)
+        deviceType = RETRO_DEVICE_SUBCLASS(device->Type(), device->Subclass());
+      else
+        deviceType = device->Type();
+
+      if (port >= m_controllers.size())
+        m_controllers.resize(port + 1);
+
+      m_controllers[port] = std::move(device);
+    }
+  }
+
+  return deviceType;
 }
 
-libretro_device_t CInputManager::GetDeviceType(unsigned int port) const
+bool CInputManager::DisconnectController(const std::string &address)
+{
+  bool bSuccess = false;
+
+  const int port = GetPortIndex(address);
+  if (port < 0)
+  {
+    esyslog("Failed to disconnect controller, invalid port address: %s", address.c_str());
+  }
+  else
+  {
+    CControllerTopology::GetInstance().RemoveController(address);
+
+    if (port < m_controllers.size())
+      m_controllers[port].reset();
+
+    bSuccess = true;
+  }
+
+  return bSuccess;
+}
+
+int CInputManager::GetPortIndex(const std::string &address) const
+{
+  return CControllerTopology::GetInstance().GetPortIndex(address);
+}
+
+std::string CInputManager::GetAddress(unsigned int port) const
+{
+  return CControllerTopology::GetInstance().GetAddress(port);
+}
+
+libretro_device_t CInputManager::GetDeviceType(const std::string &address) const
 {
   libretro_device_t deviceType = RETRO_DEVICE_NONE;
 
-  auto it = m_devices.find(port);
-  if (it != m_devices.end())
+  int port = GetPortIndex(address);
+  if (0 <= port && port < m_controllers.size())
   {
-    const auto &device = it->second;
+    const DevicePtr &device = m_controllers[port];
+
     if (device)
     {
       libretro_subclass_t subclass = device->Subclass();
+
       if (subclass == RETRO_SUBCLASS_NONE)
         deviceType = device->Type();
       else
@@ -110,40 +198,9 @@ libretro_device_t CInputManager::GetDeviceType(unsigned int port) const
   return deviceType;
 }
 
-bool CInputManager::OpenPort(unsigned int port)
-{
-  if (!CLibretroEnvironment::Get().GetFrontend())
-    return false;
-
-  CLibretroEnvironment::Get().GetFrontend()->OpenPort(port);
-
-  return true;
-}
-
-DevicePtr CInputManager::GetPort(unsigned int port)
-{
-  return m_devices[port];
-}
-
-void CInputManager::ClosePort(unsigned int port)
-{
-  if (CLibretroEnvironment::Get().GetFrontend())
-    CLibretroEnvironment::Get().GetFrontend()->ClosePort(port);
-
-  m_devices[port].reset();
-}
-
 void CInputManager::ClosePorts(void)
 {
-  std::vector<unsigned int> ports;
-  for (auto it = m_devices.begin(); it != m_devices.end(); ++it)
-  {
-    if (it->second)
-      ports.push_back(it->first);
-  }
-
-  for (auto port : ports)
-    ClosePort(port);
+  m_controllers.clear();
 }
 
 void CInputManager::EnableAnalogSensors(unsigned int port, bool bEnabled)
@@ -161,26 +218,44 @@ bool CInputManager::InputEvent(const game_input_event& event)
 
   bool bHandled = false;
 
-  switch (event.type)
+  switch (event.port_type)
   {
-  case GAME_INPUT_EVENT_KEY:
+  case GAME_PORT_KEYBOARD:
   {
     if (m_keyboard)
-      bHandled = m_keyboard->Input().InputEvent(event);
+      bHandled |= m_keyboard->Input().InputEvent(event);
+
+    break;
+  }
+  case GAME_PORT_MOUSE:
+  {
+    if (m_mouse)
+      bHandled = m_mouse->Input().InputEvent(event);
+
+    break;
+  }
+  case GAME_PORT_CONTROLLER:
+  {
+    std::string portAddress = event.port_address != nullptr ? event.port_address : "";
+    int port = GetPortIndex(portAddress);
+
+    if (0 <= port && port < PORT_MAX_COUNT)
+    {
+      // Resize devices if necessary
+      if (port >= m_controllers.size())
+        m_controllers.resize(port);
+
+      if (m_controllers[port])
+        bHandled = m_controllers[port]->Input().InputEvent(event);
+      else
+        esyslog("Event from controller %s sent to port with no device!",
+            event.controller_id != nullptr ? event.controller_id : "");
+    }
 
     break;
   }
   default:
-  {
-    const int port = event.port;
-
-    if (port < GAME_INPUT_PORT_JOYSTICK_START) //! @todo Remove in port refactor
-      bHandled = m_mouse->Input().InputEvent(event);
-    else if (m_devices[port])
-      bHandled = m_devices[port]->Input().InputEvent(event);
-
     break;
-  }
   }
 
   return bHandled;
@@ -223,10 +298,9 @@ std::string CInputManager::ControllerID(unsigned int port) const
 {
   std::string controllerId;
 
-  auto it = m_devices.find(port);
-  if (it != m_devices.end())
+  if (port < m_controllers.size())
   {
-    const auto &device = it->second;
+    const DevicePtr &device = m_controllers[port];
     if (device)
       controllerId = device->ControllerID();
   }
@@ -250,30 +324,18 @@ bool CInputManager::ButtonState(libretro_device_t device, unsigned int port, uns
   case RETRO_DEVICE_MOUSE:
   {
     if (m_mouse)
-      bState = m_mouse->Input().ButtonState(buttonIndex);
-    else
     {
-      int iPort = port;
-
-      auto it = m_devices.find(iPort);
-      if (it != m_devices.end())
-      {
-        const auto &controller = it->second;
-        if (controller)
-          bState = controller->Input().ButtonState(buttonIndex);
-      }
+      bState = m_mouse->Input().ButtonState(buttonIndex);
+      break;
     }
 
-    break;
+    // Fall through to controller ports
   }
   default:
   {
-    int iPort = port;
-
-    auto it = m_devices.find(iPort);
-    if (it != m_devices.end())
+    if (port < m_controllers.size())
     {
-      const auto &controller = it->second;
+      const DevicePtr &controller = m_controllers[port];
       if (controller)
         bState = controller->Input().ButtonState(buttonIndex);
     }
@@ -289,10 +351,9 @@ float CInputManager::AnalogButtonState(unsigned int port, unsigned int buttonInd
 {
   float state = 0.0f;
 
-  auto it = m_devices.find(port);
-  if (it != m_devices.end())
+  if (port < m_controllers.size())
   {
-    const auto &device = it->second;
+    const DevicePtr &device = m_controllers[port];
     if (device)
       state = device->Input().AnalogButtonState(buttonIndex);
   }
@@ -308,17 +369,11 @@ int CInputManager::DeltaX(libretro_device_t device, unsigned int port)
   {
     deltaX = m_mouse->Input().RelativePointerDeltaX();
   }
-  else
+  else if (port < m_controllers.size())
   {
-    int iPort = port;
-
-    auto it = m_devices.find(iPort);
-    if (it != m_devices.end())
-    {
-      const auto &device = it->second;
-      if (device)
-        deltaX = device->Input().RelativePointerDeltaX();
-    }
+    const DevicePtr &device = m_controllers[port];
+    if (device)
+      deltaX = device->Input().RelativePointerDeltaX();
   }
 
   return deltaX;
@@ -332,17 +387,11 @@ int CInputManager::DeltaY(libretro_device_t device, unsigned int port)
   {
     deltaY = m_mouse->Input().RelativePointerDeltaY();
   }
-  else
+  else if (port < m_controllers.size())
   {
-    int iPort = port;
-
-    auto it = m_devices.find(iPort);
-    if (it != m_devices.end())
-    {
-      const auto &device = it->second;
-      if (device)
-        deltaY = device->Input().RelativePointerDeltaY();
-    }
+    const DevicePtr &device = m_controllers[port];
+    if (device)
+      deltaY = device->Input().RelativePointerDeltaY();
   }
 
   return deltaY;
@@ -352,10 +401,9 @@ bool CInputManager::AnalogStickState(unsigned int port, unsigned int analogStick
 {
   bool bSuccess = false;
 
-  auto it = m_devices.find(port);
-  if (it != m_devices.end())
+  if (port < m_controllers.size())
   {
-    const auto &device = it->second;
+    const DevicePtr &device = m_controllers[port];
     if (device)
       bSuccess = device->Input().AnalogStickState(analogStickIndex, x, y);
   }
@@ -367,10 +415,9 @@ bool CInputManager::AbsolutePointerState(unsigned int port, unsigned int pointer
 {
   bool bSuccess = false;
 
-  auto it = m_devices.find(port);
-  if (it != m_devices.end())
+  if (port < m_controllers.size())
   {
-    const auto &device = it->second;
+    const DevicePtr &device = m_controllers[port];
     if (device)
       bSuccess = device->Input().AbsolutePointerState(pointerIndex, x, y);
   }
@@ -382,10 +429,9 @@ bool CInputManager::AccelerometerState(unsigned int port, float& x, float& y, fl
 {
   bool bSuccess = false;
 
-  auto it = m_devices.find(port);
-  if (it != m_devices.end())
+  if (port < m_controllers.size())
   {
-    const auto &device = it->second;
+    const DevicePtr &device = m_controllers[port];
     if (device)
       bSuccess = device->Input().AccelerometerState(x, y, z);
   }

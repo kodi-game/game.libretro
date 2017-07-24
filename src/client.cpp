@@ -19,6 +19,7 @@
  */
 
 #include "input/ButtonMapper.h"
+#include "input/ControllerTopology.h"
 #include "input/InputManager.h"
 #include "libretro/ClientBridge.h"
 #include "libretro/libretro.h"
@@ -109,6 +110,7 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
     CLibretroEnvironment::Get().Initialize(XBMC, FRONTEND, CLIENT, CLIENT_BRIDGE, gameClientProps);
 
     CButtonMapper::Get().LoadButtonMap();
+    CControllerTopology::GetInstance().LoadTopology();
 
     CLIENT->retro_init();
 
@@ -173,8 +175,12 @@ void ADDON_Destroy(void)
     CLIENT_BRIDGE->AudioEnable(false);
   */
 
+  CInputManager::Get().ClosePorts();
+
   if (CLIENT)
     CLIENT->retro_deinit();
+
+  CControllerTopology::GetInstance().Clear();
 
   CLibretroEnvironment::Get().Deinitialize();
 
@@ -238,16 +244,6 @@ GAME_ERROR LoadGame(const char* url)
     bResult = CLIENT->retro_load_game(&gameInfo);
   }
 
-  if (bResult)
-  {
-    CInputManager::Get().OpenPort(0);
-
-    // TODO
-    CInputManager::Get().OpenPort(1);
-    CInputManager::Get().OpenPort(2);
-    CInputManager::Get().OpenPort(3);
-  }
-
   return bResult ? GAME_ERROR_NO_ERROR : GAME_ERROR_FAILED;
 }
 
@@ -300,13 +296,6 @@ GAME_ERROR LoadStandalone(void)
   if (!CLIENT->retro_load_game(nullptr))
     return GAME_ERROR_FAILED;
 
-  CInputManager::Get().OpenPort(0);
-
-  // TODO
-  CInputManager::Get().OpenPort(1);
-  CInputManager::Get().OpenPort(2);
-  CInputManager::Get().OpenPort(3);
-
   return GAME_ERROR_NO_ERROR;
 }
 
@@ -317,8 +306,6 @@ GAME_ERROR UnloadGame(void)
   if (CLIENT)
   {
     CLIENT->retro_unload_game();
-
-    CInputManager::Get().ClosePorts();
 
     error = GAME_ERROR_NO_ERROR;
   }
@@ -429,6 +416,24 @@ GAME_ERROR HwContextDestroy()
   return CLIENT_BRIDGE->HwContextDestroy();
 }
 
+bool HasFeature(const char* controller_id, const char* feature_name)
+{
+  if (controller_id == nullptr || feature_name == nullptr)
+    return false;
+
+  return CButtonMapper::Get().GetLibretroIndex(controller_id, feature_name) >= 0;
+}
+
+game_input_topology* GetTopology()
+{
+  return CControllerTopology::GetInstance().GetTopology();
+}
+
+void FreeTopology(game_input_topology* topology)
+{
+  CControllerTopology::FreeTopology(topology);
+}
+
 bool EnableKeyboard(bool enable, const game_controller* controller)
 {
   bool bSuccess = false;
@@ -465,31 +470,50 @@ bool EnableMouse(bool enable, const game_controller* controller)
   return bSuccess;
 }
 
-void UpdatePort(int port, bool connected, const game_controller* controller)
+bool ConnectController(bool connect, const char *port_address, const game_controller* controller)
 {
-  if (connected)
+  if (port_address == nullptr)
+    return false;
+
+  std::string strPortAddress(port_address);
+  std::string strController;
+
+  if (connect)
   {
-    if (!controller || !controller->controller_id)
-      return;
+    if (controller == nullptr || controller->controller_id == nullptr)
+      return false;
+
+    strController = controller->controller_id;
   }
 
-  CInputManager::Get().DeviceConnected(port, connected, connected ? controller : nullptr);
-
-  if (port >= GAME_INPUT_PORT_JOYSTICK_START)
+  const int port = CInputManager::Get().GetPortIndex(strPortAddress);
+  if (port < 0)
   {
-    const unsigned int device = CInputManager::Get().GetDeviceType(port);
+    esyslog("Failed to connect controller, invalid port address: %s", strPortAddress.c_str());
+  }
+  else
+  {
+    libretro_device_t device = RETRO_DEVICE_NONE;
+
+    if (connect)
+    {
+      device = CInputManager::Get().ConnectController(strPortAddress, *controller);
+    }
+    else
+    {
+      CInputManager::Get().DisconnectController(strPortAddress);
+    }
+
+    dsyslog("Settings port \"%s\" (libretro port %d) to controller \"%s\" (libretro device ID %u)",
+        strPortAddress.c_str(), port, strController.c_str(), device);
 
     if (CLIENT)
       CLIENT->retro_set_controller_port_device(port, device);
+
+    return true;
   }
-}
 
-bool HasFeature(const char* controller_id, const char* feature_name)
-{
-  if (controller_id == nullptr || feature_name == nullptr)
-    return false;
-
-  return CButtonMapper::Get().GetLibretroIndex(controller_id, feature_name) >= 0;
+  return false;
 }
 
 bool InputEvent(const game_input_event* event)

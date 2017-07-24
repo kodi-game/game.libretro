@@ -17,29 +17,17 @@
  *  <http://www.gnu.org/licenses/>.
  *
  */
-#pragma once
 
-#include <map>
-#include <memory>
-#include <string>
-#include <vector>
+#include "InputTranslator.h"
+#include "InputDefinitions.h"
 
-// No subclass
-#define RETRO_SUBCLASS_NONE  (-1)
+using namespace LIBRETRO;
 
-namespace LIBRETRO
+GAME_PORT_TYPE CInputTranslator::GetPortType(const std::string &portType)
 {
-  class CLibretroDevice;
-  using DevicePtr = std::shared_ptr<CLibretroDevice>;
-  using DeviceVector = std::vector<DevicePtr>;
+  if (portType == PORT_TYPE_KEYBOARD)    return GAME_PORT_KEYBOARD;
+  if (portType == PORT_TYPE_MOUSE)       return GAME_PORT_MOUSE;
+  if (portType == PORT_TYPE_CONTROLLER)  return GAME_PORT_CONTROLLER;
 
-  using libretro_device_t = unsigned int;
-  using libretro_subclass_t = int;
-
-  struct FeatureMapItem
-  {
-    std::string feature;
-    std::string axis;
-  };
-  using FeatureMap = std::map<std::string, FeatureMapItem>;
+  return GAME_PORT_UNKNOWN;
 }

@@ -41,7 +41,7 @@ namespace LIBRETRO
     CLibretroDevice(const game_controller &controller);
     ~CLibretroDevice();
 
-    std::string ControllerID(void) const { return m_controllerId; }
+    const std::string& ControllerID(void) const { return m_controllerId; }
     libretro_device_t Type(void) const { return m_type; }
     libretro_subclass_t Subclass() const { return m_subclass; }
     const FeatureMap& Features(void) const { return m_featureMap; }

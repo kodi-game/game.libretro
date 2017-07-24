@@ -67,10 +67,10 @@ bool CLibretroDevice::Deserialize(const TiXmlElement* pElement, unsigned int but
   }
 
   // Device type
-  const char* type = pElement->Attribute(BUTTONMAP_XML_ATTR_CONTROLLER_TYPE);
+  const char* type = pElement->Attribute(BUTTONMAP_XML_ATTR_DEVICE_TYPE);
   if (!type)
   {
-    esyslog("<%s> tag has no \"%s\" attribute", BUTTONMAP_XML_ELM_CONTROLLER, BUTTONMAP_XML_ATTR_CONTROLLER_TYPE);
+    esyslog("<%s> tag has no \"%s\" attribute", BUTTONMAP_XML_ELM_CONTROLLER, BUTTONMAP_XML_ATTR_DEVICE_TYPE);
     return false;
   }
 
@@ -84,7 +84,7 @@ bool CLibretroDevice::Deserialize(const TiXmlElement* pElement, unsigned int but
   }
 
   // Device subclass
-  const char* subclass = pElement->Attribute(BUTTONMAP_XML_ATTR_CONTROLLER_SUBCLASS);
+  const char* subclass = pElement->Attribute(BUTTONMAP_XML_ATTR_DEVICE_SUBCLASS);
   if (subclass)
     std::istringstream(subclass) >> m_subclass;
   else

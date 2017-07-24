@@ -221,14 +221,19 @@ bool CFrontendBridge::RumbleSetState(unsigned int port, retro_rumble_effect effe
     return false;
 
   std::string controllerId  = CInputManager::Get().ControllerID(port);
+  std::string address       = CInputManager::Get().GetAddress(port);
   std::string libretroMotor = LibretroTranslator::GetMotorName(effect);
   std::string featureName   = CButtonMapper::Get().GetControllerFeature(controllerId, libretroMotor);
   float       magnitude     = static_cast<float>(strength) / MAX_RUMBLE_STRENGTH;
 
+  if (controllerId.empty() || address.empty() || featureName.empty())
+    return false;
+
   game_input_event eventStruct;
   eventStruct.type            = GAME_INPUT_EVENT_MOTOR;
-  eventStruct.port            = port;
   eventStruct.controller_id   = controllerId.c_str();
+  eventStruct.port_address    = address.c_str();
+  eventStruct.port_type       = GAME_PORT_CONTROLLER;
   eventStruct.feature_name    = featureName.c_str();
   eventStruct.motor.magnitude = CONSTRAIN(magnitude, 0.0f, 1.0f);
 

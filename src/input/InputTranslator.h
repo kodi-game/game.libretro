@@ -19,27 +19,16 @@
  */
 #pragma once
 
-#include <map>
-#include <memory>
-#include <string>
-#include <vector>
-
-// No subclass
-#define RETRO_SUBCLASS_NONE  (-1)
+#include <kodi/kodi_game_types.h>
 
 namespace LIBRETRO
 {
-  class CLibretroDevice;
-  using DevicePtr = std::shared_ptr<CLibretroDevice>;
-  using DeviceVector = std::vector<DevicePtr>;
-
-  using libretro_device_t = unsigned int;
-  using libretro_subclass_t = int;
-
-  struct FeatureMapItem
+  class CInputTranslator
   {
-    std::string feature;
-    std::string axis;
+  public:
+    /*!
+     * \brief Translate from string to Game API enum
+     */
+    static GAME_PORT_TYPE GetPortType(const std::string &portType);
   };
-  using FeatureMap = std::map<std::string, FeatureMapItem>;
 }

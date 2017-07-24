@@ -75,24 +75,38 @@ namespace LIBRETRO
     bool EnableMouse(const game_controller &controller);
 
     /*!
-     * \brief Disable the keyboard and free any resources it held
+     * \brief Disable the mouse and free any resources it held
      */
     void DisableMouse();
 
     /*!
-     * \brief Called when a device has been connected to an open port
+     * \brief Called when a device has been connected to a port
      */
-    void DeviceConnected(int port, bool bConnected, const game_controller* connectedController);
+    libretro_device_t ConnectController(const std::string &address, const game_controller &controller);
+
+    /*!
+     * \brief Called when a device has been disconnected from a port
+     */
+    bool DisconnectController(const std::string &address);
+
+    /*!
+     * \brief Get the port number associated with the specified address
+     *
+     * \return The port number, or -1 if the address has no port number
+     */
+    int GetPortIndex(const std::string &address) const;
+
+    std::string GetAddress(unsigned int port) const;
 
     /*!
      * \brief Get the libretro device abstraction for the device connected to
-     *        the specified port
+     *        the specified address
      */
-    libretro_device_t GetDeviceType(unsigned int port) const;
+    libretro_device_t GetDeviceType(const std::string &address) const;
 
-    bool OpenPort(unsigned int port);
-    DevicePtr GetPort(unsigned int port);
-    void ClosePort(unsigned int port);
+    /*!
+     * \brief Close all ports
+     */
     void ClosePorts(void);
 
     /*!
@@ -132,9 +146,8 @@ namespace LIBRETRO
     void SetControllerInfo(const retro_controller_info* info);
 
   private:
-    std::map<int, DevicePtr>          m_devices;
     DevicePtr m_keyboard;
     DevicePtr m_mouse;
-    mutable P8PLATFORM::CMutex        m_keyMutex;
+    DeviceVector m_controllers;
   };
 }
