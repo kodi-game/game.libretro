@@ -23,6 +23,7 @@
 #include "libretro.h"
 
 #include "kodi_game_types.h"
+#include "XBMC_vkeys.h"
 
 #include <string>
 

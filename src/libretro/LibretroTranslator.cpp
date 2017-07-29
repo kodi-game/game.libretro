@@ -19,7 +19,6 @@
  */
 
 #include "LibretroTranslator.h"
-#include "XBMC_vkeys.h"
 
 using namespace LIBRETRO;
 
