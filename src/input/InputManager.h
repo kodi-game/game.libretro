@@ -82,19 +82,19 @@ namespace LIBRETRO
     /*!
      * \brief Parse libretro input descriptors and output to the log
      */
-    void LogInputDescriptors(const retro_input_descriptor* descriptors);
+    void LogInputDescriptors(const retro_input_descriptor* descriptors) const;
 
     /*!
      * \brief Return the controller ID that the specified port is connected to
      */
-    std::string ControllerID(unsigned int port);
+    std::string ControllerID(unsigned int port) const;
 
-    bool ButtonState(libretro_device_t device, unsigned int port, unsigned int buttonIndex);
+    bool ButtonState(libretro_device_t device, unsigned int port, unsigned int buttonIndex) const;
     int DeltaX(libretro_device_t device, unsigned int port);
     int DeltaY(libretro_device_t device, unsigned int port);
-    bool AnalogStickState(unsigned int port, unsigned int analogStickIndex, float& x, float& y);
-    bool AbsolutePointerState(unsigned int port, unsigned int pointerIndex, float& x, float& y);
-    bool AccelerometerState(unsigned int port, float& x, float& y, float& z);
+    bool AnalogStickState(unsigned int port, unsigned int analogStickIndex, float& x, float& y) const;
+    bool AbsolutePointerState(unsigned int port, unsigned int pointerIndex, float& x, float& y) const;
+    bool AccelerometerState(unsigned int port, float& x, float& y, float& z) const;
 
     /*!
      * \brief Inform the frontend of controller info
@@ -103,10 +103,10 @@ namespace LIBRETRO
 
   private:
     void HandlePress(const game_key_event& key);
-    bool IsPressed(uint32_t character);
+    bool IsPressed(uint32_t character) const;
 
     std::map<int, DevicePtr>          m_devices;
     std::vector<game_key_event>       m_pressedKeys;
-    P8PLATFORM::CMutex                m_keyMutex;
+    mutable P8PLATFORM::CMutex        m_keyMutex;
   };
 }

@@ -146,7 +146,7 @@ bool CInputManager::InputEvent(const game_input_event& event)
   return bHandled;
 }
 
-void CInputManager::LogInputDescriptors(const retro_input_descriptor* descriptors)
+void CInputManager::LogInputDescriptors(const retro_input_descriptor* descriptors) const
 {
   dsyslog("Libretro input bindings:");
   dsyslog("------------------------------------------------------------");
@@ -179,17 +179,22 @@ void CInputManager::LogInputDescriptors(const retro_input_descriptor* descriptor
   dsyslog("------------------------------------------------------------");
 }
 
-std::string CInputManager::ControllerID(unsigned int port)
+std::string CInputManager::ControllerID(unsigned int port) const
 {
   std::string controllerId;
 
-  if (m_devices[port])
-    controllerId = m_devices[port]->ControllerID();
+  auto it = m_devices.find(port);
+  if (it != m_devices.end())
+  {
+    const auto &device = it->second;
+    if (device)
+      controllerId = device->ControllerID();
+  }
 
   return controllerId;
 }
 
-bool CInputManager::ButtonState(libretro_device_t device, unsigned int port, unsigned int buttonIndex)
+bool CInputManager::ButtonState(libretro_device_t device, unsigned int port, unsigned int buttonIndex) const
 {
   bool bState = false;
 
@@ -204,9 +209,12 @@ bool CInputManager::ButtonState(libretro_device_t device, unsigned int port, uns
     if (device == RETRO_DEVICE_MOUSE)
       iPort = GAME_INPUT_PORT_MOUSE;
 
-    if (m_devices[iPort])
+    auto it = m_devices.find(iPort);
+    if (it != m_devices.end())
     {
-      bState = m_devices[iPort]->Input().ButtonState(buttonIndex);
+      const auto &device = it->second;
+      if (device)
+        bState = device->Input().ButtonState(buttonIndex);
     }
   }
 
@@ -222,9 +230,12 @@ int CInputManager::DeltaX(libretro_device_t device, unsigned int port)
   if (device == RETRO_DEVICE_MOUSE)
     iPort = GAME_INPUT_PORT_MOUSE;
 
-  if (m_devices[iPort])
+  auto it = m_devices.find(iPort);
+  if (it != m_devices.end())
   {
-    deltaX = m_devices[iPort]->Input().RelativePointerDeltaX();
+    const auto &device = it->second;
+    if (device)
+      deltaX = device->Input().RelativePointerDeltaX();
   }
 
   return deltaX;
@@ -239,45 +250,57 @@ int CInputManager::DeltaY(libretro_device_t device, unsigned int port)
   if (device == RETRO_DEVICE_MOUSE)
     iPort = GAME_INPUT_PORT_MOUSE;
 
-  if (m_devices[iPort])
+  auto it = m_devices.find(iPort);
+  if (it != m_devices.end())
   {
-    deltaY= m_devices[iPort]->Input().RelativePointerDeltaY();
+    const auto &device = it->second;
+    if (device)
+      deltaY = device->Input().RelativePointerDeltaY();
   }
 
   return deltaY;
 }
 
-bool CInputManager::AnalogStickState(unsigned int port, unsigned int analogStickIndex, float& x, float& y)
+bool CInputManager::AnalogStickState(unsigned int port, unsigned int analogStickIndex, float& x, float& y) const
 {
   bool bSuccess = false;
 
-  if (m_devices[port])
+  auto it = m_devices.find(port);
+  if (it != m_devices.end())
   {
-    bSuccess = m_devices[port]->Input().AnalogStickState(analogStickIndex, x, y);
+    const auto &device = it->second;
+    if (device)
+      bSuccess = device->Input().AnalogStickState(analogStickIndex, x, y);
   }
 
   return bSuccess;
 }
 
-bool CInputManager::AbsolutePointerState(unsigned int port, unsigned int pointerIndex, float& x, float& y)
+bool CInputManager::AbsolutePointerState(unsigned int port, unsigned int pointerIndex, float& x, float& y) const
 {
   bool bSuccess = false;
 
-  if (m_devices[port])
+  auto it = m_devices.find(port);
+  if (it != m_devices.end())
   {
-    bSuccess = m_devices[port]->Input().AbsolutePointerState(pointerIndex, x, y);
+    const auto &device = it->second;
+    if (device)
+      bSuccess = device->Input().AbsolutePointerState(pointerIndex, x, y);
   }
 
   return bSuccess;
 }
 
-bool CInputManager::AccelerometerState(unsigned int port, float& x, float& y, float& z)
+bool CInputManager::AccelerometerState(unsigned int port, float& x, float& y, float& z) const
 {
   bool bSuccess = false;
 
-  if (m_devices[port])
+  auto it = m_devices.find(port);
+  if (it != m_devices.end())
   {
-    bSuccess = m_devices[port]->Input().AccelerometerState(x, y, z);
+    const auto &device = it->second;
+    if (device)
+      bSuccess = device->Input().AccelerometerState(x, y, z);
   }
 
   return bSuccess;
@@ -321,7 +344,7 @@ void CInputManager::HandlePress(const game_key_event& key)
   }
 }
 
-bool CInputManager::IsPressed(uint32_t character)
+bool CInputManager::IsPressed(uint32_t character) const
 {
   CLockObject lock(m_keyMutex);
 
