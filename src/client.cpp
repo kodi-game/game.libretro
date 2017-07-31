@@ -441,7 +441,7 @@ void UpdatePort(int port, bool connected, const game_controller* controller)
 
   if (port >= GAME_INPUT_PORT_JOYSTICK_START)
   {
-    const unsigned int device = CInputManager::Get().GetDevice(port);
+    const unsigned int device = CInputManager::Get().GetDeviceType(port);
 
     if (CLIENT)
       CLIENT->retro_set_controller_port_device(port, device);

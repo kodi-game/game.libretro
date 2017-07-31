@@ -28,11 +28,15 @@
 
 class TiXmlElement;
 
+// No subclass
+#define RETRO_SUBCLASS_NONE  (-1)
+
 namespace LIBRETRO
 {
   class CLibretroDevice;
   typedef std::shared_ptr<CLibretroDevice>   DevicePtr;
   typedef unsigned int                       libretro_device_t;
+  using libretro_subclass_t = int;
 
   struct FeatureMapItem
   {
@@ -52,6 +56,7 @@ namespace LIBRETRO
 
     std::string ControllerID(void) const { return m_controllerId; }
     libretro_device_t Type(void) const { return m_type; }
+    libretro_subclass_t Subclass() const { return m_subclass; }
     const FeatureMap& Features(void) const { return m_featureMap; }
     CLibretroDeviceInput& Input() { return *m_input; }
 
@@ -60,6 +65,7 @@ namespace LIBRETRO
   private:
     std::string                            m_controllerId;
     libretro_device_t                      m_type;
+    libretro_subclass_t                    m_subclass = RETRO_SUBCLASS_NONE;
     FeatureMap                             m_featureMap;
     std::unique_ptr<CLibretroDeviceInput>  m_input;
   };

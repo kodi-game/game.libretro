@@ -98,6 +98,22 @@ libretro_device_t CButtonMapper::GetLibretroType(const std::string& strControlle
   return deviceType;
 }
 
+libretro_subclass_t CButtonMapper::GetSubclass(const std::string& strControllerId)
+{
+  libretro_subclass_t subclass = 0;
+
+  for (auto& device : m_devices)
+  {
+    if (device->ControllerID() == strControllerId)
+    {
+      subclass = device->Subclass();
+      break;
+    }
+  }
+
+  return subclass;
+}
+
 int CButtonMapper::GetLibretroIndex(const std::string& strControllerId, const std::string& strFeatureName)
 {
   if (!strControllerId.empty() && !strFeatureName.empty())
