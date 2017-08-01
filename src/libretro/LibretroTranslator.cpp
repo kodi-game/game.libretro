@@ -81,7 +81,7 @@ GAME_HW_CONTEXT_TYPE LibretroTranslator::GetHWContextType(retro_hw_context_type 
 
 // --- Input translation --------------------------------------------------
 
-libretro_device_t LibretroTranslator::GetDeviceType(const std::string& strType)
+libretro_device_t LibretroTranslator::GetDeviceTypeV1(const std::string& strType)
 {
   if (strType == "joypad")   return RETRO_DEVICE_JOYPAD;
   if (strType == "mouse")    return RETRO_DEVICE_MOUSE;
@@ -93,16 +93,28 @@ libretro_device_t LibretroTranslator::GetDeviceType(const std::string& strType)
   return RETRO_DEVICE_NONE;
 }
 
+libretro_device_t LibretroTranslator::GetDeviceTypeV2(const std::string& strLibretroType)
+{
+  if (strLibretroType == "RETRO_DEVICE_JOYPAD")   return RETRO_DEVICE_JOYPAD;
+  if (strLibretroType == "RETRO_DEVICE_MOUSE")    return RETRO_DEVICE_MOUSE;
+  if (strLibretroType == "RETRO_DEVICE_KEYBOARD") return RETRO_DEVICE_KEYBOARD;
+  if (strLibretroType == "RETRO_DEVICE_LIGHTGUN") return RETRO_DEVICE_LIGHTGUN;
+  if (strLibretroType == "RETRO_DEVICE_ANALOG")   return RETRO_DEVICE_ANALOG;
+  if (strLibretroType == "RETRO_DEVICE_POINTER")  return RETRO_DEVICE_POINTER;
+
+  return RETRO_DEVICE_NONE;
+}
+
 const char* LibretroTranslator::GetDeviceName(libretro_device_t type)
 {
   switch (type)
   {
-  case RETRO_DEVICE_JOYPAD:   return "joypad";
-  case RETRO_DEVICE_MOUSE:    return "mouse";
-  case RETRO_DEVICE_KEYBOARD: return "keyboard";
-  case RETRO_DEVICE_LIGHTGUN: return "lightgun";
-  case RETRO_DEVICE_ANALOG:   return "analog";
-  case RETRO_DEVICE_POINTER:  return "pointer";
+  case RETRO_DEVICE_JOYPAD:   return "RETRO_DEVICE_JOYPAD";
+  case RETRO_DEVICE_MOUSE:    return "RETRO_DEVICE_MOUSE";
+  case RETRO_DEVICE_KEYBOARD: return "RETRO_DEVICE_KEYBOARD";
+  case RETRO_DEVICE_LIGHTGUN: return "RETRO_DEVICE_LIGHTGUN";
+  case RETRO_DEVICE_ANALOG:   return "RETRO_DEVICE_ANALOG";
+  case RETRO_DEVICE_POINTER:  return "RETRO_DEVICE_POINTER";
   default:
     break;
   }
@@ -110,42 +122,68 @@ const char* LibretroTranslator::GetDeviceName(libretro_device_t type)
   return "";
 }
 
-int LibretroTranslator::GetFeatureIndex(const std::string& strFeatureName)
+std::string LibretroTranslator::GetFeatureV2(const std::string& strLibretroFeature)
 {
-  if (strFeatureName == "a")            return RETRO_DEVICE_ID_JOYPAD_A;
-  if (strFeatureName == "b")            return RETRO_DEVICE_ID_JOYPAD_B;
-  if (strFeatureName == "x")            return RETRO_DEVICE_ID_JOYPAD_X;
-  if (strFeatureName == "y")            return RETRO_DEVICE_ID_JOYPAD_Y;
-  if (strFeatureName == "start")        return RETRO_DEVICE_ID_JOYPAD_START;
-  if (strFeatureName == "select")       return RETRO_DEVICE_ID_JOYPAD_SELECT;
-  if (strFeatureName == "up")           return RETRO_DEVICE_ID_JOYPAD_UP;
-  if (strFeatureName == "down")         return RETRO_DEVICE_ID_JOYPAD_DOWN;
-  if (strFeatureName == "right")        return RETRO_DEVICE_ID_JOYPAD_RIGHT;
-  if (strFeatureName == "left")         return RETRO_DEVICE_ID_JOYPAD_LEFT;
-  if (strFeatureName == "l")            return RETRO_DEVICE_ID_JOYPAD_L;
-  if (strFeatureName == "r")            return RETRO_DEVICE_ID_JOYPAD_R;
-  if (strFeatureName == "l2")           return RETRO_DEVICE_ID_JOYPAD_L2;
-  if (strFeatureName == "r2")           return RETRO_DEVICE_ID_JOYPAD_R2;
-  if (strFeatureName == "l3")           return RETRO_DEVICE_ID_JOYPAD_L3;
-  if (strFeatureName == "r3")           return RETRO_DEVICE_ID_JOYPAD_R3;
-  if (strFeatureName == "leftstick")    return RETRO_DEVICE_INDEX_ANALOG_LEFT;
-  if (strFeatureName == "rightstick")   return RETRO_DEVICE_INDEX_ANALOG_RIGHT;
-  if (strFeatureName == "relpointer")   return 0; // Only 1 relative pointer
-  if (strFeatureName == "leftmouse")    return RETRO_DEVICE_ID_MOUSE_LEFT;
-  if (strFeatureName == "rightmouse")   return RETRO_DEVICE_ID_MOUSE_RIGHT;
-  if (strFeatureName == "wheelup")      return RETRO_DEVICE_ID_MOUSE_WHEELUP;
-  if (strFeatureName == "wheeldown")    return RETRO_DEVICE_ID_MOUSE_WHEELDOWN;
-  if (strFeatureName == "middle")       return RETRO_DEVICE_ID_MOUSE_MIDDLE;
-  if (strFeatureName == "horizwheelup") return RETRO_DEVICE_ID_MOUSE_HORIZ_WHEELUP;
-  if (strFeatureName == "horizwheeldown") return RETRO_DEVICE_ID_MOUSE_HORIZ_WHEELDOWN;
-  if (strFeatureName == "gunpointer")   return 0; // Only 1 relative pointer
-  if (strFeatureName == "trigger")      return RETRO_DEVICE_ID_LIGHTGUN_TRIGGER;
-  if (strFeatureName == "cursor")       return RETRO_DEVICE_ID_LIGHTGUN_CURSOR;
-  if (strFeatureName == "turbo")        return RETRO_DEVICE_ID_LIGHTGUN_TURBO;
-  if (strFeatureName == "pause")        return RETRO_DEVICE_ID_LIGHTGUN_PAUSE;
-  if (strFeatureName == "gunstart")     return RETRO_DEVICE_ID_LIGHTGUN_START;
-  if (strFeatureName == "strong")       return RETRO_RUMBLE_STRONG;
-  if (strFeatureName == "weak")         return RETRO_RUMBLE_WEAK;
+  if (strLibretroFeature == "a")           return "RETRO_DEVICE_ID_JOYPAD_A";
+  if (strLibretroFeature == "b")           return "RETRO_DEVICE_ID_JOYPAD_B";
+  if (strLibretroFeature == "x")           return "RETRO_DEVICE_ID_JOYPAD_X";
+  if (strLibretroFeature == "y")           return "RETRO_DEVICE_ID_JOYPAD_Y";
+  if (strLibretroFeature == "start")       return "RETRO_DEVICE_ID_JOYPAD_START";
+  if (strLibretroFeature == "select")      return "RETRO_DEVICE_ID_JOYPAD_SELECT";
+  if (strLibretroFeature == "up")          return "RETRO_DEVICE_ID_JOYPAD_UP";
+  if (strLibretroFeature == "down")        return "RETRO_DEVICE_ID_JOYPAD_DOWN";
+  if (strLibretroFeature == "right")       return "RETRO_DEVICE_ID_JOYPAD_RIGHT";
+  if (strLibretroFeature == "left")        return "RETRO_DEVICE_ID_JOYPAD_LEFT";
+  if (strLibretroFeature == "l")           return "RETRO_DEVICE_ID_JOYPAD_L";
+  if (strLibretroFeature == "r")           return "RETRO_DEVICE_ID_JOYPAD_R";
+  if (strLibretroFeature == "l2")          return "RETRO_DEVICE_ID_JOYPAD_L2";
+  if (strLibretroFeature == "r2")          return "RETRO_DEVICE_ID_JOYPAD_R2";
+  if (strLibretroFeature == "l3")          return "RETRO_DEVICE_ID_JOYPAD_L3";
+  if (strLibretroFeature == "r3")          return "RETRO_DEVICE_ID_JOYPAD_R3";
+  if (strLibretroFeature == "leftstick")   return "RETRO_DEVICE_INDEX_ANALOG_LEFT";
+  if (strLibretroFeature == "rightstick")  return "RETRO_DEVICE_INDEX_ANALOG_RIGHT";
+  if (strLibretroFeature == "strong")      return "RETRO_RUMBLE_STRONG";
+  if (strLibretroFeature == "weak")        return "RETRO_RUMBLE_WEAK";
+
+  return "";
+}
+
+int LibretroTranslator::GetFeatureIndexV2(const std::string& strLibretroFeature)
+{
+  if (strLibretroFeature == "RETRO_DEVICE_ID_JOYPAD_A")              return RETRO_DEVICE_ID_JOYPAD_A;
+  if (strLibretroFeature == "RETRO_DEVICE_ID_JOYPAD_B")              return RETRO_DEVICE_ID_JOYPAD_B;
+  if (strLibretroFeature == "RETRO_DEVICE_ID_JOYPAD_X")              return RETRO_DEVICE_ID_JOYPAD_X;
+  if (strLibretroFeature == "RETRO_DEVICE_ID_JOYPAD_Y")              return RETRO_DEVICE_ID_JOYPAD_Y;
+  if (strLibretroFeature == "RETRO_DEVICE_ID_JOYPAD_START")          return RETRO_DEVICE_ID_JOYPAD_START;
+  if (strLibretroFeature == "RETRO_DEVICE_ID_JOYPAD_SELECT")         return RETRO_DEVICE_ID_JOYPAD_SELECT;
+  if (strLibretroFeature == "RETRO_DEVICE_ID_JOYPAD_UP")             return RETRO_DEVICE_ID_JOYPAD_UP;
+  if (strLibretroFeature == "RETRO_DEVICE_ID_JOYPAD_DOWN")           return RETRO_DEVICE_ID_JOYPAD_DOWN;
+  if (strLibretroFeature == "RETRO_DEVICE_ID_JOYPAD_RIGHT")          return RETRO_DEVICE_ID_JOYPAD_RIGHT;
+  if (strLibretroFeature == "RETRO_DEVICE_ID_JOYPAD_LEFT")           return RETRO_DEVICE_ID_JOYPAD_LEFT;
+  if (strLibretroFeature == "RETRO_DEVICE_ID_JOYPAD_L")              return RETRO_DEVICE_ID_JOYPAD_L;
+  if (strLibretroFeature == "RETRO_DEVICE_ID_JOYPAD_R")              return RETRO_DEVICE_ID_JOYPAD_R;
+  if (strLibretroFeature == "RETRO_DEVICE_ID_JOYPAD_L2")             return RETRO_DEVICE_ID_JOYPAD_L2;
+  if (strLibretroFeature == "RETRO_DEVICE_ID_JOYPAD_R2")             return RETRO_DEVICE_ID_JOYPAD_R2;
+  if (strLibretroFeature == "RETRO_DEVICE_ID_JOYPAD_L3")             return RETRO_DEVICE_ID_JOYPAD_L3;
+  if (strLibretroFeature == "RETRO_DEVICE_ID_JOYPAD_R3")             return RETRO_DEVICE_ID_JOYPAD_R3;
+  if (strLibretroFeature == "RETRO_DEVICE_INDEX_ANALOG_LEFT")        return RETRO_DEVICE_INDEX_ANALOG_LEFT;
+  if (strLibretroFeature == "RETRO_DEVICE_INDEX_ANALOG_RIGHT")       return RETRO_DEVICE_INDEX_ANALOG_RIGHT;
+  if (strLibretroFeature == "RETRO_DEVICE_MOUSE")                    return 0; // Only 1 relative pointer
+  if (strLibretroFeature == "RETRO_DEVICE_ID_MOUSE_LEFT")            return RETRO_DEVICE_ID_MOUSE_LEFT;
+  if (strLibretroFeature == "RETRO_DEVICE_ID_MOUSE_RIGHT")           return RETRO_DEVICE_ID_MOUSE_RIGHT;
+  if (strLibretroFeature == "RETRO_DEVICE_ID_MOUSE_WHEELUP")         return RETRO_DEVICE_ID_MOUSE_WHEELUP;
+  if (strLibretroFeature == "RETRO_DEVICE_ID_MOUSE_WHEELDOWN")       return RETRO_DEVICE_ID_MOUSE_WHEELDOWN;
+  if (strLibretroFeature == "RETRO_DEVICE_ID_MOUSE_MIDDLE")          return RETRO_DEVICE_ID_MOUSE_MIDDLE;
+  if (strLibretroFeature == "RETRO_DEVICE_ID_MOUSE_HORIZ_WHEELUP")   return RETRO_DEVICE_ID_MOUSE_HORIZ_WHEELUP;
+  if (strLibretroFeature == "RETRO_DEVICE_ID_MOUSE_HORIZ_WHEELDOWN") return RETRO_DEVICE_ID_MOUSE_HORIZ_WHEELDOWN;
+  if (strLibretroFeature == "RETRO_DEVICE_LIGHTGUN")                 return 0; // Only 1 relative pointer
+  if (strLibretroFeature == "RETRO_DEVICE_ID_LIGHTGUN_TRIGGER")      return RETRO_DEVICE_ID_LIGHTGUN_TRIGGER;
+  if (strLibretroFeature == "RETRO_DEVICE_ID_LIGHTGUN_CURSOR")       return RETRO_DEVICE_ID_LIGHTGUN_CURSOR;
+  if (strLibretroFeature == "RETRO_DEVICE_ID_LIGHTGUN_TURBO")        return RETRO_DEVICE_ID_LIGHTGUN_TURBO;
+  if (strLibretroFeature == "RETRO_DEVICE_ID_LIGHTGUN_PAUSE")        return RETRO_DEVICE_ID_LIGHTGUN_PAUSE;
+  if (strLibretroFeature == "RETRO_DEVICE_ID_LIGHTGUN_START")        return RETRO_DEVICE_ID_LIGHTGUN_START;
+  if (strLibretroFeature == "RETRO_RUMBLE_STRONG")                   return RETRO_RUMBLE_STRONG;
+  if (strLibretroFeature == "RETRO_RUMBLE_WEAK")                     return RETRO_RUMBLE_WEAK;
 
   return -1;
 }
@@ -158,22 +196,22 @@ const char* LibretroTranslator::GetFeatureName(libretro_device_t type, unsigned 
   {
     switch (id)
     {
-    case RETRO_DEVICE_ID_JOYPAD_B:        return "b";
-    case RETRO_DEVICE_ID_JOYPAD_Y:        return "y";
-    case RETRO_DEVICE_ID_JOYPAD_SELECT:   return "select";
-    case RETRO_DEVICE_ID_JOYPAD_START:    return "start";
-    case RETRO_DEVICE_ID_JOYPAD_UP:       return "up";
-    case RETRO_DEVICE_ID_JOYPAD_DOWN:     return "down";
-    case RETRO_DEVICE_ID_JOYPAD_LEFT:     return "left";
-    case RETRO_DEVICE_ID_JOYPAD_RIGHT:    return "right";
-    case RETRO_DEVICE_ID_JOYPAD_A:        return "a";
-    case RETRO_DEVICE_ID_JOYPAD_X:        return "x";
-    case RETRO_DEVICE_ID_JOYPAD_L:        return "l";
-    case RETRO_DEVICE_ID_JOYPAD_R:        return "r";
-    case RETRO_DEVICE_ID_JOYPAD_L2:       return "l2";
-    case RETRO_DEVICE_ID_JOYPAD_R2:       return "r2";
-    case RETRO_DEVICE_ID_JOYPAD_L3:       return "l3";
-    case RETRO_DEVICE_ID_JOYPAD_R3:       return "r3";
+    case RETRO_DEVICE_ID_JOYPAD_B:        return "RETRO_DEVICE_ID_JOYPAD_B";
+    case RETRO_DEVICE_ID_JOYPAD_Y:        return "RETRO_DEVICE_ID_JOYPAD_Y";
+    case RETRO_DEVICE_ID_JOYPAD_SELECT:   return "RETRO_DEVICE_ID_JOYPAD_SELECT";
+    case RETRO_DEVICE_ID_JOYPAD_START:    return "RETRO_DEVICE_ID_JOYPAD_START";
+    case RETRO_DEVICE_ID_JOYPAD_UP:       return "RETRO_DEVICE_ID_JOYPAD_UP";
+    case RETRO_DEVICE_ID_JOYPAD_DOWN:     return "RETRO_DEVICE_ID_JOYPAD_DOWN";
+    case RETRO_DEVICE_ID_JOYPAD_LEFT:     return "RETRO_DEVICE_ID_JOYPAD_LEFT";
+    case RETRO_DEVICE_ID_JOYPAD_RIGHT:    return "RETRO_DEVICE_ID_JOYPAD_RIGHT";
+    case RETRO_DEVICE_ID_JOYPAD_A:        return "RETRO_DEVICE_ID_JOYPAD_A";
+    case RETRO_DEVICE_ID_JOYPAD_X:        return "RETRO_DEVICE_ID_JOYPAD_X";
+    case RETRO_DEVICE_ID_JOYPAD_L:        return "RETRO_DEVICE_ID_JOYPAD_L";
+    case RETRO_DEVICE_ID_JOYPAD_R:        return "RETRO_DEVICE_ID_JOYPAD_R";
+    case RETRO_DEVICE_ID_JOYPAD_L2:       return "RETRO_DEVICE_ID_JOYPAD_L2";
+    case RETRO_DEVICE_ID_JOYPAD_R2:       return "RETRO_DEVICE_ID_JOYPAD_R2";
+    case RETRO_DEVICE_ID_JOYPAD_L3:       return "RETRO_DEVICE_ID_JOYPAD_L3";
+    case RETRO_DEVICE_ID_JOYPAD_R3:       return "RETRO_DEVICE_ID_JOYPAD_R3";
     default:
       break;
     }
@@ -185,15 +223,15 @@ const char* LibretroTranslator::GetFeatureName(libretro_device_t type, unsigned 
     {
     case RETRO_DEVICE_ID_MOUSE_X:
     case RETRO_DEVICE_ID_MOUSE_Y:
-      return "relpointer";
+      return "RETRO_DEVICE_MOUSE";
 
-    case RETRO_DEVICE_ID_MOUSE_LEFT:             return "leftmouse";
-    case RETRO_DEVICE_ID_MOUSE_RIGHT:            return "rightmouse";
-    case RETRO_DEVICE_ID_MOUSE_WHEELUP:          return "wheelup";
-    case RETRO_DEVICE_ID_MOUSE_WHEELDOWN:        return "wheeldown";
-    case RETRO_DEVICE_ID_MOUSE_MIDDLE:           return "middle";
-    case RETRO_DEVICE_ID_MOUSE_HORIZ_WHEELUP:    return "horizwheelup";
-    case RETRO_DEVICE_ID_MOUSE_HORIZ_WHEELDOWN:  return "horizwheeldown";
+    case RETRO_DEVICE_ID_MOUSE_LEFT:             return "RETRO_DEVICE_ID_MOUSE_LEFT";
+    case RETRO_DEVICE_ID_MOUSE_RIGHT:            return "RETRO_DEVICE_ID_MOUSE_RIGHT";
+    case RETRO_DEVICE_ID_MOUSE_WHEELUP:          return "RETRO_DEVICE_ID_MOUSE_WHEELUP";
+    case RETRO_DEVICE_ID_MOUSE_WHEELDOWN:        return "RETRO_DEVICE_ID_MOUSE_WHEELDOWN";
+    case RETRO_DEVICE_ID_MOUSE_MIDDLE:           return "RETRO_DEVICE_ID_MOUSE_MIDDLE";
+    case RETRO_DEVICE_ID_MOUSE_HORIZ_WHEELUP:    return "RETRO_DEVICE_ID_MOUSE_HORIZ_WHEELUP";
+    case RETRO_DEVICE_ID_MOUSE_HORIZ_WHEELDOWN:  return "RETRO_DEVICE_ID_MOUSE_HORIZ_WHEELDOWN";
     default:
       break;
     }
@@ -209,13 +247,13 @@ const char* LibretroTranslator::GetFeatureName(libretro_device_t type, unsigned 
     {
     case RETRO_DEVICE_ID_LIGHTGUN_X:
     case RETRO_DEVICE_ID_LIGHTGUN_Y:
-      return "gunpointer";
+      return "RETRO_DEVICE_LIGHTGUN";
 
-    case RETRO_DEVICE_ID_LIGHTGUN_TRIGGER:  return "trigger";
-    case RETRO_DEVICE_ID_LIGHTGUN_CURSOR:   return "cursor";
-    case RETRO_DEVICE_ID_LIGHTGUN_TURBO:    return "turbo";
-    case RETRO_DEVICE_ID_LIGHTGUN_PAUSE:    return "pause";
-    case RETRO_DEVICE_ID_LIGHTGUN_START:    return "gunstart";
+    case RETRO_DEVICE_ID_LIGHTGUN_TRIGGER:  return "RETRO_DEVICE_ID_LIGHTGUN_TRIGGER";
+    case RETRO_DEVICE_ID_LIGHTGUN_CURSOR:   return "RETRO_DEVICE_ID_LIGHTGUN_CURSOR";
+    case RETRO_DEVICE_ID_LIGHTGUN_TURBO:    return "RETRO_DEVICE_ID_LIGHTGUN_TURBO";
+    case RETRO_DEVICE_ID_LIGHTGUN_PAUSE:    return "RETRO_DEVICE_ID_LIGHTGUN_PAUSE";
+    case RETRO_DEVICE_ID_LIGHTGUN_START:    return "RETRO_DEVICE_ID_LIGHTGUN_START";
     default:
       break;
     }
@@ -230,8 +268,8 @@ const char* LibretroTranslator::GetFeatureName(libretro_device_t type, unsigned 
     {
       switch (index)
       {
-      case RETRO_DEVICE_INDEX_ANALOG_LEFT:  return "leftstick";
-      case RETRO_DEVICE_INDEX_ANALOG_RIGHT: return "rightstick";
+      case RETRO_DEVICE_INDEX_ANALOG_LEFT:  return "RETRO_DEVICE_INDEX_ANALOG_LEFT";
+      case RETRO_DEVICE_INDEX_ANALOG_RIGHT: return "RETRO_DEVICE_INDEX_ANALOG_RIGHT";
       default:
         break;
       }
@@ -261,8 +299,8 @@ const char* LibretroTranslator::GetComponentName(libretro_device_t type, unsigne
   {
     switch (id)
     {
-    case RETRO_DEVICE_ID_ANALOG_X:  return "x";
-    case RETRO_DEVICE_ID_ANALOG_Y:  return "y";
+    case RETRO_DEVICE_ID_ANALOG_X:  return "RETRO_DEVICE_ID_ANALOG_X";
+    case RETRO_DEVICE_ID_ANALOG_Y:  return "RETRO_DEVICE_ID_ANALOG_Y";
     default:
       break;
     }
@@ -272,8 +310,8 @@ const char* LibretroTranslator::GetComponentName(libretro_device_t type, unsigne
   {
     switch (id)
     {
-    case RETRO_DEVICE_ID_MOUSE_X:  return "x";
-    case RETRO_DEVICE_ID_MOUSE_Y:  return "y";
+    case RETRO_DEVICE_ID_MOUSE_X:  return "RETRO_DEVICE_ID_MOUSE_X";
+    case RETRO_DEVICE_ID_MOUSE_Y:  return "RETRO_DEVICE_ID_MOUSE_Y";
     default:
       break;
     }
@@ -283,8 +321,8 @@ const char* LibretroTranslator::GetComponentName(libretro_device_t type, unsigne
   {
     switch (id)
     {
-    case RETRO_DEVICE_ID_LIGHTGUN_X:  return "x";
-    case RETRO_DEVICE_ID_LIGHTGUN_Y:  return "y";
+    case RETRO_DEVICE_ID_LIGHTGUN_X:  return "RETRO_DEVICE_ID_LIGHTGUN_X";
+    case RETRO_DEVICE_ID_LIGHTGUN_Y:  return "RETRO_DEVICE_ID_LIGHTGUN_Y";
     default:
       break;
     }
@@ -294,8 +332,8 @@ const char* LibretroTranslator::GetComponentName(libretro_device_t type, unsigne
   {
     switch (id)
     {
-    case RETRO_DEVICE_ID_POINTER_X:  return "x";
-    case RETRO_DEVICE_ID_POINTER_Y:  return "y";
+    case RETRO_DEVICE_ID_POINTER_X:  return "RETRO_DEVICE_ID_POINTER_X";
+    case RETRO_DEVICE_ID_POINTER_Y:  return "RETRO_DEVICE_ID_POINTER_Y";
     default:
       break;
     }
@@ -312,8 +350,8 @@ std::string LibretroTranslator::GetMotorName(retro_rumble_effect effect)
 {
   switch (effect)
   {
-    case RETRO_RUMBLE_STRONG: return "strong";
-    case RETRO_RUMBLE_WEAK:   return "weak";
+    case RETRO_RUMBLE_STRONG: return "RETRO_RUMBLE_STRONG";
+    case RETRO_RUMBLE_WEAK:   return "RETRO_RUMBLE_WEAK";
     default:
       break;
   }

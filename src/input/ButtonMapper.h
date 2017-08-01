@@ -24,7 +24,6 @@
 #include <string>
 
 // TODO: Make this class generic and move XML-specific stuff to xml subfolder
-class TiXmlDocument;
 class TiXmlElement;
 
 namespace LIBRETRO
@@ -48,6 +47,8 @@ namespace LIBRETRO
   private:
     bool HasController(const std::string& strControllerId) const;
     std::string GetFeature(const std::string& strControllerId, const std::string& strFeatureName) const;
+
+    bool Deserialize(TiXmlElement* pElement);
 
     bool                   m_bLoadAttempted;
     std::vector<DevicePtr> m_devices;

@@ -48,7 +48,7 @@ namespace LIBRETRO
     const FeatureMap& Features(void) const { return m_featureMap; }
     CLibretroDeviceInput& Input() { return *m_input; }
 
-    bool Deserialize(const TiXmlElement* pElement);
+    bool Deserialize(const TiXmlElement* pElement, unsigned int buttonMapVersion);
 
   private:
     std::string                            m_controllerId;
