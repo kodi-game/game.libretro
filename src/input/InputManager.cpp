@@ -316,11 +316,12 @@ void CInputManager::SetControllerInfo(const retro_controller_info* info)
     const retro_controller_description& type = info->types[i];
 
     libretro_device_t baseType = type.id & RETRO_DEVICE_MASK;
+    std::string device = LibretroTranslator::GetDeviceName(baseType);
     unsigned int subclass = type.id >> RETRO_DEVICE_TYPE_SHIFT;
     std::string description = type.desc ? type.desc : "";
 
-    dsyslog("Device: %s, Subclass: %u, Description: %s",
-        LibretroTranslator::GetDeviceName(baseType), subclass, description.c_str());
+    dsyslog("Device: \"%s\" (%d), Subclass: %u, Description: \"%s\"",
+        device.c_str(), static_cast<int>(baseType), subclass, description.c_str());
   }
 
   dsyslog("------------------------------------------------------------");
