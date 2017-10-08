@@ -4,6 +4,9 @@ This add-on provides a wrapper that allows Libretro cores to be loaded as game a
 
 This add-on depends on the Game API, which is not part of Kodi yet. This most recent version of the Game API currently exists on garbear's `retroplayer-15.2` branch.
 
+[![Build Status](https://travis-ci.org/kodi-game/game.libretro?branch=master)](https://travis-ci.org/kodi-game/game.libretro)
+[![Build Status](https://ci.appveyor.com/api/projects/status/github/kodi-game/game.libretro?svg=true)](https://ci.appveyor.com/project/kodi-game/game-libretro)
+
 ## Loading mechanism
 
 In Kodi, a game add-on can import another game add-on in its `addon.xml` file. The imported add-on will be loaded instead of the actual add-on, and it is given the original add-on's path as a parameter. If multiple game add-ons are imported, the first will be loaded and given the list of imports, starting with itself and ending with the original game add-on.
