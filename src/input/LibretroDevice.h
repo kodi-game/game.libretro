@@ -33,7 +33,14 @@ namespace LIBRETRO
   class CLibretroDevice;
   typedef std::shared_ptr<CLibretroDevice>   DevicePtr;
   typedef unsigned int                       libretro_device_t;
-  typedef std::map<std::string, std::string> FeatureMap;
+
+  struct FeatureMapItem
+  {
+    std::string feature;
+    std::string axis;
+  };
+
+  using FeatureMap = std::map<std::string, FeatureMapItem>;
 
   class CLibretroDeviceInput;
 

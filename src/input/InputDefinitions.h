@@ -31,3 +31,4 @@
 
 #define BUTTONMAP_XML_ATTR_FEATURE_NAME     "name"
 #define BUTTONMAP_XML_ATTR_FEATURE_MAPTO    "mapto"
+#define BUTTONMAP_XML_ATTR_FEATURE_AXIS     "axis"

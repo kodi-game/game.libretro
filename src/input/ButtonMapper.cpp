@@ -115,6 +115,30 @@ int CButtonMapper::GetLibretroIndex(const std::string& strControllerId, const st
   return -1;
 }
 
+libretro_device_t CButtonMapper::GetLibretroDevice(const std::string& strControllerId, const std::string& strFeatureName) const
+{
+  if (!strControllerId.empty() && !strFeatureName.empty())
+  {
+    std::string mapto = GetFeature(strControllerId, strFeatureName);
+    if (!mapto.empty())
+      return LibretroTranslator::GetLibretroDevice(mapto);
+  }
+
+  return RETRO_DEVICE_NONE;
+}
+
+int CButtonMapper::GetAxisID(const std::string& strControllerId, const std::string& strFeatureName) const
+{
+  if (!strControllerId.empty() && !strFeatureName.empty())
+  {
+    std::string axis = GetAxis(strControllerId, strFeatureName);
+    if (!axis.empty())
+      return LibretroTranslator::GetAxisID(axis);
+  }
+
+  return -1;
+}
+
 std::string CButtonMapper::GetControllerFeature(const std::string& strControllerId, const std::string& strLibretroFeature)
 {
   std::string feature;
@@ -133,7 +157,7 @@ std::string CButtonMapper::GetControllerFeature(const std::string& strController
         for (auto& featurePair : features)
         {
           const std::string& controllerFeature = featurePair.first;
-          const std::string& libretroFeature = featurePair.second;
+          const std::string& libretroFeature = featurePair.second.feature;
 
           if (libretroFeature == strLibretroFeature)
           {
@@ -177,7 +201,7 @@ std::string CButtonMapper::GetFeature(const std::string& strControllerId, const 
       for (auto& featurePair : features)
       {
         const std::string& controllerFeature = featurePair.first;
-        const std::string& libretroFeature = featurePair.second;
+        const std::string& libretroFeature = featurePair.second.feature;
 
         if (controllerFeature == strFeatureName)
         {
@@ -190,6 +214,33 @@ std::string CButtonMapper::GetFeature(const std::string& strControllerId, const 
   }
 
   return mapto;
+}
+
+std::string CButtonMapper::GetAxis(const std::string& strControllerId, const std::string& strFeatureName) const
+{
+  std::string axis;
+
+  for (auto& device : m_devices)
+  {
+    if (device->ControllerID() == strControllerId)
+    {
+      const FeatureMap& features = device->Features();
+      for (auto& featurePair : features)
+      {
+        const std::string& controllerFeature = featurePair.first;
+        const std::string& libretroAxis = featurePair.second.axis;
+
+        if (controllerFeature == strFeatureName)
+        {
+          axis = libretroAxis;
+          break;
+        }
+      }
+      break;
+    }
+  }
+
+  return axis;
 }
 
 bool CButtonMapper::Deserialize(TiXmlElement* pElement)

@@ -104,6 +104,13 @@ namespace LIBRETRO
     static int GetFeatureIndexV2(const std::string& strLibretroFeature);
 
     /*!
+     * \brief Translate button/feature name (libretro buttonmap "mapto" field) to libretro index value.
+     * \param strFeatureName The feature name to translate.
+     * \return Translated button/feature id.
+     */
+    static libretro_device_t GetLibretroDevice(const std::string& strLibretroFeature);
+
+    /*!
      * \brief Translate identifiers to feature name (libretro buttonmap "mapto" field).
      * \param type The libretro device type
      * \param index The libretro index
@@ -120,6 +127,13 @@ namespace LIBRETRO
      * \return Translated name of a feature's component
      */
     static const char* GetComponentName(libretro_device_t type, unsigned int index, unsigned int id);
+
+    /*!
+     * \brief Translate libretro axis ID (libretro buttonmap "axis" field) to axis ID value in libretro.h
+     * \param axisId The axis ID
+     * \return Translated value of the axis ID
+     */
+    static int GetAxisID(const std::string& axisId);
 
     /*!
      * \brief Translate rumble motor name (libretro) to string representation (e.g. for logging).
