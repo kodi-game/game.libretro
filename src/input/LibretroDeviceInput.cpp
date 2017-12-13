@@ -29,10 +29,12 @@ using namespace P8PLATFORM;
 #define LIBRETRO_JOYPAD_BUTTON_COUNT     16
 #define LIBRETRO_ANALOG_STICK_COUNT      2
 #define LIBRETRO_ACCELEROMETER_COUNT     1
-#define LIBRETRO_MOUSE_BUTTON_COUNT      9
-#define LIBRETRO_LIGHTGUN_BUTTON_COUNT   7
+#define LIBRETRO_MOUSE_BUTTON_COUNT      11
+#define LIBRETRO_LIGHTGUN_BUTTON_COUNT   17
 #define LIBRETRO_RELATIVE_POINTER_COUNT  1
 #define LIBRETRO_ABSOLUTE_POINTER_COUNT  10
+
+#define ANALOG_DIGITAL_THRESHHOLD  0.5f
 
 CLibretroDeviceInput::CLibretroDeviceInput(const game_controller* controller)
 {
@@ -58,6 +60,7 @@ CLibretroDeviceInput::CLibretroDeviceInput(const game_controller* controller)
 
       case RETRO_DEVICE_ANALOG:
         m_buttons.resize(LIBRETRO_JOYPAD_BUTTON_COUNT);
+        m_axes.resize(LIBRETRO_JOYPAD_BUTTON_COUNT);
         m_analogSticks.resize(LIBRETRO_ANALOG_STICK_COUNT);
         break;
 
@@ -81,6 +84,16 @@ bool CLibretroDeviceInput::ButtonState(unsigned int buttonIndex) const
     buttonState = m_buttons[buttonIndex].pressed;
 
   return buttonState;
+}
+
+float CLibretroDeviceInput::AxisState(unsigned int buttonIndex) const
+{
+  float axisState = 0.0f;
+
+  if (buttonIndex < m_axes.size())
+    axisState = m_axes[buttonIndex].position;
+
+  return axisState;
 }
 
 bool CLibretroDeviceInput::AnalogStickState(unsigned int analogStickIndex, float& x, float& y) const
@@ -167,13 +180,26 @@ bool CLibretroDeviceInput::InputEvent(const game_input_event& event)
     switch (event.type)
     {
       case GAME_INPUT_EVENT_DIGITAL_BUTTON:
+      {
         if (index < (int)m_buttons.size())
           m_buttons[index] = event.digital_button;
+
+        if (index < static_cast<int>(m_axes.size()))
+          m_axes[index].position = event.digital_button.pressed ? 1.0f : 0.0f;
+
         break;
+      }
 
       case GAME_INPUT_EVENT_ANALOG_BUTTON:
-        // Not used by libretro
+      {
+        if (index < static_cast<int>(m_buttons.size()))
+          m_buttons[index].pressed = (event.analog_button.magnitude >= ANALOG_DIGITAL_THRESHHOLD);
+
+        if (index < static_cast<int>(m_axes.size()))
+          m_axes[index].position = event.analog_button.magnitude;
+
         break;
+      }
 
       case GAME_INPUT_EVENT_ANALOG_STICK:
         if (index < (int)m_analogSticks.size())

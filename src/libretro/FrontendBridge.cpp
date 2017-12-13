@@ -142,18 +142,27 @@ int16_t CFrontendBridge::InputState(unsigned int port, unsigned int device, unsi
 
   case RETRO_DEVICE_ANALOG:
   {
-    float x, y;
-    if (CInputManager::Get().AnalogStickState(port, index, x, y))
+    if (index == RETRO_DEVICE_INDEX_ANALOG_BUTTON)
     {
-      if (id == RETRO_DEVICE_ID_ANALOG_X)
+      const float position = CInputManager::Get().AxisState(port, id);
+      const float normalized = (position + 1.0f) / 2.0f;
+      inputState = (int)(normalized * 0xffff) - 0x8000;
+    }
+    else
+    {
+      float x, y;
+      if (CInputManager::Get().AnalogStickState(port, index, x, y))
       {
-        const float normalized = (x + 1.0f) / 2.0f;
-        inputState = (int)(normalized * 0xffff) - 0x8000;
-      }
-      else if (id == RETRO_DEVICE_ID_ANALOG_Y)
-      {
-        const float normalized = (-y + 1.0f) / 2.0f; // y axis is inverted
-        inputState = (int)(normalized * 0xffff) - 0x8000;
+        if (id == RETRO_DEVICE_ID_ANALOG_X)
+        {
+          const float normalized = (x + 1.0f) / 2.0f;
+          inputState = (int)(normalized * 0xffff) - 0x8000;
+        }
+        else if (id == RETRO_DEVICE_ID_ANALOG_Y)
+        {
+          const float normalized = (-y + 1.0f) / 2.0f; // y axis is inverted
+          inputState = (int)(normalized * 0xffff) - 0x8000;
+        }
       }
     }
     break;

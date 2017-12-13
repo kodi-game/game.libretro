@@ -221,6 +221,21 @@ bool CInputManager::ButtonState(libretro_device_t device, unsigned int port, uns
   return bState;
 }
 
+float CInputManager::AxisState(unsigned int port, unsigned int buttonIndex) const
+{
+  float state = 0.0f;
+
+  auto it = m_devices.find(port);
+  if (it != m_devices.end())
+  {
+    const auto &device = it->second;
+    if (device)
+      state = device->Input().AxisState(buttonIndex);
+  }
+
+  return state;
+}
+
 int CInputManager::DeltaX(libretro_device_t device, unsigned int port)
 {
   int deltaX = 0;

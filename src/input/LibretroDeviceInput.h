@@ -35,6 +35,7 @@ namespace LIBRETRO
     CLibretroDeviceInput(const game_controller* controller);
 
     bool  ButtonState(unsigned int buttonIndex) const;
+    float AxisState(unsigned int buttonIndex) const;
     bool  AnalogStickState(unsigned int analogStickIndex, float& x, float& y) const;
     bool  AccelerometerState(float& x, float& y, float& z) const;
     int   RelativePointerDeltaX(void);
@@ -45,6 +46,7 @@ namespace LIBRETRO
 
   private:
     std::vector<game_digital_button_event> m_buttons;
+    std::vector<game_axis_event>           m_axes;
     std::vector<game_analog_stick_event>   m_analogSticks;
     std::vector<game_accelerometer_event>  m_accelerometers;
     std::vector<game_rel_pointer_event>    m_relativePointers;
