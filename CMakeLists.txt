@@ -48,6 +48,7 @@ set(LIBRETRO_HEADERS src/GameInfoLoader.h
                      src/input/DefaultControllerTranslator.h
                      src/input/InputDefinitions.h
                      src/input/InputManager.h
+                     src/input/InputTypes.h
                      src/input/LibretroDevice.h
                      src/input/LibretroDeviceInput.h
                      src/libretro/ClientBridge.h
