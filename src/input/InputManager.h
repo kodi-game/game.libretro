@@ -90,6 +90,7 @@ namespace LIBRETRO
     std::string ControllerID(unsigned int port) const;
 
     bool ButtonState(libretro_device_t device, unsigned int port, unsigned int buttonIndex) const;
+    float AxisState(unsigned int port, unsigned int buttonIndex) const;
     int DeltaX(libretro_device_t device, unsigned int port);
     int DeltaY(libretro_device_t device, unsigned int port);
     bool AnalogStickState(unsigned int port, unsigned int analogStickIndex, float& x, float& y) const;
