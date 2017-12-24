@@ -201,6 +201,60 @@ bool CLibretroDeviceInput::InputEvent(const game_input_event& event)
         break;
       }
 
+      case GAME_INPUT_EVENT_AXIS:
+      {
+        const int axisId = CButtonMapper::Get().GetAxisID(strControllerId, strFeatureName);
+        if (axisId >= 0)
+        {
+          const libretro_device_t deviceType = CButtonMapper::Get().GetLibretroDevice(strControllerId, strFeatureName);
+          switch (deviceType)
+          {
+          case RETRO_DEVICE_ANALOG:
+          {
+            if (index < static_cast<int>(m_analogSticks.size()))
+            {
+              auto& analogStick = m_analogSticks[index];
+              switch (axisId)
+              {
+              case RETRO_DEVICE_ID_ANALOG_X:
+                analogStick.x = event.axis.position;
+                break;
+              case RETRO_DEVICE_ID_ANALOG_Y:
+                analogStick.y = event.axis.position;
+                break;
+              default:
+                break;
+              }
+            }
+            break;
+          }
+          case RETRO_DEVICE_POINTER:
+          {
+            if (index < static_cast<int>(m_absolutePointers.size()))
+            {
+              auto& absPointer = m_absolutePointers[index];
+              switch (axisId)
+              {
+              case RETRO_DEVICE_ID_POINTER_X:
+                absPointer.x = event.axis.position;
+                break;
+              case RETRO_DEVICE_ID_POINTER_Y:
+                absPointer.y = event.axis.position;
+                break;
+              default:
+                break;
+              }
+            }
+            break;
+          }
+          default:
+            break;
+          }
+        }
+
+        break;
+      }
+
       case GAME_INPUT_EVENT_ANALOG_STICK:
         if (index < (int)m_analogSticks.size())
           m_analogSticks[index] = event.analog_stick;

@@ -100,18 +100,32 @@ bool CLibretroDevice::Deserialize(const TiXmlElement* pElement, unsigned int but
       return false;
     }
 
-    std::string libretroFeature;
+    const char* axis = pFeature->Attribute(BUTTONMAP_XML_ATTR_FEATURE_AXIS);
+
+    FeatureMapItem libretroFeature;
 
     if (buttonMapVersion == 1)
-      libretroFeature = LibretroTranslator::GetFeatureV2(mapto);
+      libretroFeature.feature = LibretroTranslator::GetFeatureV2(mapto);
     else
-      libretroFeature = mapto;
+      libretroFeature.feature = mapto;
 
     // Ensure feature is valid
-    if (LibretroTranslator::GetFeatureIndexV2(libretroFeature) < 0)
+    if (LibretroTranslator::GetFeatureIndexV2(libretroFeature.feature) < 0)
     {
       esyslog("<%s> tag has invalid \"%s\" attribute: \"%s\"", BUTTONMAP_XML_ELM_FEATURE, BUTTONMAP_XML_ATTR_FEATURE_MAPTO, mapto);
       return false;
+    }
+
+    if (axis != nullptr)
+    {
+      libretroFeature.axis = axis;
+
+      // Ensure axis is valid
+      if (LibretroTranslator::GetAxisID(libretroFeature.axis) < 0)
+      {
+        esyslog("<%s> tag has invalid \"%s\" attribute: \"%s\"", BUTTONMAP_XML_ELM_FEATURE, BUTTONMAP_XML_ATTR_FEATURE_AXIS, axis);
+        return false;
+      }
     }
 
     m_featureMap[name] = std::move(libretroFeature);
