@@ -40,12 +40,31 @@ CLibretroDevice::CLibretroDevice(const game_controller* controller)
   {
     m_controllerId = controller->controller_id;
     m_type = CButtonMapper::Get().GetLibretroType(m_controllerId);
-    m_subclass = CButtonMapper::Get().GetSubclass(m_controllerId);
+    m_defaultModel = CButtonMapper::Get().GetDefaultModel(m_controllerId);
+    m_modelMap = CButtonMapper::Get().GetModels(m_controllerId);
   }
 }
 
 CLibretroDevice::~CLibretroDevice()
 {
+}
+
+bool CLibretroDevice::HasModel(const std::string &model) const
+{
+  if (m_modelMap.empty())
+    return true; // Accepts all models
+
+  return m_modelMap.find(model) != m_modelMap.end();
+}
+
+const ModelInfo &CLibretroDevice::GetModel(const std::string &model) const
+{
+  auto it = m_modelMap.find(model);
+
+  if (it != m_modelMap.end())
+    return it->second;
+
+  return m_defaultModel;
 }
 
 bool CLibretroDevice::Deserialize(const TiXmlElement* pElement, unsigned int buttonMapVersion)
@@ -82,12 +101,9 @@ bool CLibretroDevice::Deserialize(const TiXmlElement* pElement, unsigned int but
     return false;
   }
 
-  // Device subclass
-  const char* subclass = pElement->Attribute(BUTTONMAP_XML_ATTR_CONTROLLER_SUBCLASS);
-  if (subclass)
-    std::istringstream(subclass) >> m_subclass;
-  else
-    m_subclass = RETRO_SUBCLASS_NONE;
+  // Default model info
+  if (!DeserializeModel(pElement, m_defaultModel))
+    return false;
 
   // Features
   const TiXmlElement* pFeature = pElement->FirstChildElement(BUTTONMAP_XML_ELM_FEATURE);
@@ -145,6 +161,43 @@ bool CLibretroDevice::Deserialize(const TiXmlElement* pElement, unsigned int but
 
     pFeature = pFeature->NextSiblingElement(BUTTONMAP_XML_ELM_FEATURE);
   }
+
+  // Models
+  m_modelMap.clear();
+
+  const TiXmlElement* pModels = pElement->FirstChildElement(BUTTONMAP_XML_ELM_MODELS);
+  if (pModels != nullptr)
+  {
+    const TiXmlElement* pModel = pModels->FirstChildElement(BUTTONMAP_XML_ELM_MODEL);
+
+    while (pModel != nullptr)
+    {
+      // Model name
+      const char* modelName = pElement->Attribute(BUTTONMAP_XML_ATTR_MODEL_NAME);
+      if (modelName == nullptr)
+      {
+        esyslog("<%s> tag has no \"%s\" attribute", BUTTONMAP_XML_ELM_MODEL, BUTTONMAP_XML_ATTR_MODEL_NAME);
+        return false;
+      }
+
+      ModelInfo &modelInfo = m_modelMap[modelName];
+      modelInfo = m_defaultModel;
+      if (!DeserializeModel(pModel, modelInfo))
+        return false;
+
+      pModel = pModel->NextSiblingElement(BUTTONMAP_XML_ELM_MODEL);
+    }
+  }
+
+  return true;
+}
+
+bool CLibretroDevice::DeserializeModel(const TiXmlElement* pElement, ModelInfo &modelInfo)
+{
+  // Device subclass
+  const char* subclass = pElement->Attribute(BUTTONMAP_XML_ATTR_CONTROLLER_SUBCLASS);
+  if (subclass)
+    std::istringstream(subclass) >> modelInfo.subclass;
 
   return true;
 }

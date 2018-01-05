@@ -21,6 +21,8 @@
 
 #define BUTTONMAP_XML_ROOT                  "buttonmap"
 #define BUTTONMAP_XML_ELM_CONTROLLER        "controller"
+#define BUTTONMAP_XML_ELM_MODELS            "models"
+#define BUTTONMAP_XML_ELM_MODEL             "model"
 #define BUTTONMAP_XML_ELM_FEATURE           "feature"
 #define BUTTONMAP_XML_ATTR_VERSION          "version"
 #define BUTTONMAP_XML_ATTR_CONTROLLER_ID    "id"
@@ -29,3 +31,4 @@
 #define BUTTONMAP_XML_ATTR_FEATURE_NAME     "name"
 #define BUTTONMAP_XML_ATTR_FEATURE_MAPTO    "mapto"
 #define BUTTONMAP_XML_ATTR_FEATURE_AXIS     "axis"
+#define BUTTONMAP_XML_ATTR_MODEL_NAME       "name"

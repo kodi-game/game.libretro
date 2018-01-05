@@ -106,7 +106,13 @@ namespace LIBRETRO
     void HandlePress(const game_key_event& key);
     bool IsPressed(uint32_t character) const;
 
-    std::map<int, DevicePtr>          m_devices;
+    struct DeviceState
+    {
+      DevicePtr device;
+      std::string model;
+    };
+
+    std::map<int, DeviceState>        m_devices;
     std::vector<game_key_event>       m_pressedKeys;
     mutable P8PLATFORM::CMutex        m_keyMutex;
   };

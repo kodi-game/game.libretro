@@ -19,6 +19,8 @@
  */
 #pragma once
 
+#include "InputTypes.h"
+
 #include "kodi_game_types.h"
 
 #include <map>
@@ -28,24 +30,8 @@
 
 class TiXmlElement;
 
-// No subclass
-#define RETRO_SUBCLASS_NONE  (-1)
-
 namespace LIBRETRO
 {
-  class CLibretroDevice;
-  typedef std::shared_ptr<CLibretroDevice>   DevicePtr;
-  typedef unsigned int                       libretro_device_t;
-  using libretro_subclass_t = int;
-
-  struct FeatureMapItem
-  {
-    std::string feature;
-    std::string axis;
-  };
-
-  using FeatureMap = std::map<std::string, FeatureMapItem>;
-
   class CLibretroDeviceInput;
 
   class CLibretroDevice
@@ -54,19 +40,25 @@ namespace LIBRETRO
     CLibretroDevice(const game_controller* controller);
     ~CLibretroDevice();
 
-    std::string ControllerID(void) const { return m_controllerId; }
+    const std::string &ControllerID(void) const { return m_controllerId; }
+    bool HasModel(const std::string &model) const;
+    const ModelInfo &DefaultModel() const { return m_defaultModel; }
+    const ModelMap &Models() const { return m_modelMap; }
+    const ModelInfo &GetModel(const std::string &model) const;
     libretro_device_t Type(void) const { return m_type; }
-    libretro_subclass_t Subclass() const { return m_subclass; }
     const FeatureMap& Features(void) const { return m_featureMap; }
     CLibretroDeviceInput& Input() { return *m_input; }
 
     bool Deserialize(const TiXmlElement* pElement, unsigned int buttonMapVersion);
 
   private:
+    static bool DeserializeModel(const TiXmlElement* pElement, ModelInfo &modelInfo);
+
     std::string                            m_controllerId;
     libretro_device_t                      m_type;
-    libretro_subclass_t                    m_subclass = RETRO_SUBCLASS_NONE;
     FeatureMap                             m_featureMap;
     std::unique_ptr<CLibretroDeviceInput>  m_input;
+    ModelInfo                              m_defaultModel;
+    ModelMap                               m_modelMap;
   };
 }

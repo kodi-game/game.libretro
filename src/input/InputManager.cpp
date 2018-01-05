@@ -52,10 +52,29 @@ libretro_device_caps_t CInputManager::GetDeviceCaps(void) const
 
 void CInputManager::DeviceConnected(int port, bool bConnected, const game_controller* connectedDevice)
 {
+  bool bValid = false;
+
   if (bConnected)
-    m_devices[port] = std::make_shared<CLibretroDevice>(connectedDevice);
-  else
-    m_devices[port].reset();
+  {
+    DevicePtr device(new CLibretroDevice(connectedDevice));
+    std::string model = connectedDevice->model ? connectedDevice->model : "";
+
+    if (device->HasModel(model))
+    {
+      DeviceState &state = m_devices[port];
+      state.device = std::move(device);
+      state.model = std::move(model);
+      bValid = true;
+    }
+    else
+    {
+      esyslog("Incompatible device \"%s\", model \"%s\" on port %d",
+          device->ControllerID().c_str(), model.c_str(), port);
+    }
+  }
+
+  if (!bValid)
+    m_devices.erase(port);
 }
 
 libretro_device_t CInputManager::GetDeviceType(unsigned int port) const
@@ -65,10 +84,17 @@ libretro_device_t CInputManager::GetDeviceType(unsigned int port) const
   auto it = m_devices.find(port);
   if (it != m_devices.end())
   {
-    const auto &device = it->second;
-    if (device)
+    const DevicePtr &device = it->second.device;
+    const std::string &model = it->second.model;
+
+    // Sanity check
+    if (!device)
     {
-      libretro_subclass_t subclass = device->Subclass();
+      esyslog("Error: Port %u has no device!", port);
+    }
+    else if (device->HasModel(model))
+    {
+      libretro_subclass_t subclass = device->GetModel(model).subclass;
       if (subclass == RETRO_SUBCLASS_NONE)
         deviceType = device->Type();
       else
@@ -91,7 +117,7 @@ bool CInputManager::OpenPort(unsigned int port)
 
 DevicePtr CInputManager::GetPort(unsigned int port)
 {
-  return m_devices[port];
+  return m_devices[port].device;
 }
 
 void CInputManager::ClosePort(unsigned int port)
@@ -99,7 +125,7 @@ void CInputManager::ClosePort(unsigned int port)
   if (CLibretroEnvironment::Get().GetFrontend())
     CLibretroEnvironment::Get().GetFrontend()->ClosePort(port);
 
-  m_devices[port].reset();
+  m_devices.erase(port);
 }
 
 void CInputManager::ClosePorts(void)
@@ -107,7 +133,7 @@ void CInputManager::ClosePorts(void)
   std::vector<unsigned int> ports;
   for (auto it = m_devices.begin(); it != m_devices.end(); ++it)
   {
-    if (it->second)
+    if (it->second.device)
       ports.push_back(it->first);
   }
 
@@ -150,8 +176,8 @@ bool CInputManager::InputEvent(const game_input_event& event)
   {
     const int port = event.port;
 
-    if (m_devices[port])
-      bHandled = m_devices[port]->Input().InputEvent(event);
+    if (m_devices[port].device)
+      bHandled = m_devices[port].device->Input().InputEvent(event);
   }
 
   return bHandled;
@@ -197,7 +223,7 @@ std::string CInputManager::ControllerID(unsigned int port) const
   auto it = m_devices.find(port);
   if (it != m_devices.end())
   {
-    const auto &device = it->second;
+    const auto &device = it->second.device;
     if (device)
       controllerId = device->ControllerID();
   }
@@ -223,7 +249,7 @@ bool CInputManager::ButtonState(libretro_device_t device, unsigned int port, uns
     auto it = m_devices.find(iPort);
     if (it != m_devices.end())
     {
-      const auto &device = it->second;
+      const auto &device = it->second.device;
       if (device)
         bState = device->Input().ButtonState(buttonIndex);
     }
@@ -239,7 +265,7 @@ float CInputManager::AxisState(unsigned int port, unsigned int buttonIndex) cons
   auto it = m_devices.find(port);
   if (it != m_devices.end())
   {
-    const auto &device = it->second;
+    const auto &device = it->second.device;
     if (device)
       state = device->Input().AxisState(buttonIndex);
   }
@@ -259,7 +285,7 @@ int CInputManager::DeltaX(libretro_device_t device, unsigned int port)
   auto it = m_devices.find(iPort);
   if (it != m_devices.end())
   {
-    const auto &device = it->second;
+    const auto &device = it->second.device;
     if (device)
       deltaX = device->Input().RelativePointerDeltaX();
   }
@@ -279,7 +305,7 @@ int CInputManager::DeltaY(libretro_device_t device, unsigned int port)
   auto it = m_devices.find(iPort);
   if (it != m_devices.end())
   {
-    const auto &device = it->second;
+    const auto &device = it->second.device;
     if (device)
       deltaY = device->Input().RelativePointerDeltaY();
   }
@@ -294,7 +320,7 @@ bool CInputManager::AnalogStickState(unsigned int port, unsigned int analogStick
   auto it = m_devices.find(port);
   if (it != m_devices.end())
   {
-    const auto &device = it->second;
+    const auto &device = it->second.device;
     if (device)
       bSuccess = device->Input().AnalogStickState(analogStickIndex, x, y);
   }
@@ -309,7 +335,7 @@ bool CInputManager::AbsolutePointerState(unsigned int port, unsigned int pointer
   auto it = m_devices.find(port);
   if (it != m_devices.end())
   {
-    const auto &device = it->second;
+    const auto &device = it->second.device;
     if (device)
       bSuccess = device->Input().AbsolutePointerState(pointerIndex, x, y);
   }
@@ -324,7 +350,7 @@ bool CInputManager::AccelerometerState(unsigned int port, float& x, float& y, fl
   auto it = m_devices.find(port);
   if (it != m_devices.end())
   {
-    const auto &device = it->second;
+    const auto &device = it->second.device;
     if (device)
       bSuccess = device->Input().AccelerometerState(x, y, z);
   }
