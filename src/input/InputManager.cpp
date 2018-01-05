@@ -58,12 +58,23 @@ void CInputManager::DeviceConnected(int port, bool bConnected, const game_contro
     m_devices[port].reset();
 }
 
-libretro_device_t CInputManager::GetDevice(unsigned int port)
+libretro_device_t CInputManager::GetDeviceType(unsigned int port) const
 {
-  libretro_device_t deviceType = 0;
+  libretro_device_t deviceType = RETRO_DEVICE_NONE;
 
-  if (m_devices[port])
-    deviceType = m_devices[port]->Type();
+  auto it = m_devices.find(port);
+  if (it != m_devices.end())
+  {
+    const auto &device = it->second;
+    if (device)
+    {
+      libretro_subclass_t subclass = device->Subclass();
+      if (subclass == RETRO_SUBCLASS_NONE)
+        deviceType = device->Type();
+      else
+        deviceType = RETRO_DEVICE_SUBCLASS(device->Type(), subclass);
+    }
+  }
 
   return deviceType;
 }
@@ -331,12 +342,20 @@ void CInputManager::SetControllerInfo(const retro_controller_info* info)
     const retro_controller_description& type = info->types[i];
 
     libretro_device_t baseType = type.id & RETRO_DEVICE_MASK;
-    std::string device = LibretroTranslator::GetDeviceName(baseType);
-    unsigned int subclass = type.id >> RETRO_DEVICE_TYPE_SHIFT;
+
     std::string description = type.desc ? type.desc : "";
 
-    dsyslog("Device: \"%s\" (%d), Subclass: %u, Description: \"%s\"",
-        device.c_str(), static_cast<int>(baseType), subclass, description.c_str());
+    if (type.id & ~RETRO_DEVICE_MASK)
+    {
+      libretro_subclass_t subclass = (type.id >> RETRO_DEVICE_TYPE_SHIFT) - 1;
+      dsyslog("Device: %s, Subclass: %u, Description: \"%s\"",
+          LibretroTranslator::GetDeviceName(baseType), subclass, description.c_str());
+    }
+    else
+    {
+      dsyslog("Device: %s, Description: \"%s\"",
+          LibretroTranslator::GetDeviceName(baseType), description.c_str());
+    }
   }
 
   dsyslog("------------------------------------------------------------");

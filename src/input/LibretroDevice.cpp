@@ -28,6 +28,8 @@
 
 #include "tinyxml.h"
 
+#include <sstream>
+
 using namespace LIBRETRO;
 
 CLibretroDevice::CLibretroDevice(const game_controller* controller)
@@ -38,6 +40,7 @@ CLibretroDevice::CLibretroDevice(const game_controller* controller)
   {
     m_controllerId = controller->controller_id;
     m_type = CButtonMapper::Get().GetLibretroType(m_controllerId);
+    m_subclass = CButtonMapper::Get().GetSubclass(m_controllerId);
   }
 }
 
@@ -50,6 +53,7 @@ bool CLibretroDevice::Deserialize(const TiXmlElement* pElement, unsigned int but
   if (!pElement)
     return false;
 
+  // Controller ID
   const char* controllerId = pElement->Attribute(BUTTONMAP_XML_ATTR_CONTROLLER_ID);
   if (!controllerId)
   {
@@ -57,6 +61,7 @@ bool CLibretroDevice::Deserialize(const TiXmlElement* pElement, unsigned int but
     return false;
   }
 
+  // Device type
   const char* type = pElement->Attribute(BUTTONMAP_XML_ATTR_CONTROLLER_TYPE);
   if (!type)
   {
@@ -77,6 +82,14 @@ bool CLibretroDevice::Deserialize(const TiXmlElement* pElement, unsigned int but
     return false;
   }
 
+  // Device subclass
+  const char* subclass = pElement->Attribute(BUTTONMAP_XML_ATTR_CONTROLLER_SUBCLASS);
+  if (subclass)
+    std::istringstream(subclass) >> m_subclass;
+  else
+    m_subclass = RETRO_SUBCLASS_NONE;
+
+  // Features
   const TiXmlElement* pFeature = pElement->FirstChildElement(BUTTONMAP_XML_ELM_FEATURE);
   if (!pFeature)
   {

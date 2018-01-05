@@ -20,15 +20,12 @@
 #pragma once
 
 #define BUTTONMAP_XML_ROOT                  "buttonmap"
-
 #define BUTTONMAP_XML_ELM_CONTROLLER        "controller"
 #define BUTTONMAP_XML_ELM_FEATURE           "feature"
-
 #define BUTTONMAP_XML_ATTR_VERSION          "version"
-
 #define BUTTONMAP_XML_ATTR_CONTROLLER_ID    "id"
 #define BUTTONMAP_XML_ATTR_CONTROLLER_TYPE  "type"
-
+#define BUTTONMAP_XML_ATTR_CONTROLLER_SUBCLASS  "subclass"
 #define BUTTONMAP_XML_ATTR_FEATURE_NAME     "name"
 #define BUTTONMAP_XML_ATTR_FEATURE_MAPTO    "mapto"
 #define BUTTONMAP_XML_ATTR_FEATURE_AXIS     "axis"
