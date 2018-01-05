@@ -19,6 +19,8 @@
  */
 #pragma once
 
+#include "InputTypes.h"
+
 #include "kodi_game_types.h"
 
 #include <map>
@@ -28,24 +30,8 @@
 
 class TiXmlElement;
 
-// No subclass
-#define RETRO_SUBCLASS_NONE  (-1)
-
 namespace LIBRETRO
 {
-  class CLibretroDevice;
-  typedef std::shared_ptr<CLibretroDevice>   DevicePtr;
-  typedef unsigned int                       libretro_device_t;
-  using libretro_subclass_t = int;
-
-  struct FeatureMapItem
-  {
-    std::string feature;
-    std::string axis;
-  };
-
-  using FeatureMap = std::map<std::string, FeatureMapItem>;
-
   class CLibretroDeviceInput;
 
   class CLibretroDevice

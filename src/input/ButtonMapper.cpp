@@ -30,6 +30,7 @@
 
 #include "tinyxml.h"
 
+#include <algorithm>
 #include <sstream>
 
 #define BUTTONMAP_XML          "buttonmap.xml"
@@ -88,30 +89,24 @@ libretro_device_t CButtonMapper::GetLibretroType(const std::string& strControlle
 
   libretro_device_t deviceType = RETRO_DEVICE_NONE;
 
-  for (auto& device : m_devices)
-  {
-    if (device->ControllerID() == strControllerId)
-    {
-      deviceType = device->Type();
-      break;
-    }
-  }
+  DeviceIt it = GetDevice(m_devices, strControllerId);
+  if (it != m_devices.end())
+    deviceType = (*it)->Type();
 
   return deviceType;
 }
 
 libretro_subclass_t CButtonMapper::GetSubclass(const std::string& strControllerId)
 {
-  libretro_subclass_t subclass = 0;
+  // Handle default controller
+  if (strControllerId == DEFAULT_CONTROLLER_ID)
+    return RETRO_SUBCLASS_NONE;
 
-  for (auto& device : m_devices)
-  {
-    if (device->ControllerID() == strControllerId)
-    {
-      subclass = device->Subclass();
-      break;
-    }
-  }
+  libretro_subclass_t subclass = RETRO_SUBCLASS_NONE;
+
+  DeviceIt it = GetDevice(m_devices, strControllerId);
+  if (it != m_devices.end())
+    subclass = (*it)->Subclass();
 
   return subclass;
 }
@@ -167,23 +162,22 @@ std::string CButtonMapper::GetControllerFeature(const std::string& strController
     if (strControllerId == DEFAULT_CONTROLLER_ID && !HasController(DEFAULT_CONTROLLER_ID))
       return CDefaultControllerTranslator::GetControllerFeature(strLibretroFeature);
 
-    for (auto& device : m_devices)
+    DeviceIt it = GetDevice(m_devices, strControllerId);
+    if (it != m_devices.end())
     {
-      if (device->ControllerID() == strControllerId)
-      {
-        const FeatureMap& features = device->Features();
-        for (auto& featurePair : features)
-        {
-          const std::string& controllerFeature = featurePair.first;
-          const std::string& libretroFeature = featurePair.second.feature;
+      const DevicePtr &device = *it;
 
-          if (libretroFeature == strLibretroFeature)
-          {
-            feature = controllerFeature;
-            break;
-          }
+      const FeatureMap& features = device->Features();
+      for (auto& featurePair : features)
+      {
+        const std::string& controllerFeature = featurePair.first;
+        const FeatureMapItem& libretroFeature = featurePair.second;
+
+        if (libretroFeature.feature == strLibretroFeature)
+        {
+          feature = controllerFeature;
+          break;
         }
-        break;
       }
     }
   }
@@ -195,14 +189,9 @@ bool CButtonMapper::HasController(const std::string& strControllerId) const
 {
   bool bFound = false;
 
-  for (auto& device : m_devices)
-  {
-    if (device->ControllerID() == strControllerId)
-    {
-      bFound = true;
-      break;
-    }
-  }
+  DeviceIt it = GetDevice(m_devices, strControllerId);
+  if (it != m_devices.end())
+    bFound = true;
 
   return bFound;
 }
@@ -211,23 +200,22 @@ std::string CButtonMapper::GetFeature(const std::string& strControllerId, const 
 {
   std::string mapto;
 
-  for (auto& device : m_devices)
+  DeviceIt it = GetDevice(m_devices, strControllerId);
+  if (it != m_devices.end())
   {
-    if (device->ControllerID() == strControllerId)
-    {
-      const FeatureMap& features = device->Features();
-      for (auto& featurePair : features)
-      {
-        const std::string& controllerFeature = featurePair.first;
-        const std::string& libretroFeature = featurePair.second.feature;
+    const DevicePtr &device = *it;
 
-        if (controllerFeature == strFeatureName)
-        {
-          mapto = libretroFeature;
-          break;
-        }
+    const FeatureMap& features = device->Features();
+    for (auto& featurePair : features)
+    {
+      const std::string& controllerFeature = featurePair.first;
+      const std::string& libretroFeature = featurePair.second.feature;
+
+      if (controllerFeature == strFeatureName)
+      {
+        mapto = libretroFeature;
+        break;
       }
-      break;
     }
   }
 
@@ -327,4 +315,14 @@ bool CButtonMapper::Deserialize(TiXmlElement* pElement)
   }
 
   return bSuccess;
+}
+
+CButtonMapper::DeviceIt CButtonMapper::GetDevice(const DeviceVector &devices,
+                                                 const std::string &controllerId)
+{
+  return std::find_if(devices.begin(), devices.end(),
+    [&controllerId](const DevicePtr &device)
+    {
+      return device->ControllerID() == controllerId;
+    });
 }

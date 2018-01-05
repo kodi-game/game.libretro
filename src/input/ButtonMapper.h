@@ -19,8 +19,9 @@
  */
 #pragma once
 
-#include "LibretroDevice.h" // for libretro_device_t
+#include "InputTypes.h"
 
+#include <vector>
 #include <string>
 
 // TODO: Make this class generic and move XML-specific stuff to xml subfolder
@@ -55,7 +56,13 @@ namespace LIBRETRO
 
     bool Deserialize(TiXmlElement* pElement);
 
+    using DeviceVector = std::vector<DevicePtr>;
+    using DeviceIt = DeviceVector::const_iterator;
+
+    static DeviceIt GetDevice(const DeviceVector &devices,
+                              const std::string &controllerId);
+
     bool                   m_bLoadAttempted;
-    std::vector<DevicePtr> m_devices;
+    DeviceVector m_devices;
   };
 }
