@@ -26,10 +26,10 @@ using namespace LIBRETRO;
 
 int CDefaultControllerTranslator::GetLibretroIndex(const std::string &strFeatureName)
 {
-  if (strFeatureName == DEFAULT_CONTROLLER_FEATURE_A)             return RETRO_DEVICE_ID_JOYPAD_A;
-  if (strFeatureName == DEFAULT_CONTROLLER_FEATURE_B)             return RETRO_DEVICE_ID_JOYPAD_B;
-  if (strFeatureName == DEFAULT_CONTROLLER_FEATURE_X)             return RETRO_DEVICE_ID_JOYPAD_X;
-  if (strFeatureName == DEFAULT_CONTROLLER_FEATURE_Y)             return RETRO_DEVICE_ID_JOYPAD_Y;
+  if (strFeatureName == DEFAULT_CONTROLLER_FEATURE_A)             return RETRO_DEVICE_ID_JOYPAD_B;
+  if (strFeatureName == DEFAULT_CONTROLLER_FEATURE_B)             return RETRO_DEVICE_ID_JOYPAD_A;
+  if (strFeatureName == DEFAULT_CONTROLLER_FEATURE_X)             return RETRO_DEVICE_ID_JOYPAD_Y;
+  if (strFeatureName == DEFAULT_CONTROLLER_FEATURE_Y)             return RETRO_DEVICE_ID_JOYPAD_X;
   if (strFeatureName == DEFAULT_CONTROLLER_FEATURE_START)         return RETRO_DEVICE_ID_JOYPAD_START;
   if (strFeatureName == DEFAULT_CONTROLLER_FEATURE_BACK)          return RETRO_DEVICE_ID_JOYPAD_SELECT;
   if (strFeatureName == DEFAULT_CONTROLLER_FEATURE_LEFT_BUMPER)   return RETRO_DEVICE_ID_JOYPAD_L;
@@ -52,10 +52,10 @@ int CDefaultControllerTranslator::GetLibretroIndex(const std::string &strFeature
 
 std::string CDefaultControllerTranslator::GetControllerFeature(const std::string &strLibretroFeature)
 {
-  if (strLibretroFeature == "RETRO_DEVICE_ID_JOYPAD_A")        return DEFAULT_CONTROLLER_FEATURE_A;
-  if (strLibretroFeature == "RETRO_DEVICE_ID_JOYPAD_B")        return DEFAULT_CONTROLLER_FEATURE_B;
-  if (strLibretroFeature == "RETRO_DEVICE_ID_JOYPAD_X")        return DEFAULT_CONTROLLER_FEATURE_X;
-  if (strLibretroFeature == "RETRO_DEVICE_ID_JOYPAD_Y")        return DEFAULT_CONTROLLER_FEATURE_Y;
+  if (strLibretroFeature == "RETRO_DEVICE_ID_JOYPAD_A")        return DEFAULT_CONTROLLER_FEATURE_B;
+  if (strLibretroFeature == "RETRO_DEVICE_ID_JOYPAD_B")        return DEFAULT_CONTROLLER_FEATURE_A;
+  if (strLibretroFeature == "RETRO_DEVICE_ID_JOYPAD_X")        return DEFAULT_CONTROLLER_FEATURE_Y;
+  if (strLibretroFeature == "RETRO_DEVICE_ID_JOYPAD_Y")        return DEFAULT_CONTROLLER_FEATURE_X;
   if (strLibretroFeature == "RETRO_DEVICE_ID_JOYPAD_START")    return DEFAULT_CONTROLLER_FEATURE_START;
   if (strLibretroFeature == "RETRO_DEVICE_ID_JOYPAD_SELECT")   return DEFAULT_CONTROLLER_FEATURE_BACK;
   if (strLibretroFeature == "RETRO_DEVICE_ID_JOYPAD_UP")       return DEFAULT_CONTROLLER_FEATURE_UP;
