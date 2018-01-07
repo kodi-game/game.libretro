@@ -60,7 +60,7 @@ CLibretroDeviceInput::CLibretroDeviceInput(const game_controller* controller)
 
       case RETRO_DEVICE_ANALOG:
         m_buttons.resize(LIBRETRO_JOYPAD_BUTTON_COUNT);
-        m_axes.resize(LIBRETRO_JOYPAD_BUTTON_COUNT);
+        m_analogButtons.resize(LIBRETRO_JOYPAD_BUTTON_COUNT);
         m_analogSticks.resize(LIBRETRO_ANALOG_STICK_COUNT);
         break;
 
@@ -86,12 +86,12 @@ bool CLibretroDeviceInput::ButtonState(unsigned int buttonIndex) const
   return buttonState;
 }
 
-float CLibretroDeviceInput::AxisState(unsigned int buttonIndex) const
+float CLibretroDeviceInput::AnalogButtonState(unsigned int buttonIndex) const
 {
   float axisState = 0.0f;
 
-  if (buttonIndex < m_axes.size())
-    axisState = m_axes[buttonIndex].position;
+  if (buttonIndex < m_analogButtons.size())
+    axisState = m_analogButtons[buttonIndex].magnitude;
 
   return axisState;
 }
@@ -184,8 +184,8 @@ bool CLibretroDeviceInput::InputEvent(const game_input_event& event)
         if (index < (int)m_buttons.size())
           m_buttons[index] = event.digital_button;
 
-        if (index < static_cast<int>(m_axes.size()))
-          m_axes[index].position = event.digital_button.pressed ? 1.0f : 0.0f;
+        if (index < static_cast<int>(m_analogButtons.size()))
+          m_analogButtons[index].magnitude = event.digital_button.pressed ? 1.0f : 0.0f;
 
         break;
       }
@@ -195,8 +195,8 @@ bool CLibretroDeviceInput::InputEvent(const game_input_event& event)
         if (index < static_cast<int>(m_buttons.size()))
           m_buttons[index].pressed = (event.analog_button.magnitude >= ANALOG_DIGITAL_THRESHHOLD);
 
-        if (index < static_cast<int>(m_axes.size()))
-          m_axes[index].position = event.analog_button.magnitude;
+        if (index < static_cast<int>(m_analogButtons.size()))
+          m_analogButtons[index].magnitude = event.analog_button.magnitude;
 
         break;
       }

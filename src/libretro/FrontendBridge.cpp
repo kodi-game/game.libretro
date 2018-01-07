@@ -144,7 +144,7 @@ int16_t CFrontendBridge::InputState(unsigned int port, unsigned int device, unsi
   {
     if (index == RETRO_DEVICE_INDEX_ANALOG_BUTTON)
     {
-      const float position = CInputManager::Get().AxisState(port, id);
+      const float position = CInputManager::Get().AnalogButtonState(port, id);
       const float normalized = (position + 1.0f) / 2.0f;
       inputState = (int)(normalized * 0xffff) - 0x8000;
     }
