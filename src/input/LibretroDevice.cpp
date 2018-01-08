@@ -70,11 +70,7 @@ bool CLibretroDevice::Deserialize(const TiXmlElement* pElement, unsigned int but
   }
 
   m_controllerId = controllerId;
-
-  if (buttonMapVersion == 1)
-    m_type = LibretroTranslator::GetDeviceTypeV1(type);
-  else
-    m_type = LibretroTranslator::GetDeviceTypeV2(type);
+  m_type = LibretroTranslator::GetDeviceType(type);
 
   if (m_type == RETRO_DEVICE_NONE)
   {
@@ -115,15 +111,10 @@ bool CLibretroDevice::Deserialize(const TiXmlElement* pElement, unsigned int but
 
     const char* axis = pFeature->Attribute(BUTTONMAP_XML_ATTR_FEATURE_AXIS);
 
-    FeatureMapItem libretroFeature;
-
-    if (buttonMapVersion == 1)
-      libretroFeature.feature = LibretroTranslator::GetFeatureV2(mapto);
-    else
-      libretroFeature.feature = mapto;
+    FeatureMapItem libretroFeature = { mapto };
 
     // Ensure feature is valid
-    if (LibretroTranslator::GetFeatureIndexV2(libretroFeature.feature) < 0)
+    if (LibretroTranslator::GetFeatureIndex(libretroFeature.feature) < 0)
     {
       esyslog("<%s> tag has invalid \"%s\" attribute: \"%s\"", BUTTONMAP_XML_ELM_FEATURE, BUTTONMAP_XML_ATTR_FEATURE_MAPTO, mapto);
       return false;
