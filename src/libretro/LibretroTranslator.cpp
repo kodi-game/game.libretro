@@ -296,24 +296,15 @@ const char* LibretroTranslator::GetFeatureName(libretro_device_t type, unsigned 
   }
   case RETRO_DEVICE_ANALOG:
   {
-    switch (id)
+    switch (index)
     {
-    case RETRO_DEVICE_ID_ANALOG_X:
-    case RETRO_DEVICE_ID_ANALOG_Y:
-    {
-      switch (index)
-      {
-      case RETRO_DEVICE_INDEX_ANALOG_LEFT:  return "RETRO_DEVICE_INDEX_ANALOG_LEFT";
-      case RETRO_DEVICE_INDEX_ANALOG_RIGHT: return "RETRO_DEVICE_INDEX_ANALOG_RIGHT";
-      default:
-        break;
-      }
-      break;
-    }
-    break;
+    case RETRO_DEVICE_INDEX_ANALOG_LEFT:   return "RETRO_DEVICE_INDEX_ANALOG_LEFT";
+    case RETRO_DEVICE_INDEX_ANALOG_RIGHT:  return "RETRO_DEVICE_INDEX_ANALOG_RIGHT";
+    case RETRO_DEVICE_INDEX_ANALOG_BUTTON: return GetFeatureName(RETRO_DEVICE_JOYPAD, index, id);
     default:
       break;
     }
+    break;
   }
   case RETRO_DEVICE_POINTER:
   {
