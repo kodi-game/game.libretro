@@ -53,7 +53,7 @@ libretro_device_caps_t CInputManager::GetDeviceCaps(void) const
 void CInputManager::DeviceConnected(int port, bool bConnected, const game_controller* connectedDevice)
 {
   if (bConnected)
-    m_devices[port] = std::make_shared<CLibretroDevice>(connectedDevice);
+    m_devices[port] = std::make_shared<CLibretroDevice>(*connectedDevice);
   else
     m_devices[port].reset();
 }

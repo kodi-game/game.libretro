@@ -297,7 +297,7 @@ bool CButtonMapper::Deserialize(TiXmlElement* pElement)
 
         for ( ; pChild != nullptr; pChild = pChild->NextSiblingElement(BUTTONMAP_XML_ELM_CONTROLLER))
         {
-          DevicePtr device = std::make_shared<CLibretroDevice>(nullptr);
+          DevicePtr device(std::make_shared<CLibretroDevice>());
 
           if (!device->Deserialize(pChild, version))
           {

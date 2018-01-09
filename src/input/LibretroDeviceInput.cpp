@@ -36,11 +36,11 @@ using namespace P8PLATFORM;
 
 #define ANALOG_DIGITAL_THRESHHOLD  0.5f
 
-CLibretroDeviceInput::CLibretroDeviceInput(const game_controller* controller)
+CLibretroDeviceInput::CLibretroDeviceInput(const game_controller &controller)
 {
-  if (controller && controller->controller_id)
+  if (controller.controller_id != nullptr)
   {
-    unsigned int type = CButtonMapper::Get().GetLibretroType(controller->controller_id);
+    unsigned int type = CButtonMapper::Get().GetLibretroType(controller.controller_id);
 
     switch (type)
     {
