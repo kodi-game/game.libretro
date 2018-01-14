@@ -20,6 +20,7 @@
 
 #include "ButtonMapper.h"
 #include "DefaultControllerTranslator.h"
+#include "DefaultKeyboardTranslator.h"
 #include "InputDefinitions.h"
 #include "LibretroDevice.h"
 #include "libretro/LibretroDLL.h"
@@ -36,7 +37,6 @@
 #define BUTTONMAP_XML          "buttonmap.xml"
 #define BUTTONMAP_XML_VERSION      2
 #define BUTTONMAP_XML_MIN_VERSION  2
-#define DEFAULT_CONTROLLER_ID  "game.controller.default"
 
 using namespace LIBRETRO;
 
@@ -83,12 +83,17 @@ bool CButtonMapper::LoadButtonMap(void)
 
 libretro_device_t CButtonMapper::GetLibretroType(const std::string& strControllerId)
 {
-  // Handle default controller
-  if (strControllerId == DEFAULT_CONTROLLER_ID)
+  // Handle default controller unless it appears in buttonmap.xml
+  if (strControllerId == DEFAULT_CONTROLLER_ID && !HasController(DEFAULT_CONTROLLER_ID))
     return RETRO_DEVICE_ANALOG;
+
+  // Handle default keyboard unless it appears in buttonmap.xml
+  if (strControllerId == DEFAULT_KEYBOARD_ID && !HasController(DEFAULT_KEYBOARD_ID))
+    return RETRO_DEVICE_KEYBOARD;
 
   libretro_device_t deviceType = RETRO_DEVICE_NONE;
 
+  // Check buttonmap for other controllers
   DeviceIt it = GetDevice(m_devices, strControllerId);
   if (it != m_devices.end())
     deviceType = (*it)->Type();
@@ -98,12 +103,17 @@ libretro_device_t CButtonMapper::GetLibretroType(const std::string& strControlle
 
 libretro_subclass_t CButtonMapper::GetSubclass(const std::string& strControllerId)
 {
-  // Handle default controller
-  if (strControllerId == DEFAULT_CONTROLLER_ID)
+  // Handle default controller unless it appears in buttonmap.xml
+  if (strControllerId == DEFAULT_CONTROLLER_ID && !HasController(DEFAULT_CONTROLLER_ID))
+    return RETRO_SUBCLASS_NONE;
+
+  // Handle default keyboard unless it appears in buttonmap.xml
+  if (strControllerId == DEFAULT_KEYBOARD_ID && !HasController(DEFAULT_KEYBOARD_ID))
     return RETRO_SUBCLASS_NONE;
 
   libretro_subclass_t subclass = RETRO_SUBCLASS_NONE;
 
+  // Check buttonmap for other controllers
   DeviceIt it = GetDevice(m_devices, strControllerId);
   if (it != m_devices.end())
     subclass = (*it)->Subclass();
@@ -118,6 +128,10 @@ int CButtonMapper::GetLibretroIndex(const std::string& strControllerId, const st
     // Handle default controller unless it appears in buttonmap.xml
     if (strControllerId == DEFAULT_CONTROLLER_ID && !HasController(DEFAULT_CONTROLLER_ID))
       return CDefaultControllerTranslator::GetLibretroIndex(strFeatureName);
+
+    // Handle default keyboard unless it appears in buttonmap.xml
+    if (strControllerId == DEFAULT_KEYBOARD_ID && !HasController(DEFAULT_KEYBOARD_ID))
+      return CDefaultKeyboardTranslator::GetLibretroIndex(strFeatureName);
 
     // Check buttonmap for other controllers
     std::string mapto = GetFeature(strControllerId, strFeatureName);
@@ -161,6 +175,8 @@ std::string CButtonMapper::GetControllerFeature(const std::string& strController
     // Handle default controller unless it appears in buttonmap.xml
     if (strControllerId == DEFAULT_CONTROLLER_ID && !HasController(DEFAULT_CONTROLLER_ID))
       return CDefaultControllerTranslator::GetControllerFeature(strLibretroFeature);
+
+    // No need to handle keyboard, keyboard input doesn't go from libretro to frontend
 
     DeviceIt it = GetDevice(m_devices, strControllerId);
     if (it != m_devices.end())

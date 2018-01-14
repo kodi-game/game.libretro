@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2017 Team Kodi
+ *      Copyright (C) 2018 Team Kodi
  *      http://kodi.tv
  *
  *  This Program is free software; you can redistribute it and/or modify
@@ -21,25 +21,16 @@
 
 #include <string>
 
-#define DEFAULT_CONTROLLER_ID  "game.controller.default"
+#define DEFAULT_KEYBOARD_ID    "game.controller.keyboard"
 
 namespace LIBRETRO
 {
-  class CDefaultControllerTranslator
+  class CDefaultKeyboardTranslator
   {
   public:
     /*!
      * \brief Translate from Kodi feature name to libretro index
      */
     static int GetLibretroIndex(const std::string &strFeatureName);
-
-    /*!
-     * \brief Translate from libretro feature (from libretro.h) to Kodi feature
-     *
-     * This is necessary because input doesn't just flow from Kodi to the
-     * add-on. Rumble feedback going from the add-on to Kodi makes use of this
-     * functionality.
-     */
-    static std::string GetControllerFeature(const std::string &strLibretroFeature);
   };
 }
