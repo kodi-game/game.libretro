@@ -429,6 +429,24 @@ GAME_ERROR HwContextDestroy()
   return CLIENT_BRIDGE->HwContextDestroy();
 }
 
+bool EnableKeyboard(bool enable, const game_controller* controller)
+{
+  bool bSuccess = false;
+
+  if (enable)
+  {
+    if (controller != nullptr)
+      bSuccess = CInputManager::Get().EnableKeyboard(*controller);
+  }
+  else
+  {
+    CInputManager::Get().DisableKeyboard();
+    bSuccess = true;
+  }
+
+  return bSuccess;
+}
+
 void UpdatePort(int port, bool connected, const game_controller* controller)
 {
   if (connected)
