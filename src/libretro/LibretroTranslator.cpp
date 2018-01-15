@@ -82,19 +82,7 @@ GAME_HW_CONTEXT_TYPE LibretroTranslator::GetHWContextType(retro_hw_context_type 
 
 // --- Input translation --------------------------------------------------
 
-libretro_device_t LibretroTranslator::GetDeviceTypeV1(const std::string& strType)
-{
-  if (strType == "joypad")   return RETRO_DEVICE_JOYPAD;
-  if (strType == "mouse")    return RETRO_DEVICE_MOUSE;
-  if (strType == "keyboard") return RETRO_DEVICE_KEYBOARD;
-  if (strType == "lightgun") return RETRO_DEVICE_LIGHTGUN;
-  if (strType == "analog")   return RETRO_DEVICE_ANALOG;
-  if (strType == "pointer")  return RETRO_DEVICE_POINTER;
-
-  return RETRO_DEVICE_NONE;
-}
-
-libretro_device_t LibretroTranslator::GetDeviceTypeV2(const std::string& strLibretroType)
+libretro_device_t LibretroTranslator::GetDeviceType(const std::string& strLibretroType)
 {
   if (strLibretroType == "RETRO_DEVICE_JOYPAD")   return RETRO_DEVICE_JOYPAD;
   if (strLibretroType == "RETRO_DEVICE_MOUSE")    return RETRO_DEVICE_MOUSE;
@@ -119,32 +107,6 @@ const char* LibretroTranslator::GetDeviceName(libretro_device_t type)
   default:
     break;
   }
-
-  return "";
-}
-
-std::string LibretroTranslator::GetFeatureV2(const std::string& strLibretroFeature)
-{
-  if (strLibretroFeature == "a")           return "RETRO_DEVICE_ID_JOYPAD_A";
-  if (strLibretroFeature == "b")           return "RETRO_DEVICE_ID_JOYPAD_B";
-  if (strLibretroFeature == "x")           return "RETRO_DEVICE_ID_JOYPAD_X";
-  if (strLibretroFeature == "y")           return "RETRO_DEVICE_ID_JOYPAD_Y";
-  if (strLibretroFeature == "start")       return "RETRO_DEVICE_ID_JOYPAD_START";
-  if (strLibretroFeature == "select")      return "RETRO_DEVICE_ID_JOYPAD_SELECT";
-  if (strLibretroFeature == "up")          return "RETRO_DEVICE_ID_JOYPAD_UP";
-  if (strLibretroFeature == "down")        return "RETRO_DEVICE_ID_JOYPAD_DOWN";
-  if (strLibretroFeature == "right")       return "RETRO_DEVICE_ID_JOYPAD_RIGHT";
-  if (strLibretroFeature == "left")        return "RETRO_DEVICE_ID_JOYPAD_LEFT";
-  if (strLibretroFeature == "l")           return "RETRO_DEVICE_ID_JOYPAD_L";
-  if (strLibretroFeature == "r")           return "RETRO_DEVICE_ID_JOYPAD_R";
-  if (strLibretroFeature == "l2")          return "RETRO_DEVICE_ID_JOYPAD_L2";
-  if (strLibretroFeature == "r2")          return "RETRO_DEVICE_ID_JOYPAD_R2";
-  if (strLibretroFeature == "l3")          return "RETRO_DEVICE_ID_JOYPAD_L3";
-  if (strLibretroFeature == "r3")          return "RETRO_DEVICE_ID_JOYPAD_R3";
-  if (strLibretroFeature == "leftstick")   return "RETRO_DEVICE_INDEX_ANALOG_LEFT";
-  if (strLibretroFeature == "rightstick")  return "RETRO_DEVICE_INDEX_ANALOG_RIGHT";
-  if (strLibretroFeature == "strong")      return "RETRO_RUMBLE_STRONG";
-  if (strLibretroFeature == "weak")        return "RETRO_RUMBLE_WEAK";
 
   return "";
 }
@@ -222,7 +184,7 @@ namespace LIBRETRO
   };
 }
 
-int LibretroTranslator::GetFeatureIndexV2(const std::string& strLibretroFeature)
+int LibretroTranslator::GetFeatureIndex(const std::string& strLibretroFeature)
 {
   for (const auto &it : featureMap)
   {

@@ -33,6 +33,8 @@
 #include <sstream>
 
 #define BUTTONMAP_XML          "buttonmap.xml"
+#define BUTTONMAP_XML_VERSION      2
+#define BUTTONMAP_XML_MIN_VERSION  2
 #define DEFAULT_CONTROLLER_ID  "game.controller.default"
 
 using namespace LIBRETRO;
@@ -125,7 +127,7 @@ int CButtonMapper::GetLibretroIndex(const std::string& strControllerId, const st
     // Check buttonmap for other controllers
     std::string mapto = GetFeature(strControllerId, strFeatureName);
     if (!mapto.empty())
-      return LibretroTranslator::GetFeatureIndexV2(mapto);
+      return LibretroTranslator::GetFeatureIndex(mapto);
   }
 
   return -1;
@@ -270,45 +272,57 @@ bool CButtonMapper::Deserialize(TiXmlElement* pElement)
   }
   else
   {
-    // Check buttonmap version (assume v1 if unspecified)
+    // Assume v1 if unspecified
     unsigned int version = 1;
 
     const char* strVersion = pElement->Attribute(BUTTONMAP_XML_ATTR_VERSION);
-    if (strVersion != nullptr)
+    if (strVersion == nullptr)
+    {
+      esyslog("Buttonmap version required, expected version %u (min=%u)",
+          BUTTONMAP_XML_VERSION, BUTTONMAP_XML_MIN_VERSION);
+    }
+    else
     {
       std::istringstream ss(strVersion);
       ss >> version;
-      dsyslog("Detected buttonmap version %u", version);
-    }
-    else
-    {
-      dsyslog("No version detected, defaulting to version 1");
-    }
-
-    const TiXmlElement* pChild = pElement->FirstChildElement(BUTTONMAP_XML_ELM_CONTROLLER);
-    if (!pChild)
-    {
-      esyslog("Can't find <%s> tag", BUTTONMAP_XML_ELM_CONTROLLER);
-    }
-    else
-    {
-      bSuccess = true;
-
-      for ( ; pChild != nullptr; pChild = pChild->NextSiblingElement(BUTTONMAP_XML_ELM_CONTROLLER))
+      if (version < BUTTONMAP_XML_MIN_VERSION)
       {
-        DevicePtr device = std::make_shared<CLibretroDevice>(nullptr);
+        esyslog("Buttonmap with version %u too old, expected version %u (min=%u)",
+            version, BUTTONMAP_XML_VERSION, BUTTONMAP_XML_MIN_VERSION);
+      }
+      else
+      {
+        dsyslog("Detected buttonmap version %u", version);
+      }
+    }
 
-        if (!device->Deserialize(pChild, version))
+    if (version >= BUTTONMAP_XML_MIN_VERSION)
+    {
+      const TiXmlElement* pChild = pElement->FirstChildElement(BUTTONMAP_XML_ELM_CONTROLLER);
+      if (!pChild)
+      {
+        esyslog("Can't find <%s> tag", BUTTONMAP_XML_ELM_CONTROLLER);
+      }
+      else
+      {
+        bSuccess = true;
+
+        for ( ; pChild != nullptr; pChild = pChild->NextSiblingElement(BUTTONMAP_XML_ELM_CONTROLLER))
         {
-          bSuccess = false;
-          break;
+          DevicePtr device = std::make_shared<CLibretroDevice>(nullptr);
+
+          if (!device->Deserialize(pChild, version))
+          {
+            bSuccess = false;
+            break;
+          }
+
+          m_devices.emplace_back(std::move(device));
         }
 
-        m_devices.emplace_back(std::move(device));
+        if (bSuccess)
+          dsyslog("Loaded buttonmap at version %u", version);
       }
-
-      if (bSuccess)
-        dsyslog("Loaded buttonmap at version %u", version);
     }
   }
 

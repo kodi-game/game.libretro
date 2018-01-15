@@ -69,18 +69,11 @@ namespace LIBRETRO
     // --- Input translation --------------------------------------------------
 
     /*!
-     * \brief Translate device type (libretro buttonmap "type" field) from version 1
-     * \param strType The device type to translate from a buttonmap at version 1
-     * \return The translated device type
-     */
-    static libretro_device_t GetDeviceTypeV1(const std::string& strType);
-
-    /*!
      * \brief Translate device type (Game API to libretro).
      * \param strType The device type to translate.
      * \return Translated device values.
      */
-    static libretro_device_t GetDeviceTypeV2(const std::string& strLibretroType);
+    static libretro_device_t GetDeviceType(const std::string& strLibretroType);
 
     /*!
      * \brief Translate device type (libretro) to string representation (e.g. for logging).
@@ -90,18 +83,11 @@ namespace LIBRETRO
     static const char* GetDeviceName(libretro_device_t type);
 
     /*!
-     * \brief Translate button/feature name (libretro buttonmap "mapto" field) from version 1 to version 2
-     * \param strFeatureName The feature name to translate from a buttonmap at version 1.
-     * \return The feature name for the buttonmap at version 2+.
-     */
-    static std::string GetFeatureV2(const std::string& strLibretroFeature);
-
-    /*!
      * \brief Translate button/feature name (libretro buttonmap "mapto" field) to libretro index value.
      * \param strFeatureName The feature name to translate.
      * \return Translated button/feature id.
      */
-    static int GetFeatureIndexV2(const std::string& strLibretroFeature);
+    static int GetFeatureIndex(const std::string& strLibretroFeature);
 
     /*!
      * \brief Translate button/feature name (libretro buttonmap "mapto" field) to libretro index value.
