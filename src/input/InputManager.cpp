@@ -65,6 +65,22 @@ void CInputManager::DisableKeyboard()
   m_keyboard.reset();
 }
 
+bool CInputManager::EnableMouse(const game_controller &controller)
+{
+  bool bSuccess = false;
+
+  DevicePtr device(new CLibretroDevice(controller));
+  m_mouse = std::move(device);
+  bSuccess = true;
+
+  return bSuccess;
+}
+
+void CInputManager::DisableMouse()
+{
+  m_mouse.reset();
+}
+
 void CInputManager::DeviceConnected(int port, bool bConnected, const game_controller* connectedDevice)
 {
   if (bConnected)
@@ -158,7 +174,9 @@ bool CInputManager::InputEvent(const game_input_event& event)
   {
     const int port = event.port;
 
-    if (m_devices[port])
+    if (port < GAME_INPUT_PORT_JOYSTICK_START) //! @todo Remove in port refactor
+      bHandled = m_mouse->Input().InputEvent(event);
+    else if (m_devices[port])
       bHandled = m_devices[port]->Input().InputEvent(event);
 
     break;
@@ -229,12 +247,28 @@ bool CInputManager::ButtonState(libretro_device_t device, unsigned int port, uns
 
     break;
   }
+  case RETRO_DEVICE_MOUSE:
+  {
+    if (m_mouse)
+      bState = m_mouse->Input().ButtonState(buttonIndex);
+    else
+    {
+      int iPort = port;
+
+      auto it = m_devices.find(iPort);
+      if (it != m_devices.end())
+      {
+        const auto &controller = it->second;
+        if (controller)
+          bState = controller->Input().ButtonState(buttonIndex);
+      }
+    }
+
+    break;
+  }
   default:
   {
     int iPort = port;
-
-    if (device == RETRO_DEVICE_MOUSE)
-      iPort = GAME_INPUT_PORT_MOUSE;
 
     auto it = m_devices.find(iPort);
     if (it != m_devices.end())
@@ -270,17 +304,21 @@ int CInputManager::DeltaX(libretro_device_t device, unsigned int port)
 {
   int deltaX = 0;
 
-  int iPort = port;
-
-  if (device == RETRO_DEVICE_MOUSE)
-    iPort = GAME_INPUT_PORT_MOUSE;
-
-  auto it = m_devices.find(iPort);
-  if (it != m_devices.end())
+  if (device == RETRO_DEVICE_MOUSE && m_mouse)
   {
-    const auto &device = it->second;
-    if (device)
-      deltaX = device->Input().RelativePointerDeltaX();
+    deltaX = m_mouse->Input().RelativePointerDeltaX();
+  }
+  else
+  {
+    int iPort = port;
+
+    auto it = m_devices.find(iPort);
+    if (it != m_devices.end())
+    {
+      const auto &device = it->second;
+      if (device)
+        deltaX = device->Input().RelativePointerDeltaX();
+    }
   }
 
   return deltaX;
@@ -290,17 +328,21 @@ int CInputManager::DeltaY(libretro_device_t device, unsigned int port)
 {
   int deltaY = 0;
 
-  int iPort = port;
-
-  if (device == RETRO_DEVICE_MOUSE)
-    iPort = GAME_INPUT_PORT_MOUSE;
-
-  auto it = m_devices.find(iPort);
-  if (it != m_devices.end())
+  if (device == RETRO_DEVICE_MOUSE && m_mouse)
   {
-    const auto &device = it->second;
-    if (device)
-      deltaY = device->Input().RelativePointerDeltaY();
+    deltaY = m_mouse->Input().RelativePointerDeltaY();
+  }
+  else
+  {
+    int iPort = port;
+
+    auto it = m_devices.find(iPort);
+    if (it != m_devices.end())
+    {
+      const auto &device = it->second;
+      if (device)
+        deltaY = device->Input().RelativePointerDeltaY();
+    }
   }
 
   return deltaY;

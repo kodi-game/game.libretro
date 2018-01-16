@@ -66,6 +66,20 @@ namespace LIBRETRO
     void DisableKeyboard();
 
     /*!
+     * \brief Enable mouse input
+     *
+     * \param controller The mouse's controller profile
+     *
+     * \return True if mouse input was enabled, false otherwise
+     */
+    bool EnableMouse(const game_controller &controller);
+
+    /*!
+     * \brief Disable the keyboard and free any resources it held
+     */
+    void DisableMouse();
+
+    /*!
      * \brief Called when a device has been connected to an open port
      */
     void DeviceConnected(int port, bool bConnected, const game_controller* connectedController);
@@ -120,6 +134,7 @@ namespace LIBRETRO
   private:
     std::map<int, DevicePtr>          m_devices;
     DevicePtr m_keyboard;
+    DevicePtr m_mouse;
     mutable P8PLATFORM::CMutex        m_keyMutex;
   };
 }

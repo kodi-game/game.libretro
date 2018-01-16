@@ -447,6 +447,24 @@ bool EnableKeyboard(bool enable, const game_controller* controller)
   return bSuccess;
 }
 
+bool EnableMouse(bool enable, const game_controller* controller)
+{
+  bool bSuccess = false;
+
+  if (enable)
+  {
+    if (controller != nullptr)
+      bSuccess = CInputManager::Get().EnableMouse(*controller);
+  }
+  else
+  {
+    CInputManager::Get().DisableMouse();
+    bSuccess = true;
+  }
+
+  return bSuccess;
+}
+
 void UpdatePort(int port, bool connected, const game_controller* controller)
 {
   if (connected)
