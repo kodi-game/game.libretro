@@ -27,6 +27,7 @@
 #include "libXBMC_addon.h"
 #include "libKODI_game.h"
 
+#include <algorithm>
 #include <assert.h>
 
 using namespace ADDON;
