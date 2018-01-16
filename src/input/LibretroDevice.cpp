@@ -32,13 +32,18 @@
 
 using namespace LIBRETRO;
 
-CLibretroDevice::CLibretroDevice(const game_controller* controller)
+CLibretroDevice::CLibretroDevice() :
+  m_type(RETRO_DEVICE_NONE)
+{
+}
+
+CLibretroDevice::CLibretroDevice(const game_controller &controller)
   : m_type(RETRO_DEVICE_NONE),
     m_input(new CLibretroDeviceInput(controller))
 {
-  if (controller && controller->controller_id)
+  if (controller.controller_id != nullptr)
   {
-    m_controllerId = controller->controller_id;
+    m_controllerId = controller.controller_id;
     m_type = CButtonMapper::Get().GetLibretroType(m_controllerId);
     m_subclass = CButtonMapper::Get().GetSubclass(m_controllerId);
   }

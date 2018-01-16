@@ -53,7 +53,7 @@ libretro_device_caps_t CInputManager::GetDeviceCaps(void) const
 void CInputManager::DeviceConnected(int port, bool bConnected, const game_controller* connectedDevice)
 {
   if (bConnected)
-    m_devices[port] = std::make_shared<CLibretroDevice>(connectedDevice);
+    m_devices[port] = std::make_shared<CLibretroDevice>(*connectedDevice);
   else
     m_devices[port].reset();
 }
@@ -232,7 +232,7 @@ bool CInputManager::ButtonState(libretro_device_t device, unsigned int port, uns
   return bState;
 }
 
-float CInputManager::AxisState(unsigned int port, unsigned int buttonIndex) const
+float CInputManager::AnalogButtonState(unsigned int port, unsigned int buttonIndex) const
 {
   float state = 0.0f;
 
@@ -241,7 +241,7 @@ float CInputManager::AxisState(unsigned int port, unsigned int buttonIndex) cons
   {
     const auto &device = it->second;
     if (device)
-      state = device->Input().AxisState(buttonIndex);
+      state = device->Input().AnalogButtonState(buttonIndex);
   }
 
   return state;
