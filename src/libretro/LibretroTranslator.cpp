@@ -180,7 +180,150 @@ namespace LIBRETRO
         { "RETRO_DEVICE_ID_LIGHTGUN_IS_OFFSCREEN",  RETRO_DEVICE_ID_LIGHTGUN_IS_OFFSCREEN },
         { "RETRO_DEVICE_ID_LIGHTGUN_RELOAD",        RETRO_DEVICE_ID_LIGHTGUN_RELOAD },
       }
-    }
+    },
+    {
+      RETRO_DEVICE_KEYBOARD, {
+        { "RETROK_BACKSPACE",      RETROK_BACKSPACE },
+        { "RETROK_TAB",            RETROK_TAB },
+        { "RETROK_CLEAR",          RETROK_CLEAR },
+        { "RETROK_RETURN",         RETROK_RETURN },
+        { "RETROK_PAUSE",          RETROK_PAUSE },
+        { "RETROK_ESCAPE",         RETROK_ESCAPE },
+        { "RETROK_SPACE",          RETROK_SPACE },
+        { "RETROK_EXCLAIM",        RETROK_EXCLAIM },
+        { "RETROK_QUOTEDBL",       RETROK_QUOTEDBL },
+        { "RETROK_HASH",           RETROK_HASH },
+        { "RETROK_DOLLAR",         RETROK_DOLLAR },
+        { "RETROK_AMPERSAND",      RETROK_AMPERSAND },
+        { "RETROK_QUOTE",          RETROK_QUOTE },
+        { "RETROK_LEFTPAREN",      RETROK_LEFTPAREN },
+        { "RETROK_RIGHTPAREN",     RETROK_RIGHTPAREN },
+        { "RETROK_ASTERISK",       RETROK_ASTERISK },
+        { "RETROK_PLUS",           RETROK_PLUS },
+        { "RETROK_COMMA",          RETROK_COMMA },
+        { "RETROK_MINUS",          RETROK_MINUS },
+        { "RETROK_PERIOD",         RETROK_PERIOD },
+        { "RETROK_SLASH",          RETROK_SLASH },
+        { "RETROK_0",              RETROK_0 },
+        { "RETROK_1",              RETROK_1 },
+        { "RETROK_2",              RETROK_2 },
+        { "RETROK_3",              RETROK_3 },
+        { "RETROK_4",              RETROK_4 },
+        { "RETROK_5",              RETROK_5 },
+        { "RETROK_6",              RETROK_6 },
+        { "RETROK_7",              RETROK_7 },
+        { "RETROK_8",              RETROK_8 },
+        { "RETROK_9",              RETROK_9 },
+        { "RETROK_COLON",          RETROK_COLON },
+        { "RETROK_SEMICOLON",      RETROK_SEMICOLON },
+        { "RETROK_LESS",           RETROK_LESS },
+        { "RETROK_EQUALS",         RETROK_EQUALS },
+        { "RETROK_GREATER",        RETROK_GREATER },
+        { "RETROK_QUESTION",       RETROK_QUESTION },
+        { "RETROK_AT",             RETROK_AT },
+        { "RETROK_LEFTBRACKET",    RETROK_LEFTBRACKET },
+        { "RETROK_BACKSLASH",      RETROK_BACKSLASH },
+        { "RETROK_RIGHTBRACKET",   RETROK_RIGHTBRACKET },
+        { "RETROK_CARET",          RETROK_CARET },
+        { "RETROK_UNDERSCORE",     RETROK_UNDERSCORE },
+        { "RETROK_BACKQUOTE",      RETROK_BACKQUOTE },
+        { "RETROK_a",              RETROK_a },
+        { "RETROK_b",              RETROK_b },
+        { "RETROK_c",              RETROK_c },
+        { "RETROK_d",              RETROK_d },
+        { "RETROK_e",              RETROK_e },
+        { "RETROK_f",              RETROK_f },
+        { "RETROK_g",              RETROK_g },
+        { "RETROK_h",              RETROK_h },
+        { "RETROK_i",              RETROK_i },
+        { "RETROK_j",              RETROK_j },
+        { "RETROK_k",              RETROK_k },
+        { "RETROK_l",              RETROK_l },
+        { "RETROK_m",              RETROK_m },
+        { "RETROK_n",              RETROK_n },
+        { "RETROK_o",              RETROK_o },
+        { "RETROK_p",              RETROK_p },
+        { "RETROK_q",              RETROK_q },
+        { "RETROK_r",              RETROK_r },
+        { "RETROK_s",              RETROK_s },
+        { "RETROK_t",              RETROK_t },
+        { "RETROK_u",              RETROK_u },
+        { "RETROK_v",              RETROK_v },
+        { "RETROK_w",              RETROK_w },
+        { "RETROK_x",              RETROK_x },
+        { "RETROK_y",              RETROK_y },
+        { "RETROK_z",              RETROK_z },
+        { "RETROK_LEFTBRACE",      RETROK_LEFTBRACE },
+        { "RETROK_BAR",            RETROK_BAR },
+        { "RETROK_RIGHTBRACE",     RETROK_RIGHTBRACE },
+        { "RETROK_TILDE",          RETROK_TILDE },
+        { "RETROK_DELETE",         RETROK_DELETE },
+        { "RETROK_KP0",            RETROK_KP0 },
+        { "RETROK_KP1",            RETROK_KP1 },
+        { "RETROK_KP2",            RETROK_KP2 },
+        { "RETROK_KP3",            RETROK_KP3 },
+        { "RETROK_KP4",            RETROK_KP4 },
+        { "RETROK_KP5",            RETROK_KP5 },
+        { "RETROK_KP6",            RETROK_KP6 },
+        { "RETROK_KP7",            RETROK_KP7 },
+        { "RETROK_KP8",            RETROK_KP8 },
+        { "RETROK_KP9",            RETROK_KP9 },
+        { "RETROK_KP_PERIOD",      RETROK_KP_PERIOD },
+        { "RETROK_KP_DIVIDE",      RETROK_KP_DIVIDE },
+        { "RETROK_KP_MULTIPLY",    RETROK_KP_MULTIPLY },
+        { "RETROK_KP_MINUS",       RETROK_KP_MINUS },
+        { "RETROK_KP_PLUS",        RETROK_KP_PLUS },
+        { "RETROK_KP_ENTER",       RETROK_KP_ENTER },
+        { "RETROK_KP_EQUALS",      RETROK_KP_EQUALS },
+        { "RETROK_UP",             RETROK_UP },
+        { "RETROK_DOWN",           RETROK_DOWN },
+        { "RETROK_RIGHT",          RETROK_RIGHT },
+        { "RETROK_LEFT",           RETROK_LEFT },
+        { "RETROK_INSERT",         RETROK_INSERT },
+        { "RETROK_HOME",           RETROK_HOME },
+        { "RETROK_END",            RETROK_END },
+        { "RETROK_PAGEUP",         RETROK_PAGEUP },
+        { "RETROK_PAGEDOWN",       RETROK_PAGEDOWN },
+        { "RETROK_F1",             RETROK_F1 },
+        { "RETROK_F2",             RETROK_F2 },
+        { "RETROK_F3",             RETROK_F3 },
+        { "RETROK_F4",             RETROK_F4 },
+        { "RETROK_F5",             RETROK_F5 },
+        { "RETROK_F6",             RETROK_F6 },
+        { "RETROK_F7",             RETROK_F7 },
+        { "RETROK_F8",             RETROK_F8 },
+        { "RETROK_F9",             RETROK_F9 },
+        { "RETROK_F10",            RETROK_F10 },
+        { "RETROK_F11",            RETROK_F11 },
+        { "RETROK_F12",            RETROK_F12 },
+        { "RETROK_F13",            RETROK_F13 },
+        { "RETROK_F14",            RETROK_F14 },
+        { "RETROK_F15",            RETROK_F15 },
+        { "RETROK_NUMLOCK",        RETROK_NUMLOCK },
+        { "RETROK_CAPSLOCK",       RETROK_CAPSLOCK },
+        { "RETROK_SCROLLOCK",      RETROK_SCROLLOCK },
+        { "RETROK_RSHIFT",         RETROK_RSHIFT },
+        { "RETROK_LSHIFT",         RETROK_LSHIFT },
+        { "RETROK_RCTRL",          RETROK_RCTRL },
+        { "RETROK_LCTRL",          RETROK_LCTRL },
+        { "RETROK_RALT",           RETROK_RALT },
+        { "RETROK_LALT",           RETROK_LALT },
+        { "RETROK_RMETA",          RETROK_RMETA },
+        { "RETROK_LMETA",          RETROK_LMETA },
+        { "RETROK_LSUPER",         RETROK_LSUPER },
+        { "RETROK_RSUPER",         RETROK_RSUPER },
+        { "RETROK_MODE",           RETROK_MODE },
+        { "RETROK_COMPOSE",        RETROK_COMPOSE },
+        { "RETROK_HELP",           RETROK_HELP },
+        { "RETROK_PRINT",          RETROK_PRINT },
+        { "RETROK_SYSREQ",         RETROK_SYSREQ },
+        { "RETROK_BREAK",          RETROK_BREAK },
+        { "RETROK_MENU",           RETROK_MENU },
+        { "RETROK_POWER",          RETROK_POWER },
+        { "RETROK_EURO",           RETROK_EURO },
+        { "RETROK_UNDO",           RETROK_UNDO },
+      }
+    },
   };
 }
 
@@ -274,7 +417,151 @@ const char* LibretroTranslator::GetFeatureName(libretro_device_t type, unsigned 
   }
   case RETRO_DEVICE_KEYBOARD:
   {
-    break; // TODO
+    switch (id)
+    {
+    case RETROK_BACKSPACE:      return "RETROK_BACKSPACE";
+    case RETROK_TAB:            return "RETROK_TAB";
+    case RETROK_CLEAR:          return "RETROK_CLEAR";
+    case RETROK_RETURN:         return "RETROK_RETURN";
+    case RETROK_PAUSE:          return "RETROK_PAUSE";
+    case RETROK_ESCAPE:         return "RETROK_ESCAPE";
+    case RETROK_SPACE:          return "RETROK_SPACE";
+    case RETROK_EXCLAIM:        return "RETROK_EXCLAIM";
+    case RETROK_QUOTEDBL:       return "RETROK_QUOTEDBL";
+    case RETROK_HASH:           return "RETROK_HASH";
+    case RETROK_DOLLAR:         return "RETROK_DOLLAR";
+    case RETROK_AMPERSAND:      return "RETROK_AMPERSAND";
+    case RETROK_QUOTE:          return "RETROK_QUOTE";
+    case RETROK_LEFTPAREN:      return "RETROK_LEFTPAREN";
+    case RETROK_RIGHTPAREN:     return "RETROK_RIGHTPAREN";
+    case RETROK_ASTERISK:       return "RETROK_ASTERISK";
+    case RETROK_PLUS:           return "RETROK_PLUS";
+    case RETROK_COMMA:          return "RETROK_COMMA";
+    case RETROK_MINUS:          return "RETROK_MINUS";
+    case RETROK_PERIOD:         return "RETROK_PERIOD";
+    case RETROK_SLASH:          return "RETROK_SLASH";
+    case RETROK_0:              return "RETROK_0";
+    case RETROK_1:              return "RETROK_1";
+    case RETROK_2:              return "RETROK_2";
+    case RETROK_3:              return "RETROK_3";
+    case RETROK_4:              return "RETROK_4";
+    case RETROK_5:              return "RETROK_5";
+    case RETROK_6:              return "RETROK_6";
+    case RETROK_7:              return "RETROK_7";
+    case RETROK_8:              return "RETROK_8";
+    case RETROK_9:              return "RETROK_9";
+    case RETROK_COLON:          return "RETROK_COLON";
+    case RETROK_SEMICOLON:      return "RETROK_SEMICOLON";
+    case RETROK_LESS:           return "RETROK_LESS";
+    case RETROK_EQUALS:         return "RETROK_EQUALS";
+    case RETROK_GREATER:        return "RETROK_GREATER";
+    case RETROK_QUESTION:       return "RETROK_QUESTION";
+    case RETROK_AT:             return "RETROK_AT";
+    case RETROK_LEFTBRACKET:    return "RETROK_LEFTBRACKET";
+    case RETROK_BACKSLASH:      return "RETROK_BACKSLASH";
+    case RETROK_RIGHTBRACKET:   return "RETROK_RIGHTBRACKET";
+    case RETROK_CARET:          return "RETROK_CARET";
+    case RETROK_UNDERSCORE:     return "RETROK_UNDERSCORE";
+    case RETROK_BACKQUOTE:      return "RETROK_BACKQUOTE";
+    case RETROK_a:              return "RETROK_a";
+    case RETROK_b:              return "RETROK_b";
+    case RETROK_c:              return "RETROK_c";
+    case RETROK_d:              return "RETROK_d";
+    case RETROK_e:              return "RETROK_e";
+    case RETROK_f:              return "RETROK_f";
+    case RETROK_g:              return "RETROK_g";
+    case RETROK_h:              return "RETROK_h";
+    case RETROK_i:              return "RETROK_i";
+    case RETROK_j:              return "RETROK_j";
+    case RETROK_k:              return "RETROK_k";
+    case RETROK_l:              return "RETROK_l";
+    case RETROK_m:              return "RETROK_m";
+    case RETROK_n:              return "RETROK_n";
+    case RETROK_o:              return "RETROK_o";
+    case RETROK_p:              return "RETROK_p";
+    case RETROK_q:              return "RETROK_q";
+    case RETROK_r:              return "RETROK_r";
+    case RETROK_s:              return "RETROK_s";
+    case RETROK_t:              return "RETROK_t";
+    case RETROK_u:              return "RETROK_u";
+    case RETROK_v:              return "RETROK_v";
+    case RETROK_w:              return "RETROK_w";
+    case RETROK_x:              return "RETROK_x";
+    case RETROK_y:              return "RETROK_y";
+    case RETROK_z:              return "RETROK_z";
+    case RETROK_LEFTBRACE:      return "RETROK_LEFTBRACE";
+    case RETROK_BAR:            return "RETROK_BAR";
+    case RETROK_RIGHTBRACE:     return "RETROK_RIGHTBRACE";
+    case RETROK_TILDE:          return "RETROK_TILDE";
+    case RETROK_DELETE:         return "RETROK_DELETE";
+    case RETROK_KP0:            return "RETROK_KP0";
+    case RETROK_KP1:            return "RETROK_KP1";
+    case RETROK_KP2:            return "RETROK_KP2";
+    case RETROK_KP3:            return "RETROK_KP3";
+    case RETROK_KP4:            return "RETROK_KP4";
+    case RETROK_KP5:            return "RETROK_KP5";
+    case RETROK_KP6:            return "RETROK_KP6";
+    case RETROK_KP7:            return "RETROK_KP7";
+    case RETROK_KP8:            return "RETROK_KP8";
+    case RETROK_KP9:            return "RETROK_KP9";
+    case RETROK_KP_PERIOD:      return "RETROK_KP_PERIOD";
+    case RETROK_KP_DIVIDE:      return "RETROK_KP_DIVIDE";
+    case RETROK_KP_MULTIPLY:    return "RETROK_KP_MULTIPLY";
+    case RETROK_KP_MINUS:       return "RETROK_KP_MINUS";
+    case RETROK_KP_PLUS:        return "RETROK_KP_PLUS";
+    case RETROK_KP_ENTER:       return "RETROK_KP_ENTER";
+    case RETROK_KP_EQUALS:      return "RETROK_KP_EQUALS";
+    case RETROK_UP:             return "RETROK_UP";
+    case RETROK_DOWN:           return "RETROK_DOWN";
+    case RETROK_RIGHT:          return "RETROK_RIGHT";
+    case RETROK_LEFT:           return "RETROK_LEFT";
+    case RETROK_INSERT:         return "RETROK_INSERT";
+    case RETROK_HOME:           return "RETROK_HOME";
+    case RETROK_END:            return "RETROK_END";
+    case RETROK_PAGEUP:         return "RETROK_PAGEUP";
+    case RETROK_PAGEDOWN:       return "RETROK_PAGEDOWN";
+    case RETROK_F1:             return "RETROK_F1";
+    case RETROK_F2:             return "RETROK_F2";
+    case RETROK_F3:             return "RETROK_F3";
+    case RETROK_F4:             return "RETROK_F4";
+    case RETROK_F5:             return "RETROK_F5";
+    case RETROK_F6:             return "RETROK_F6";
+    case RETROK_F7:             return "RETROK_F7";
+    case RETROK_F8:             return "RETROK_F8";
+    case RETROK_F9:             return "RETROK_F9";
+    case RETROK_F10:            return "RETROK_F10";
+    case RETROK_F11:            return "RETROK_F11";
+    case RETROK_F12:            return "RETROK_F12";
+    case RETROK_F13:            return "RETROK_F13";
+    case RETROK_F14:            return "RETROK_F14";
+    case RETROK_F15:            return "RETROK_F15";
+    case RETROK_NUMLOCK:        return "RETROK_NUMLOCK";
+    case RETROK_CAPSLOCK:       return "RETROK_CAPSLOCK";
+    case RETROK_SCROLLOCK:      return "RETROK_SCROLLOCK";
+    case RETROK_RSHIFT:         return "RETROK_RSHIFT";
+    case RETROK_LSHIFT:         return "RETROK_LSHIFT";
+    case RETROK_RCTRL:          return "RETROK_RCTRL";
+    case RETROK_LCTRL:          return "RETROK_LCTRL";
+    case RETROK_RALT:           return "RETROK_RALT";
+    case RETROK_LALT:           return "RETROK_LALT";
+    case RETROK_RMETA:          return "RETROK_RMETA";
+    case RETROK_LMETA:          return "RETROK_LMETA";
+    case RETROK_LSUPER:         return "RETROK_LSUPER";
+    case RETROK_RSUPER:         return "RETROK_RSUPER";
+    case RETROK_MODE:           return "RETROK_MODE";
+    case RETROK_COMPOSE:        return "RETROK_COMPOSE";
+    case RETROK_HELP:           return "RETROK_HELP";
+    case RETROK_PRINT:          return "RETROK_PRINT";
+    case RETROK_SYSREQ:         return "RETROK_SYSREQ";
+    case RETROK_BREAK:          return "RETROK_BREAK";
+    case RETROK_MENU:           return "RETROK_MENU";
+    case RETROK_POWER:          return "RETROK_POWER";
+    case RETROK_EURO:           return "RETROK_EURO";
+    case RETROK_UNDO:           return "RETROK_UNDO";
+    default:
+      break;
+    }
+    break;
   }
   case RETRO_DEVICE_LIGHTGUN:
   {
@@ -405,311 +692,11 @@ retro_mod LibretroTranslator::GetKeyModifiers(GAME_KEY_MOD modifiers)
   if (modifiers & GAME_KEY_MOD_SHIFT)      mods = mods | RETROKMOD_SHIFT;
   if (modifiers & GAME_KEY_MOD_CTRL)       mods = mods | RETROKMOD_CTRL;
   if (modifiers & GAME_KEY_MOD_ALT)        mods = mods | RETROKMOD_ALT;
-  if (modifiers & GAME_KEY_MOD_RALT)       mods = mods | RETROKMOD_ALT;
   if (modifiers & GAME_KEY_MOD_META)       mods = mods | RETROKMOD_META;
+  // GAME_KEY_MOD_SUPER not implemented in libretro API
   if (modifiers & GAME_KEY_MOD_NUMLOCK)    mods = mods | RETROKMOD_NUMLOCK;
   if (modifiers & GAME_KEY_MOD_CAPSLOCK)   mods = mods | RETROKMOD_CAPSLOCK;
   if (modifiers & GAME_KEY_MOD_SCROLLOCK)  mods = mods | RETROKMOD_SCROLLOCK;
 
   return mods;
-}
-
-retro_key LibretroTranslator::GetKeyCode(XBMCVKey character)
-{
-  switch (character)
-  {
-    case XBMCVK_BACK:         return RETROK_BACKSPACE;
-    case XBMCVK_TAB:          return RETROK_TAB;
-    //case 0x0000:              return RETROK_CLEAR;
-    case XBMCVK_RETURN:       return RETROK_RETURN;
-    case XBMCVK_PAUSE:        return RETROK_PAUSE;
-    case XBMCVK_ESCAPE:       return RETROK_ESCAPE;
-    case XBMCVK_SPACE:        return RETROK_SPACE;
-    case XBMCVK_EXCLAIM:      return RETROK_EXCLAIM;
-    case XBMCVK_QUOTEDBL:     return RETROK_QUOTEDBL;
-    case XBMCVK_HASH:         return RETROK_HASH;
-    case XBMCVK_DOLLAR:       return RETROK_DOLLAR;
-    case XBMCVK_AMPERSAND:    return RETROK_AMPERSAND;
-    case XBMCVK_QUOTE:        return RETROK_QUOTE;
-    case XBMCVK_LEFTPAREN:    return RETROK_LEFTPAREN;
-    case XBMCVK_RIGHTPAREN:   return RETROK_RIGHTPAREN;
-    case XBMCVK_ASTERISK:     return RETROK_ASTERISK;
-    case XBMCVK_PLUS:         return RETROK_PLUS;
-    case XBMCVK_COMMA:        return RETROK_COMMA;
-    case XBMCVK_MINUS:        return RETROK_MINUS;
-    case XBMCVK_PERIOD:       return RETROK_PERIOD;
-    case XBMCVK_SLASH:        return RETROK_SLASH;
-    case XBMCVK_0:            return RETROK_0;
-    case XBMCVK_1:            return RETROK_1;
-    case XBMCVK_2:            return RETROK_2;
-    case XBMCVK_3:            return RETROK_3;
-    case XBMCVK_4:            return RETROK_4;
-    case XBMCVK_5:            return RETROK_5;
-    case XBMCVK_6:            return RETROK_6;
-    case XBMCVK_7:            return RETROK_7;
-    case XBMCVK_8:            return RETROK_8;
-    case XBMCVK_9:            return RETROK_9;
-    case XBMCVK_COLON:        return RETROK_COLON;
-    case XBMCVK_SEMICOLON:    return RETROK_SEMICOLON;
-    case XBMCVK_LESS:         return RETROK_LESS;
-    case XBMCVK_EQUALS:       return RETROK_EQUALS;
-    case XBMCVK_GREATER:      return RETROK_GREATER;
-    case XBMCVK_QUESTION:     return RETROK_QUESTION;
-    case XBMCVK_AT:           return RETROK_AT;
-    case XBMCVK_A:            return RETROK_a;
-    case XBMCVK_B:            return RETROK_b;
-    case XBMCVK_C:            return RETROK_c;
-    case XBMCVK_D:            return RETROK_d;
-    case XBMCVK_E:            return RETROK_e;
-    case XBMCVK_F:            return RETROK_f;
-    case XBMCVK_G:            return RETROK_g;
-    case XBMCVK_H:            return RETROK_h;
-    case XBMCVK_I:            return RETROK_i;
-    case XBMCVK_J:            return RETROK_j;
-    case XBMCVK_K:            return RETROK_k;
-    case XBMCVK_L:            return RETROK_l;
-    case XBMCVK_M:            return RETROK_m;
-    case XBMCVK_N:            return RETROK_n;
-    case XBMCVK_O:            return RETROK_o;
-    case XBMCVK_P:            return RETROK_p;
-    case XBMCVK_Q:            return RETROK_q;
-    case XBMCVK_R:            return RETROK_r;
-    case XBMCVK_S:            return RETROK_s;
-    case XBMCVK_T:            return RETROK_t;
-    case XBMCVK_U:            return RETROK_u;
-    case XBMCVK_V:            return RETROK_v;
-    case XBMCVK_W:            return RETROK_w;
-    case XBMCVK_X:            return RETROK_x;
-    case XBMCVK_Y:            return RETROK_y;
-    case XBMCVK_Z:            return RETROK_z;
-    case XBMCVK_LEFTBRACKET:  return RETROK_LEFTBRACKET;
-    case XBMCVK_BACKSLASH:    return RETROK_BACKSLASH;
-    case XBMCVK_RIGHTBRACKET: return RETROK_RIGHTBRACKET;
-    case XBMCVK_CARET:        return RETROK_CARET;
-    case XBMCVK_UNDERSCORE:   return RETROK_UNDERSCORE;
-    case XBMCVK_BACKQUOTE:    return RETROK_BACKQUOTE;
-    case XBMCVK_DELETE:       return RETROK_DELETE;
-
-    case XBMCVK_NUMPAD0:      return RETROK_KP0;
-    case XBMCVK_NUMPAD1:      return RETROK_KP1;
-    case XBMCVK_NUMPAD2:      return RETROK_KP2;
-    case XBMCVK_NUMPAD3:      return RETROK_KP3;
-    case XBMCVK_NUMPAD4:      return RETROK_KP4;
-    case XBMCVK_NUMPAD5:      return RETROK_KP5;
-    case XBMCVK_NUMPAD6:      return RETROK_KP6;
-    case XBMCVK_NUMPAD7:      return RETROK_KP7;
-    case XBMCVK_NUMPAD8:      return RETROK_KP8;
-    case XBMCVK_NUMPAD9:      return RETROK_KP9;
-    case XBMCVK_NUMPADPERIOD: return RETROK_KP_PERIOD;
-    case XBMCVK_NUMPADDIVIDE: return RETROK_KP_DIVIDE;
-    case XBMCVK_NUMPADTIMES:  return RETROK_KP_MULTIPLY;
-    case XBMCVK_NUMPADMINUS:  return RETROK_KP_MINUS;
-    case XBMCVK_NUMPADPLUS:   return RETROK_KP_PLUS;
-    case XBMCVK_NUMPADENTER:  return RETROK_KP_ENTER;
-    //case 0x0000:              return RETROK_KP_EQUALS;
-    case XBMCVK_UP:           return RETROK_UP;
-    case XBMCVK_DOWN:         return RETROK_DOWN;
-    case XBMCVK_LEFT:         return RETROK_RIGHT;
-    case XBMCVK_RIGHT:        return RETROK_LEFT;
-    case XBMCVK_INSERT:       return RETROK_INSERT;
-    case XBMCVK_HOME:         return RETROK_HOME;
-    case XBMCVK_END:          return RETROK_END;
-    case XBMCVK_PAGEUP:       return RETROK_PAGEUP;
-    case XBMCVK_PAGEDOWN:     return RETROK_PAGEDOWN;
-
-    case XBMCVK_F1:           return RETROK_F1;
-    case XBMCVK_F2:           return RETROK_F2;
-    case XBMCVK_F3:           return RETROK_F3;
-    case XBMCVK_F4:           return RETROK_F4;
-    case XBMCVK_F5:           return RETROK_F5;
-    case XBMCVK_F6:           return RETROK_F6;
-    case XBMCVK_F7:           return RETROK_F7;
-    case XBMCVK_F8:           return RETROK_F8;
-    case XBMCVK_F9:           return RETROK_F9;
-    case XBMCVK_F10:          return RETROK_F10;
-    case XBMCVK_F11:          return RETROK_F11;
-    case XBMCVK_F12:          return RETROK_F12;
-    case XBMCVK_F13:          return RETROK_F13;
-    case XBMCVK_F14:          return RETROK_F14;
-    case XBMCVK_F15:          return RETROK_F15;
-
-    case XBMCVK_NUMLOCK:      return RETROK_NUMLOCK;
-    case XBMCVK_CAPSLOCK:     return RETROK_CAPSLOCK;
-    case XBMCVK_SCROLLLOCK:   return RETROK_SCROLLOCK;
-    case XBMCVK_RSHIFT:       return RETROK_RSHIFT;
-    case XBMCVK_LSHIFT:       return RETROK_LSHIFT;
-    case XBMCVK_RCONTROL:     return RETROK_RCTRL;
-    case XBMCVK_LCONTROL:     return RETROK_LCTRL;
-    case XBMCVK_RMENU:        return RETROK_RALT;
-    case XBMCVK_LMENU:        return RETROK_LALT;
-    case XBMCVK_RWIN:         return RETROK_RMETA;
-    case XBMCVK_LWIN:         return RETROK_LMETA;
-    //case 0x0000:              return RETROK_LSUPER;
-    //case 0x0000:              return RETROK_RSUPER;
-    //case 0x0000:              return RETROK_MODE;
-    //case 0x0000:              return RETROK_COMPOSE;
-
-    //case 0x0000:              return RETROK_HELP;
-    case XBMCVK_PRINTSCREEN:  return RETROK_PRINT;
-    //case 0x0000:              return RETROK_SYSREQ;
-    //case 0x0000:              return RETROK_BREAK;
-    case XBMCVK_BROWSER_HOME: return RETROK_MENU;
-    case XBMCVK_POWER:        return RETROK_POWER;
-    //case 0x0000:              return RETROK_EURO;
-    //case 0x0000:              return RETROK_UNDO;
-
-    default:
-      break;
-  }
-  return RETROK_UNKNOWN;
-}
-
-const char* LibretroTranslator::GetKeyName(XBMCVKey code)
-{
-  switch (code)
-  {
-    case XBMCVK_BACK:         return "backspace";
-    case XBMCVK_TAB:          return "tab";
-    //case 0x0000:              return "clear";
-    case XBMCVK_RETURN:       return "return";
-    case XBMCVK_PAUSE:        return "pause";
-    case XBMCVK_ESCAPE:       return "escape";
-    case XBMCVK_SPACE:        return "space";
-    case XBMCVK_EXCLAIM:      return "\"";
-    case XBMCVK_QUOTEDBL:     return "&";
-    case XBMCVK_HASH:         return "#";
-    case XBMCVK_DOLLAR:       return "$";
-    case XBMCVK_AMPERSAND:    return "&";
-    case XBMCVK_QUOTE:        return "'";
-    case XBMCVK_LEFTPAREN:    return "(";
-    case XBMCVK_RIGHTPAREN:   return ")";
-    case XBMCVK_ASTERISK:     return "*";
-    case XBMCVK_PLUS:         return "+";
-    case XBMCVK_COMMA:        return ",";
-    case XBMCVK_MINUS:        return "-";
-    case XBMCVK_PERIOD:       return ".";
-    case XBMCVK_SLASH:        return "-";
-    case XBMCVK_0:            return "0";
-    case XBMCVK_1:            return "1";
-    case XBMCVK_2:            return "2";
-    case XBMCVK_3:            return "3";
-    case XBMCVK_4:            return "4";
-    case XBMCVK_5:            return "5";
-    case XBMCVK_6:            return "6";
-    case XBMCVK_7:            return "7";
-    case XBMCVK_8:            return "8";
-    case XBMCVK_9:            return "9";
-    case XBMCVK_COLON:        return ":";
-    case XBMCVK_SEMICOLON:    return ";";
-    case XBMCVK_LESS:         return "<";
-    case XBMCVK_EQUALS:       return "=";
-    case XBMCVK_GREATER:      return ">";
-    case XBMCVK_QUESTION:     return "?";
-    case XBMCVK_AT:           return "@";
-    case XBMCVK_A:            return "A";
-    case XBMCVK_B:            return "B";
-    case XBMCVK_C:            return "C";
-    case XBMCVK_D:            return "D";
-    case XBMCVK_E:            return "E";
-    case XBMCVK_F:            return "F";
-    case XBMCVK_G:            return "G";
-    case XBMCVK_H:            return "H";
-    case XBMCVK_I:            return "I";
-    case XBMCVK_J:            return "J";
-    case XBMCVK_K:            return "K";
-    case XBMCVK_L:            return "L";
-    case XBMCVK_M:            return "M";
-    case XBMCVK_N:            return "N";
-    case XBMCVK_O:            return "O";
-    case XBMCVK_P:            return "P";
-    case XBMCVK_Q:            return "Q";
-    case XBMCVK_R:            return "R";
-    case XBMCVK_S:            return "S";
-    case XBMCVK_T:            return "T";
-    case XBMCVK_U:            return "U";
-    case XBMCVK_V:            return "V";
-    case XBMCVK_W:            return "W";
-    case XBMCVK_X:            return "X";
-    case XBMCVK_Y:            return "Y";
-    case XBMCVK_Z:            return "Z";
-    case XBMCVK_LEFTBRACKET:  return "]";
-    case XBMCVK_BACKSLASH:    return "\\";
-    case XBMCVK_RIGHTBRACKET: return "]";
-    case XBMCVK_CARET:        return "^";
-    case XBMCVK_UNDERSCORE:   return "_";
-    case XBMCVK_BACKQUOTE:    return "`";
-    case XBMCVK_DELETE:       return "delete";
-
-    case XBMCVK_NUMPAD0:      return "keypad0";
-    case XBMCVK_NUMPAD1:      return "keypad1";
-    case XBMCVK_NUMPAD2:      return "keypad2";
-    case XBMCVK_NUMPAD3:      return "keypad3";
-    case XBMCVK_NUMPAD4:      return "keypad4";
-    case XBMCVK_NUMPAD5:      return "keypad5";
-    case XBMCVK_NUMPAD6:      return "keypad6";
-    case XBMCVK_NUMPAD7:      return "keypad7";
-    case XBMCVK_NUMPAD8:      return "keypad8";
-    case XBMCVK_NUMPAD9:      return "keypad9";
-    case XBMCVK_NUMPADPERIOD: return "keypadperiod";
-    case XBMCVK_NUMPADDIVIDE: return "keypaddivide";
-    case XBMCVK_NUMPADTIMES:  return "keypadmultiply";
-    case XBMCVK_NUMPADMINUS:  return "keypadminus";
-    case XBMCVK_NUMPADPLUS:   return "keypadplus";
-    case XBMCVK_NUMPADENTER:  return "keypadenter";
-    //case 0x0000:            return "keypadequals";
-    case XBMCVK_UP:           return "up";
-    case XBMCVK_DOWN:         return "down";
-    case XBMCVK_LEFT:         return "right";
-    case XBMCVK_RIGHT:        return "left";
-    case XBMCVK_INSERT:       return "insert";
-    case XBMCVK_HOME:         return "home";
-    case XBMCVK_END:          return "end";
-    case XBMCVK_PAGEUP:       return "pageup";
-    case XBMCVK_PAGEDOWN:     return "pagedown";
-
-    case XBMCVK_F1:           return "f1";
-    case XBMCVK_F2:           return "f2";
-    case XBMCVK_F3:           return "f3";
-    case XBMCVK_F4:           return "f4";
-    case XBMCVK_F5:           return "f5";
-    case XBMCVK_F6:           return "f6";
-    case XBMCVK_F7:           return "f7";
-    case XBMCVK_F8:           return "f8";
-    case XBMCVK_F9:           return "f9";
-    case XBMCVK_F10:          return "f10";
-    case XBMCVK_F11:          return "f11";
-    case XBMCVK_F12:          return "f12";
-    case XBMCVK_F13:          return "f13";
-    case XBMCVK_F14:          return "f14";
-    case XBMCVK_F15:          return "f15";
-
-    case XBMCVK_NUMLOCK:      return "numlock";
-    case XBMCVK_CAPSLOCK:     return "capslock";
-    case XBMCVK_SCROLLLOCK:   return "scrolllock";
-    case XBMCVK_RSHIFT:       return "rshift";
-    case XBMCVK_LSHIFT:       return "lshift";
-    case XBMCVK_RCONTROL:     return "rctrl";
-    case XBMCVK_LCONTROL:     return "lctrl";
-    case XBMCVK_RMENU:        return "ralt";
-    case XBMCVK_LMENU:        return "lalt";
-    case XBMCVK_RWIN:         return "rmeta";
-    case XBMCVK_LWIN:         return "lmeta";
-    //case 0x0000:              return "lsuper";
-    //case 0x0000:              return "rsuper";
-    //case 0x0000:              return "mode";
-    //case 0x0000:              return "compose";
-
-    //case 0x0000:              return "help";
-    case XBMCVK_PRINTSCREEN:  return "print";
-    //case 0x0000:              return "sysreq";
-    //case 0x0000:              return "break";
-    case XBMCVK_BROWSER_HOME: return "menu";
-    case XBMCVK_POWER:        return "power";
-    //case 0x0000:              return "euro";
-    //case 0x0000:              return "undo";
-
-    default:
-      break;
-  }
-  return "";
 }

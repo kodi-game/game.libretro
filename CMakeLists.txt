@@ -20,6 +20,7 @@ set(LIBRETRO_SOURCES src/client.cpp
                      src/GameInfoLoader.cpp
                      src/input/ButtonMapper.cpp
                      src/input/DefaultControllerTranslator.cpp
+                     src/input/DefaultKeyboardTranslator.cpp
                      src/input/InputManager.cpp
                      src/input/LibretroDevice.cpp
                      src/input/LibretroDeviceInput.cpp
@@ -46,6 +47,8 @@ set(LIBRETRO_HEADERS src/GameInfoLoader.h
                      src/input/ButtonMapper.h
                      src/input/DefaultControllerDefines.h
                      src/input/DefaultControllerTranslator.h
+                     src/input/DefaultKeyboardDefines.h
+                     src/input/DefaultKeyboardTranslator.h
                      src/input/InputDefinitions.h
                      src/input/InputManager.h
                      src/input/InputTypes.h

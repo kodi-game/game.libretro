@@ -21,7 +21,6 @@
 #include "InputManager.h"
 #include "LibretroDevice.h"
 #include "LibretroDeviceInput.h"
-#include "libretro/ClientBridge.h"
 #include "libretro/libretro.h"
 #include "libretro/LibretroEnvironment.h"
 #include "libretro/LibretroTranslator.h"
@@ -48,6 +47,22 @@ libretro_device_caps_t CInputManager::GetDeviceCaps(void) const
          1 << RETRO_DEVICE_LIGHTGUN |
          1 << RETRO_DEVICE_ANALOG   |
          1 << RETRO_DEVICE_POINTER;
+}
+
+bool CInputManager::EnableKeyboard(const game_controller &controller)
+{
+  bool bSuccess = false;
+
+  DevicePtr device(new CLibretroDevice(controller));
+  m_keyboard = std::move(device);
+  bSuccess = true;
+
+  return bSuccess;
+}
+
+void CInputManager::DisableKeyboard()
+{
+  m_keyboard.reset();
 }
 
 void CInputManager::DeviceConnected(int port, bool bConnected, const game_controller* connectedDevice)
@@ -122,36 +137,32 @@ void CInputManager::EnableAnalogSensors(unsigned int port, bool bEnabled)
 
 bool CInputManager::InputEvent(const game_input_event& event)
 {
+  std::string controllerId = event.controller_id != nullptr ? event.controller_id : "";
+  std::string feature = event.feature_name != nullptr ? event.feature_name : "";
+
+  if (controllerId.empty() || feature.empty())
+    return false;
+
   bool bHandled = false;
 
-  if (event.type == GAME_INPUT_EVENT_KEY)
+  switch (event.type)
   {
-    // Report key to client
-    CClientBridge* clientBridge = CLibretroEnvironment::Get().GetClientBridge();
-    if (clientBridge)
-    {
-      const bool      down          = event.key.pressed;
-      const retro_key keycode       = LibretroTranslator::GetKeyCode(event.key.character);
-      const uint32_t  character     = event.key.character;
-      const retro_mod key_modifiers = LibretroTranslator::GetKeyModifiers(event.key.modifiers);
+  case GAME_INPUT_EVENT_KEY:
+  {
+    if (m_keyboard)
+      bHandled = m_keyboard->Input().InputEvent(event);
 
-      dsyslog("Key %s: %s (XBMCVKey: 0x%04x, RETROK: 0x%04x, Modifier: 0x%02x)", down ? "down" : "up",
-          LibretroTranslator::GetKeyName(event.key.character), character, keycode, key_modifiers);
-
-      clientBridge->KeyboardEvent(down, keycode, character, key_modifiers);
-    }
-
-    // Record key press for polling
-    HandlePress(event.key);
-
-    bHandled = true;
+    break;
   }
-  else
+  default:
   {
     const int port = event.port;
 
     if (m_devices[port])
       bHandled = m_devices[port]->Input().InputEvent(event);
+
+    break;
+  }
   }
 
   return bHandled;
@@ -209,11 +220,16 @@ bool CInputManager::ButtonState(libretro_device_t device, unsigned int port, uns
 {
   bool bState = false;
 
-  if (device == RETRO_DEVICE_KEYBOARD)
+  switch (device)
   {
-    bState = IsPressed(buttonIndex);
+  case RETRO_DEVICE_KEYBOARD:
+  {
+    if (m_keyboard)
+      bState = m_keyboard->Input().ButtonState(buttonIndex);
+
+    break;
   }
-  else
+  default:
   {
     int iPort = port;
 
@@ -223,10 +239,13 @@ bool CInputManager::ButtonState(libretro_device_t device, unsigned int port, uns
     auto it = m_devices.find(iPort);
     if (it != m_devices.end())
     {
-      const auto &device = it->second;
-      if (device)
-        bState = device->Input().ButtonState(buttonIndex);
+      const auto &controller = it->second;
+      if (controller)
+        bState = controller->Input().ButtonState(buttonIndex);
     }
+
+    break;
+  }
   }
 
   return bState;
@@ -359,33 +378,4 @@ void CInputManager::SetControllerInfo(const retro_controller_info* info)
   }
 
   dsyslog("------------------------------------------------------------");
-}
-
-void CInputManager::HandlePress(const game_key_event& key)
-{
-  CLockObject lock(m_keyMutex);
-
-  if (key.pressed)
-  {
-    m_pressedKeys.push_back(key);
-  }
-  else
-  {
-    m_pressedKeys.erase(std::remove_if(m_pressedKeys.begin(), m_pressedKeys.end(),
-      [&key](const game_key_event& pressedKey)
-      {
-        return pressedKey.character == key.character;
-      }), m_pressedKeys.end());
-  }
-}
-
-bool CInputManager::IsPressed(uint32_t character) const
-{
-  CLockObject lock(m_keyMutex);
-
-  return std::count_if(m_pressedKeys.begin(), m_pressedKeys.end(),
-    [character](const game_key_event& keyEvent)
-    {
-      return keyEvent.character == character;
-    }) > 0;
 }

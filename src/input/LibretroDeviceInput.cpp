@@ -21,7 +21,11 @@
 #include "LibretroDeviceInput.h"
 #include "LibretroDevice.h"
 #include "ButtonMapper.h"
+#include "libretro/ClientBridge.h"
+#include "libretro/LibretroEnvironment.h"
+#include "libretro/LibretroTranslator.h"
 #include "libretro/libretro.h"
+#include "log/Log.h"
 
 using namespace LIBRETRO;
 using namespace P8PLATFORM;
@@ -66,6 +70,10 @@ CLibretroDeviceInput::CLibretroDeviceInput(const game_controller &controller)
 
       case RETRO_DEVICE_POINTER:
         m_absolutePointers.resize(LIBRETRO_ABSOLUTE_POINTER_COUNT);
+        break;
+
+      case RETRO_DEVICE_KEYBOARD:
+        m_buttons.resize(RETROK_LAST - 1);
         break;
 
       default:
@@ -265,6 +273,18 @@ bool CLibretroDeviceInput::InputEvent(const game_input_event& event)
           m_accelerometers[index] = event.accelerometer;
         break;
 
+      case GAME_INPUT_EVENT_KEY:
+      {
+        // Send keypress to libertro
+        SendKeyEvent(strControllerId, strFeatureName, index, event.key);
+
+        // Save keypress for polling
+        if (static_cast<size_t>(index) < m_buttons.size())
+          m_buttons[index] = event.digital_button;
+
+        break;
+      }
+
       case GAME_INPUT_EVENT_RELATIVE_POINTER:
         if (index < (int)m_relativePointers.size())
         {
@@ -288,4 +308,30 @@ bool CLibretroDeviceInput::InputEvent(const game_input_event& event)
   }
 
   return false;
+}
+
+void CLibretroDeviceInput::SendKeyEvent(const std::string &controllerId,
+                                        const std::string &feature,
+                                        unsigned int keyIndex,
+                                        const game_key_event &keyEvent)
+{
+  // Report key to client
+  CClientBridge* clientBridge = CLibretroEnvironment::Get().GetClientBridge();
+  if (clientBridge)
+  {
+    const bool down = keyEvent.pressed;
+    const retro_key keycode = static_cast<retro_key>(keyIndex);
+    const uint32_t character = keyEvent.unicode;
+    const retro_mod key_modifiers = LibretroTranslator::GetKeyModifiers(keyEvent.modifiers);
+    std::string retroKey = LibretroTranslator::GetFeatureName(RETRO_DEVICE_KEYBOARD, 0, keycode);
+
+    dsyslog("Controller \"%s\" key \"%s\" (%s) modifier 0x%08x: %s",
+        controllerId.c_str(),
+        feature.c_str(),
+        retroKey.c_str(),
+        keyEvent.modifiers,
+        down ? "down" : "up");
+
+    clientBridge->KeyboardEvent(down, keycode, character, key_modifiers);
+  }
 }

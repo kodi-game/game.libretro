@@ -19,6 +19,7 @@
  */
 #pragma once
 
+#include "InputTypes.h"
 #include "LibretroDevice.h"
 
 #include "kodi_game_types.h"
@@ -49,6 +50,20 @@ namespace LIBRETRO
      * \return A bitmask of libretro devices that this class supports
      */
     libretro_device_caps_t GetDeviceCaps(void) const;
+
+    /*!
+     * \brief Enable the keyboard
+     *
+     * \param controller The keyboard's controller profile
+     *
+     * \return True if keyboard was enabled, false otherwise
+     */
+    bool EnableKeyboard(const game_controller &controller);
+
+    /*!
+     * \brief Disable the keyboard and free any resources it held
+     */
+    void DisableKeyboard();
 
     /*!
      * \brief Called when a device has been connected to an open port
@@ -103,11 +118,8 @@ namespace LIBRETRO
     void SetControllerInfo(const retro_controller_info* info);
 
   private:
-    void HandlePress(const game_key_event& key);
-    bool IsPressed(uint32_t character) const;
-
     std::map<int, DevicePtr>          m_devices;
-    std::vector<game_key_event>       m_pressedKeys;
+    DevicePtr m_keyboard;
     mutable P8PLATFORM::CMutex        m_keyMutex;
   };
 }

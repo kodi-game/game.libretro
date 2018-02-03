@@ -38,10 +38,11 @@ void CSingleFrameAudio::AddFrame(int16_t left, int16_t right)
   m_data.push_back(left);
   m_data.push_back(right);
 
-  const unsigned int frameCount = m_data.size() / SAMPLES_PER_FRAME;
+  const unsigned int frameCount = static_cast<unsigned int>(m_data.size() / SAMPLES_PER_FRAME);
   if (frameCount >= FRAMES_PER_PACKET)
   {
-    m_audioStream->AddFrames_S16NE(reinterpret_cast<const uint8_t*>(m_data.data()), m_data.size() * SAMPLE_SIZE);
+    m_audioStream->AddFrames_S16NE(reinterpret_cast<const uint8_t*>(m_data.data()),
+        static_cast<unsigned int>(m_data.size() * SAMPLE_SIZE));
     m_data.clear();
   }
 }

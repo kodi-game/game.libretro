@@ -45,6 +45,14 @@ namespace LIBRETRO
     bool InputEvent(const game_input_event& event);
 
   private:
+    /*!
+     * \brief Report key to client
+     */
+    void SendKeyEvent(const std::string &controllerId,
+                      const std::string &feature,
+                      unsigned int keyIndex,
+                      const game_key_event &keyEvent);
+
     std::vector<game_digital_button_event> m_buttons;
     std::vector<game_analog_button_event>  m_analogButtons;
     std::vector<game_analog_stick_event>   m_analogSticks;

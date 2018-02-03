@@ -23,7 +23,6 @@
 #include "libretro.h"
 
 #include "kodi_game_types.h"
-#include "XBMC_vkeys.h"
 
 #include <string>
 
@@ -134,19 +133,5 @@ namespace LIBRETRO
      * \return Translated key modifiers.
      */
     static retro_mod GetKeyModifiers(GAME_KEY_MOD modifiers);
-
-    /*!
-     * \brief Translate keycode (Game API to libretro).
-     * \param character The character to translate.
-     * \return Translated character.
-     */
-    static retro_key GetKeyCode(XBMCVKey character);
-
-    /*!
-     * \brief Translate keycode (Game API) to string representation (e.g. for logging pressed buttons).
-     * \param character The character to translate.
-     * \return String representation of character.
-     */
-    static const char* GetKeyName(XBMCVKey keycode);
   };
 }

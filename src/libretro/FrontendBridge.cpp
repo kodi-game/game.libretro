@@ -80,7 +80,7 @@ void CFrontendBridge::VideoRefresh(const void* data, unsigned int width, unsigne
   else
   {
     CLibretroEnvironment::Get().Video().AddFrame(static_cast<const uint8_t*>(data),
-                                                 pitch * height,
+                                                 static_cast<unsigned int>(pitch * height),
                                                  width,
                                                  height,
                                                  CLibretroEnvironment::Get().GetVideoFormat(),
@@ -96,7 +96,7 @@ void CFrontendBridge::AudioFrame(int16_t left, int16_t right)
 size_t CFrontendBridge::AudioFrames(const int16_t* data, size_t frames)
 {
   CLibretroEnvironment::Get().Audio().AddFrames_S16NE(reinterpret_cast<const uint8_t*>(data),
-                                                      frames * S16NE_FRAMESIZE);
+                                                      static_cast<unsigned int>(frames * S16NE_FRAMESIZE));
 
   return frames;
 }
