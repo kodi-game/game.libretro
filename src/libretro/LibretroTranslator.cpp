@@ -48,6 +48,19 @@ GAME_PIXEL_FORMAT LibretroTranslator::GetVideoFormat(retro_pixel_format format)
   return GAME_PIXEL_FORMAT_UNKNOWN;
 }
 
+GAME_PIXEL_FORMAT LibretroTranslator::GetVideoFormat(retro_pixel_format format)
+{
+  switch (format)
+  {
+    case RETRO_PIXEL_FORMAT_0RGB1555: return "0RGB1555";
+    case RETRO_PIXEL_FORMAT_XRGB8888: return "XRGB8888";
+    case RETRO_PIXEL_FORMAT_RGB565:   return "RGB565";
+    default:
+      break;
+  }
+  return "";
+}
+
 GAME_VIDEO_ROTATION LibretroTranslator::GetVideoRotation(unsigned int rotation)
 {
   switch (rotation)

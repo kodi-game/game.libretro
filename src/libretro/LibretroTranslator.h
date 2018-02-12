@@ -50,6 +50,13 @@ namespace LIBRETRO
     static GAME_PIXEL_FORMAT GetVideoFormat(retro_pixel_format format);
 
     /*!
+     * \brief Translate video format (libretro to string suitable for logging)
+     * \param format The video format to translate
+     * \return String representation of video format
+     */
+    static const char *VideoFormatToString(retro_pixel_format format);
+
+    /*!
      * \brief Translate video rotation (libretro to Game API).
      * \param rotation The video rotation to translate as set by RETRO_ENVIRONMENT_SET_ROTATION.
      * \return Translated video rotation.

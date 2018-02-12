@@ -25,6 +25,7 @@
 #include "LibretroDLL.h"
 #include "LibretroTranslator.h"
 #include "input/InputManager.h"
+#include "log/Log.h"
 #include "settings/Settings.h"
 
 #include "libKODI_game.h"
@@ -170,7 +171,11 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       const retro_pixel_format* typedData = reinterpret_cast<const retro_pixel_format*>(data);
       if (!typedData)
         return false;
+
+      dsyslog("Setting libretro pixel format \"%s\"", LibretroTranslator::VideoFormatToString(*typedData));
+
       m_videoFormat = LibretroTranslator::GetVideoFormat(*typedData);
+
       break;
     }
   case RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS:
