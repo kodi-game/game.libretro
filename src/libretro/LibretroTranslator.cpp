@@ -48,7 +48,7 @@ GAME_PIXEL_FORMAT LibretroTranslator::GetVideoFormat(retro_pixel_format format)
   return GAME_PIXEL_FORMAT_UNKNOWN;
 }
 
-GAME_PIXEL_FORMAT LibretroTranslator::GetVideoFormat(retro_pixel_format format)
+const char *LibretroTranslator::VideoFormatToString(retro_pixel_format format)
 {
   switch (format)
   {
