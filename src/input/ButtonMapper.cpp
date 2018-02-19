@@ -69,7 +69,7 @@ bool CButtonMapper::LoadButtonMap(void)
     TiXmlDocument buttonMapXml;
     if (!buttonMapXml.LoadFile(strFilename))
     {
-      esyslog("Failed to open file: %s", strFilename.c_str());
+      esyslog("Failed to open file: %s (line %d)", buttonMapXml.ErrorDesc(), buttonMapXml.ErrorRow());
     }
     else
     {
