@@ -450,6 +450,16 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       }
       break;
     }
+  case RETRO_ENVIRONMENT_SET_MEMORY_MAPS:
+  {
+    const retro_memory_map* typedData = reinterpret_cast<const retro_memory_map*>(data);
+    if (typedData)
+    {
+      // Not implemented
+      return false;
+    }
+    break;
+  }
   case RETRO_ENVIRONMENT_SET_GEOMETRY:
   {
     const retro_game_geometry* typedData = reinterpret_cast<const retro_game_geometry*>(data);
@@ -480,19 +490,83 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     }
     break;
   }
-  case RETRO_ENVIRONMENT_GET_RESOURCE_DIRECTORY:
+  case RETRO_ENVIRONMENT_GET_CURRENT_SOFTWARE_FRAMEBUFFER:
+  {
+    retro_framebuffer* typedData = reinterpret_cast<retro_framebuffer*>(data);
+    if (typedData)
     {
-      retro_resource* typedData = reinterpret_cast<retro_resource*>(data);
-      if (typedData)
-      {
-        const char* relPath = typedData->rel_path;
-        if (relPath == nullptr)
-          return false;
-
-        typedData->base_directory = m_resources.GetBaseSystemPath(relPath);
-      }
-      break;
+      // Not implemented
+      return false;
     }
+    break;
+  }
+  case RETRO_ENVIRONMENT_SET_HW_SHARED_CONTEXT:
+  {
+    // Not implemented
+    return false;
+  }
+  case RETRO_ENVIRONMENT_GET_VFS_INTERFACE:
+  {
+    const uint32_t supported_vfs_version = 1;
+
+    retro_vfs_interface_info* typedData = reinterpret_cast<retro_vfs_interface_info*>(data);
+    if (typedData)
+    {
+      // Not implemented
+      return false;
+    }
+    break;
+  }
+  case RETRO_ENVIRONMENT_GET_LED_INTERFACE:
+  {
+    retro_led_interface* typedData = reinterpret_cast<retro_led_interface*>(data);
+    if (typedData)
+    {
+      // Not implemented
+      return false;
+    }
+    break;
+  }
+  case RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE:
+  {
+    const retro_hw_render_interface* typedData = reinterpret_cast<const retro_hw_render_interface*>(data);
+    if (typedData)
+    {
+      // Not implemented
+      return false;
+    }
+    break;
+  }
+  case RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS:
+  {
+    const bool* typedData = reinterpret_cast<const bool*>(data);
+    if (typedData)
+    {
+      // Not implemented
+      return false;
+    }
+    break;
+  }
+  case RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE:
+  {
+    const retro_hw_render_context_negotiation_interface* typedData = reinterpret_cast<const retro_hw_render_context_negotiation_interface*>(data);
+    if (typedData)
+    {
+      // Not implemented
+      return false;
+    }
+    break;
+  }
+  case RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS:
+  {
+    const retro_hw_render_context_negotiation_interface* typedData = reinterpret_cast<const retro_hw_render_context_negotiation_interface*>(data);
+    if (typedData)
+    {
+      // Not implemented
+      return false;
+    }
+    break;
+  }
   default:
     return false;
   }
