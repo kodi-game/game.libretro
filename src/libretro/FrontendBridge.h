@@ -9,6 +9,17 @@
 
 #include "libretro.h"
 
+#include <memory>
+#include <string>
+
+namespace kodi
+{
+namespace vfs
+{
+  class CFile;
+}
+}
+
 namespace LIBRETRO
 {
   /*!
@@ -48,5 +59,25 @@ namespace LIBRETRO
     static void SetLocationInterval(unsigned interval_ms, unsigned interval_distance);
     static void LocationInitialized(void);
     static void LocationDeinitialized(void);
+
+    // Forward to Kodi VFS API
+    static const char *GetPath(retro_vfs_file_handle *stream);
+    static retro_vfs_file_handle *OpenFile(const char *path, unsigned mode, unsigned hints);
+    static int CloseFile(retro_vfs_file_handle *stream);
+    static int64_t FileSize(retro_vfs_file_handle *stream);
+    static int64_t GetPosition(retro_vfs_file_handle *stream);
+    static int64_t Seek(retro_vfs_file_handle *stream, int64_t offset, int seek_position);
+    static int64_t ReadFile(retro_vfs_file_handle *stream, void *s, uint64_t len);
+    static int64_t WriteFile(retro_vfs_file_handle *stream, const void *s, uint64_t len);
+    static int FlushFile(retro_vfs_file_handle *stream);
+    static int RemoveFile(const char *path);
+    static int RenameFile(const char *old_path, const char *new_path);
+
+  private:
+    struct FileHandle
+    {
+      std::string path;
+      std::unique_ptr<kodi::vfs::CFile> file;
+    };
   };
 } // namespace LIBRETRO
