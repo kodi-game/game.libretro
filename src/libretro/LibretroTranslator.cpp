@@ -154,6 +154,8 @@ namespace LIBRETRO
         { "RETRO_DEVICE_ID_JOYPAD_R2",      RETRO_DEVICE_ID_JOYPAD_R2 },
         { "RETRO_DEVICE_ID_JOYPAD_L3",      RETRO_DEVICE_ID_JOYPAD_L3 },
         { "RETRO_DEVICE_ID_JOYPAD_R3",      RETRO_DEVICE_ID_JOYPAD_R3 },
+        { "RETRO_RUMBLE_STRONG",            RETRO_RUMBLE_STRONG },
+        { "RETRO_RUMBLE_WEAK",              RETRO_RUMBLE_WEAK },
       }
     },
     {
