@@ -504,7 +504,7 @@ bool ConnectController(bool connect, const char *port_address, const game_contro
       CInputManager::Get().DisconnectController(strPortAddress);
     }
 
-    dsyslog("Settings port \"%s\" (libretro port %d) to controller \"%s\" (libretro device ID %u)",
+    dsyslog("Setting port \"%s\" (libretro port %d) to controller \"%s\" (libretro device ID %u)",
         strPortAddress.c_str(), port, strController.c_str(), device);
 
     if (CLIENT)
