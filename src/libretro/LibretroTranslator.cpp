@@ -48,6 +48,19 @@ GAME_PIXEL_FORMAT LibretroTranslator::GetVideoFormat(retro_pixel_format format)
   return GAME_PIXEL_FORMAT_UNKNOWN;
 }
 
+retro_pixel_format LibretroTranslator::GetLibretroVideoFormat(GAME_PIXEL_FORMAT format)
+{
+  switch (format)
+  {
+    case GAME_PIXEL_FORMAT_0RGB1555: return RETRO_PIXEL_FORMAT_0RGB1555;
+    case GAME_PIXEL_FORMAT_0RGB8888: return RETRO_PIXEL_FORMAT_XRGB8888;
+    case GAME_PIXEL_FORMAT_RGB565:   return RETRO_PIXEL_FORMAT_RGB565;
+    default:
+      break;
+  }
+  return RETRO_PIXEL_FORMAT_UNKNOWN;
+}
+
 const char *LibretroTranslator::VideoFormatToString(retro_pixel_format format)
 {
   switch (format)
@@ -85,6 +98,8 @@ GAME_HW_CONTEXT_TYPE LibretroTranslator::GetHWContextType(retro_hw_context_type 
     case RETRO_HW_CONTEXT_OPENGLES2:   return GAME_HW_CONTEXT_OPENGLES2;
     case RETRO_HW_CONTEXT_OPENGL_CORE: return GAME_HW_CONTEXT_OPENGL_CORE;
     case RETRO_HW_CONTEXT_OPENGLES3:   return GAME_HW_CONTEXT_OPENGLES3;
+    case RETRO_HW_CONTEXT_OPENGLES_VERSION: return GAME_HW_CONTEXT_OPENGLES_VERSION;
+    case RETRO_HW_CONTEXT_VULKAN:      return GAME_HW_CONTEXT_VULKAN;
     case RETRO_HW_CONTEXT_NONE:
     case RETRO_HW_CONTEXT_DUMMY:
     default:

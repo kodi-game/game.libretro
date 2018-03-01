@@ -118,6 +118,11 @@ std::string CLibretroEnvironment::GetResourcePath(const char* relPath)
   return m_resources.GetFullPath(relPath);
 }
 
+void CLibretroEnvironment::OnFrameEnd()
+{
+  m_videoStream.OnFrameEnd();
+}
+
 bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
 {
   if (!m_frontend || !m_clientBridge)
@@ -222,9 +227,8 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       retro_hw_render_callback* typedData = reinterpret_cast<retro_hw_render_callback*>(data);
       if (typedData)
       {
-        /*! @todo
         // Translate struct and report hw info to frontend
-        game_hw_info hw_info;
+        game_stream_hw_framebuffer_properties hw_info;
         hw_info.context_type       = LibretroTranslator::GetHWContextType(typedData->context_type);
         hw_info.depth              = typedData->depth;
         hw_info.stencil            = typedData->stencil;
@@ -233,7 +237,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
         hw_info.version_minor      = typedData->version_minor;
         hw_info.cache_context      = typedData->cache_context;
         hw_info.debug_context      = typedData->debug_context;
-        m_frontend->EnableHardwareRendering(&hw_info);
+        m_videoStream.EnableHardwareRendering(hw_info);
 
         // Store callbacks from libretro client
         m_clientBridge->SetHwContextReset(typedData->context_reset);
@@ -242,8 +246,6 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
         // Expose frontend callbacks to libretro client
         typedData->get_current_framebuffer = CFrontendBridge::HwGetCurrentFramebuffer;
         typedData->get_proc_address        = CFrontendBridge::HwGetProcAddress;
-        */
-        return false;
       }
       break;
     }
@@ -510,8 +512,24 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     retro_framebuffer* typedData = reinterpret_cast<retro_framebuffer*>(data);
     if (typedData)
     {
-      // Not implemented
-      return false;
+      // Get framebuffer params from core
+      const unsigned int accessFlags = typedData->access_flags;
+      const unsigned int width = typedData->width;
+      const unsigned int height = typedData->height;
+
+      // Reading framebuffers not supported
+      if (accessFlags & RETRO_MEMORY_ACCESS_READ)
+        return false;
+
+      game_stream_sw_framebuffer_buffer framebuffer{};
+      if (!m_videoStream.GetSwFramebuffer(width, height, m_videoFormat, framebuffer))
+        return false;
+
+      // Report framebuffer info to frontend
+      typedData->data = framebuffer.data;
+      typedData->pitch = framebuffer.size / height;
+      typedData->format = LibretroTranslator::GetLibretroVideoFormat(framebuffer.format);
+      typedData->memory_flags = 0;
     }
     break;
   }

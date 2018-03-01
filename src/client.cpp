@@ -360,6 +360,8 @@ GAME_ERROR RunFrame(void)
 
   CLIENT->retro_run();
 
+  CLibretroEnvironment::Get().OnFrameEnd();
+
   return GAME_ERROR_NO_ERROR;
 }
 

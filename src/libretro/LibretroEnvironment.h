@@ -80,6 +80,11 @@ namespace LIBRETRO
 
     std::string GetResourcePath(const char* relPath);
 
+    /*!
+     * \brief Called after game has been run for a frame
+     */
+    void OnFrameEnd();
+
     bool EnvironmentCallback(unsigned cmd, void* data);
 
   private:
