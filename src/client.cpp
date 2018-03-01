@@ -307,6 +307,8 @@ GAME_ERROR UnloadGame(void)
   {
     CLIENT->retro_unload_game();
 
+    CLibretroEnvironment::Get().CloseStreams();
+
     error = GAME_ERROR_NO_ERROR;
   }
 
@@ -315,27 +317,22 @@ GAME_ERROR UnloadGame(void)
   return error;
 }
 
-GAME_ERROR GetGameInfo(game_system_av_info* info)
+GAME_ERROR GetGameTiming(game_system_timing* timing_info)
 {
   if (!CLIENT)
     return GAME_ERROR_FAILED;
 
-  if (info == nullptr)
+  if (timing_info == nullptr)
     return GAME_ERROR_INVALID_PARAMETERS;
 
   retro_system_av_info retro_info = { };
   CLIENT->retro_get_system_av_info(&retro_info);
 
-  info->geometry.base_width   = retro_info.geometry.base_width;
-  info->geometry.base_height  = retro_info.geometry.base_height;
-  info->geometry.max_width    = retro_info.geometry.max_width;
-  info->geometry.max_height   = retro_info.geometry.max_height;
-  info->geometry.aspect_ratio = retro_info.geometry.aspect_ratio;
-  info->timing.fps            = retro_info.timing.fps;
-  info->timing.sample_rate    = retro_info.timing.sample_rate;
+  timing_info->fps = retro_info.timing.fps;
+  timing_info->sample_rate = retro_info.timing.sample_rate;
 
   // Report info to CLibretroEnvironment
-  CLibretroEnvironment::Get().UpdateSystemInfo(*info);
+  CLibretroEnvironment::Get().UpdateVideoGeometry(retro_info.geometry);
 
   return GAME_ERROR_NO_ERROR;
 }

@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2016 Team Kodi
+ *      Copyright (C) 2018 Team Kodi
  *      http://kodi.tv
  *
  *  This Program is free software; you can redistribute it and/or modify
@@ -19,35 +19,30 @@
  */
 #pragma once
 
-#include "kodi_game_types.h"
-
-#include <memory>
-
-class CHelper_libKODI_game;
+struct retro_game_geometry;
 
 namespace LIBRETRO
 {
-  class CVideoGeometry;
-
-  class CVideoStream
+  class CVideoGeometry
   {
   public:
-    CVideoStream();
+    CVideoGeometry() = default;
+    CVideoGeometry(CVideoGeometry&) = default;
+    CVideoGeometry(const retro_game_geometry &geometry);
 
-    void Initialize(CHelper_libKODI_game* frontend);
-    void Deinitialize();
+    void UpdateVideoGeometry(const retro_game_geometry &geometry);
 
-    void SetGeometry(const CVideoGeometry &geometry);
-
-    void AddFrame(const uint8_t* data, unsigned int size, unsigned int width, unsigned int height, GAME_PIXEL_FORMAT format, GAME_VIDEO_ROTATION rotation);
+    unsigned int NominalWidth() const { return m_nominalWidth; }
+    unsigned int NominalHeight() const { return m_nominalHeight; }
+    unsigned int MaxWidth() const { return m_maxWidth; }
+    unsigned int MaxHeight() const { return m_maxHeight; }
+    float AspectRatio() const { return m_aspectRatio; }
 
   private:
-    void CloseStream();
-
-    CHelper_libKODI_game* m_frontend;
-
-    std::unique_ptr<CVideoGeometry> m_geometry;
-    void *m_stream = nullptr;
-    GAME_PIXEL_FORMAT m_format = GAME_PIXEL_FORMAT_UNKNOWN; // Guard against libretro changing formats
+    unsigned int m_nominalWidth = 0;
+    unsigned int m_nominalHeight = 0;
+    unsigned int m_maxWidth = 0;
+    unsigned int m_maxHeight = 0;
+    float m_aspectRatio = 0.0f;
   };
 }

@@ -70,8 +70,7 @@ void CFrontendBridge::VideoRefresh(const void* data, unsigned int width, unsigne
 {
   if (data == RETRO_HW_FRAME_BUFFER_VALID)
   {
-    if (CLibretroEnvironment::Get().GetFrontend())
-      CLibretroEnvironment::Get().GetFrontend()->RenderFrame();
+    //! @todo Submit hardware framebuffer for rendering
   }
   else if (data == nullptr)
   {
@@ -204,7 +203,8 @@ uintptr_t CFrontendBridge::HwGetCurrentFramebuffer(void)
   if (!CLibretroEnvironment::Get().GetFrontend())
     return 0;
 
-  return CLibretroEnvironment::Get().GetFrontend()->HwGetCurrentFramebuffer();
+  //! @todo Get current framebuffer from frontend
+  return 0;
 }
 
 retro_proc_address_t CFrontendBridge::HwGetProcAddress(const char *sym)

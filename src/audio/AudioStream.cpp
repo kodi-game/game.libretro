@@ -27,40 +27,49 @@ using namespace LIBRETRO;
 
 CAudioStream::CAudioStream() :
   m_frontend(nullptr),
-  m_singleFrameAudio(this),
-  m_bAudioOpen(false)
+  m_singleFrameAudio(this)
 {
 }
 
 void CAudioStream::Initialize(CHelper_libKODI_game* frontend)
 {
   m_frontend = frontend;
-  m_bAudioOpen = false;
 }
 
 void CAudioStream::Deinitialize()
 {
-  if (m_bAudioOpen)
-    m_frontend->CloseStream(GAME_STREAM_AUDIO);
+  if (m_stream != nullptr)
+  {
+    m_frontend->CloseStream(m_stream);
+    m_stream = nullptr;
+  }
 
   m_frontend = nullptr;
-  m_bAudioOpen = false;
 }
 
 void CAudioStream::AddFrames_S16NE(const uint8_t* data, unsigned int size)
 {
-  if (m_frontend && !m_bAudioOpen)
+  if (m_frontend && m_stream == nullptr)
   {
-    const double samplerate = CLibretroEnvironment::Get().GetSystemInfo().timing.sample_rate;
+    static const GAME_AUDIO_CHANNEL channelMap[] = { GAME_CH_FL, GAME_CH_FR, GAME_CH_NULL };
 
-    if (samplerate)
-    {
-      static const GAME_AUDIO_CHANNEL channelMap[] = { GAME_CH_FL, GAME_CH_FR, GAME_CH_NULL };
-      if (m_frontend->OpenPCMStream(GAME_PCM_FORMAT_S16NE, channelMap))
-        m_bAudioOpen = true;
-    }
+    game_stream_properties properties{};
+
+    properties.type = GAME_STREAM_AUDIO;
+    properties.audio.format = GAME_PCM_FORMAT_S16NE;
+    properties.audio.channel_map = channelMap;
+
+    m_stream = m_frontend->OpenStream(properties);
   }
 
-  if (m_bAudioOpen)
-    m_frontend->AddStreamData(GAME_STREAM_AUDIO, data, size);
+  if (m_stream != nullptr)
+  {
+    game_stream_packet packet{};
+
+    packet.type = GAME_STREAM_AUDIO;
+    packet.audio.data = data;
+    packet.audio.size = size;
+
+    m_frontend->AddStreamData(m_stream, packet);
+  }
 }

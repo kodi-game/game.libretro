@@ -27,6 +27,7 @@
 #include "input/InputManager.h"
 #include "log/Log.h"
 #include "settings/Settings.h"
+#include "video/VideoGeometry.h"
 
 #include "libKODI_game.h"
 #include "libXBMC_addon.h"
@@ -89,11 +90,22 @@ void CLibretroEnvironment::Initialize(ADDON::CHelper_libXBMC_addon* xbmc,
 
 void CLibretroEnvironment::Deinitialize()
 {
+  CloseStreams();
+
   m_resources.Deinitialize();
   m_settings.Deinitialize();
+}
 
+void CLibretroEnvironment::CloseStreams()
+{
   m_videoStream.Deinitialize();
   m_audioStream.Deinitialize();
+}
+
+void CLibretroEnvironment::UpdateVideoGeometry(const retro_game_geometry &geometry)
+{
+  CVideoGeometry videoGeometry(geometry);
+  m_videoStream.SetGeometry(videoGeometry);
 }
 
 void CLibretroEnvironment::SetSetting(const std::string& name, const std::string& value)
@@ -210,6 +222,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       retro_hw_render_callback* typedData = reinterpret_cast<retro_hw_render_callback*>(data);
       if (typedData)
       {
+        /*! @todo
         // Translate struct and report hw info to frontend
         game_hw_info hw_info;
         hw_info.context_type       = LibretroTranslator::GetHWContextType(typedData->context_type);
@@ -229,6 +242,8 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
         // Expose frontend callbacks to libretro client
         typedData->get_current_framebuffer = CFrontendBridge::HwGetCurrentFramebuffer;
         typedData->get_proc_address        = CFrontendBridge::HwGetProcAddress;
+        */
+        return false;
       }
       break;
     }
@@ -410,14 +425,14 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       if (!typedData)
         return false;
 
-      // Translate struct
-      m_systemInfo.geometry.base_width   = typedData->geometry.base_width;
-      m_systemInfo.geometry.base_height  = typedData->geometry.base_height;
-      m_systemInfo.geometry.max_width    = typedData->geometry.max_width;
-      m_systemInfo.geometry.max_height   = typedData->geometry.max_height;
-      m_systemInfo.geometry.aspect_ratio = typedData->geometry.aspect_ratio;
-      m_systemInfo.timing.fps            = typedData->timing.fps;
-      m_systemInfo.timing.sample_rate    = typedData->timing.sample_rate;
+      CVideoGeometry videoGeometry(typedData->geometry);
+      m_videoStream.SetGeometry(videoGeometry);
+
+      //! @todo Reopen streams if geometry changes
+
+      //! @todo Report updating timing info to frontend
+      const double fps = typedData->timing.fps;
+      const double sampleRate = typedData->timing.sample_rate;
 
       break;
     }

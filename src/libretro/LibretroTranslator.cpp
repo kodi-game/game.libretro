@@ -66,9 +66,9 @@ GAME_VIDEO_ROTATION LibretroTranslator::GetVideoRotation(unsigned int rotation)
   switch (rotation)
   {
   case 0: return GAME_VIDEO_ROTATION_0;
-  case 1: return GAME_VIDEO_ROTATION_90;
-  case 2: return GAME_VIDEO_ROTATION_180;
-  case 3: return GAME_VIDEO_ROTATION_270;
+  case 1: return GAME_VIDEO_ROTATION_90_CCW;
+  case 2: return GAME_VIDEO_ROTATION_180_CCW;
+  case 3: return GAME_VIDEO_ROTATION_270_CCW;
   default:
     break;
   }

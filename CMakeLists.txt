@@ -41,6 +41,7 @@ set(LIBRETRO_SOURCES src/client.cpp
                      src/settings/Settings.cpp
                      src/settings/SettingsGenerator.cpp
                      src/utils/PathUtils.cpp
+                     src/video/VideoGeometry.cpp
                      src/video/VideoStream.cpp)
 
 set(LIBRETRO_HEADERS src/GameInfoLoader.h
@@ -77,6 +78,7 @@ set(LIBRETRO_HEADERS src/GameInfoLoader.h
                      src/settings/Settings.h
                      src/settings/SettingsTypes.h
                      src/utils/PathUtils.h
+                     src/video/VideoGeometry.h
                      src/video/VideoStream.h)
 
 build_addon(${PROJECT_NAME} LIBRETRO DEPLIBS)

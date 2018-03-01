@@ -19,6 +19,7 @@
  */
 
 #include "VideoStream.h"
+#include "VideoGeometry.h"
 #include "libretro/LibretroEnvironment.h"
 
 #include "libKODI_game.h"
@@ -27,54 +28,77 @@ using namespace LIBRETRO;
 
 CVideoStream::CVideoStream() :
   m_frontend(nullptr),
-  m_bVideoOpen(false),
-  m_format(GAME_PIXEL_FORMAT_UNKNOWN),
-  m_width(0),
-  m_height(0)
+  m_geometry(new CVideoGeometry)
 {
 }
 
 void CVideoStream::Initialize(CHelper_libKODI_game* frontend)
 {
   m_frontend = frontend;
-  m_bVideoOpen = false;
-  m_format = GAME_PIXEL_FORMAT_UNKNOWN;
-  m_width = 0;
-  m_height = 0;
 }
 
 void CVideoStream::Deinitialize()
 {
-  if (m_bVideoOpen)
-    m_frontend->CloseStream(GAME_STREAM_VIDEO);
+  CloseStream();
 
   m_frontend = nullptr;
-  m_bVideoOpen = false;
+}
+
+void CVideoStream::SetGeometry(const CVideoGeometry &geometry)
+{
+  // Close stream so it can be reopened with the updated geometry
+  CloseStream();
+
+  *m_geometry = geometry;
 }
 
 void CVideoStream::AddFrame(const uint8_t* data, unsigned int size, unsigned int width, unsigned int height, GAME_PIXEL_FORMAT format, GAME_VIDEO_ROTATION rotation)
 {
-  if (m_frontend)
-  {
-    if (m_format != format || m_width != width || m_height != height || rotation != m_rotation)
-    {
-      if (m_bVideoOpen)
-      {
-        m_frontend->CloseStream(GAME_STREAM_VIDEO);
-        m_bVideoOpen = false;
-      }
+  if (m_frontend == nullptr)
+    return;
 
-      if (m_frontend->OpenPixelStream(format, width, height, rotation))
-      {
-        m_bVideoOpen = true;
-        m_format = format;
-        m_width = width;
-        m_height = height;
-        m_rotation = rotation;
-      }
-    }
+  if (m_format != format)
+    CloseStream();
+
+  if (m_stream == nullptr)
+  {
+    game_stream_properties properties{};
+
+    properties.type = GAME_STREAM_VIDEO;
+    properties.video.format = format;
+    properties.video.nominal_width = m_geometry->NominalWidth();
+    properties.video.nominal_height = m_geometry->NominalHeight();
+    properties.video.max_width = m_geometry->MaxWidth();
+    properties.video.max_height = m_geometry->MaxHeight();
+    properties.video.aspect_ratio = m_geometry->AspectRatio();
+
+    m_stream = m_frontend->OpenStream(properties);
+
+    // Save format to detect unwanted changes
+    m_format = format;
   }
 
-  if (m_bVideoOpen)
-    m_frontend->AddStreamData(GAME_STREAM_VIDEO, data, size);
+  if (m_stream != nullptr)
+  {
+    game_stream_packet packet{};
+
+    packet.type = GAME_STREAM_VIDEO;
+    packet.video.width = width;
+    packet.video.height = height;
+    packet.video.rotation = rotation;
+    packet.video.data = data;
+    packet.video.size = size;
+
+    m_frontend->AddStreamData(m_stream, packet);
+  }
+}
+
+void CVideoStream::CloseStream()
+{
+  if (m_stream != nullptr)
+  {
+    m_frontend->CloseStream(m_stream);
+    m_stream = nullptr;
+    m_format = GAME_PIXEL_FORMAT_UNKNOWN;
+  }
 }
