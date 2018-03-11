@@ -57,8 +57,8 @@ namespace LIBRETRO
     CVideoStream& Video(void) { return m_videoStream; }
     CAudioStream& Audio(void) { return m_audioStream; }
 
-    game_system_av_info GetSystemInfo(void) const { return m_systemInfo; }
-    void UpdateSystemInfo(game_system_av_info info) { m_systemInfo = info; }
+    game_system_timing GetSystemInfo(void) const { return m_systemInfo; }
+    void UpdateSystemInfo(game_system_timing info) { m_systemInfo = info; }
 
     /*!
      * Returns the pixel format set by the libretro core. Instead of forwarding
@@ -88,7 +88,7 @@ namespace LIBRETRO
     CVideoStream                  m_videoStream;
     CAudioStream                  m_audioStream;
 
-    game_system_av_info m_systemInfo;
+    game_system_timing m_systemInfo;
     GAME_PIXEL_FORMAT   m_videoFormat;
     GAME_VIDEO_ROTATION m_videoRotation;
 
