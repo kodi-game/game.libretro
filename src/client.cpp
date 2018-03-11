@@ -315,7 +315,7 @@ GAME_ERROR UnloadGame(void)
   return error;
 }
 
-GAME_ERROR GetGameInfo(game_system_av_info* info)
+GAME_ERROR GetGameInfo(game_system_timing* info)
 {
   if (!CLIENT)
     return GAME_ERROR_FAILED;
