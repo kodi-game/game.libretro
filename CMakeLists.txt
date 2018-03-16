@@ -80,3 +80,5 @@ set(LIBRETRO_HEADERS src/GameInfoLoader.h
                      src/video/VideoStream.h)
 
 build_addon(${PROJECT_NAME} LIBRETRO DEPLIBS)
+
+include(CPack)
