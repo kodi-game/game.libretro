@@ -1,0 +1,21 @@
+Source: kodi-game-libretro
+Priority: extra
+Maintainer: Garrett Brown <themagnificentmrb@gmail.com>
+Build-Depends: debhelper (>= 9.0.0), cmake, libkodiplatform-dev (>= 17.0.0),
+               kodi-addon-dev
+Standards-Version: 3.9.4
+Section: libs
+
+Package: kodi-game-libretro
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Libretro wrapper for Kodi's Game API
+  Libretro wrapper for Kodi's Game API
+
+Package: kodi-game-libretro-dbg
+Section: debug
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: debug symbols for Libretro wrapper for Kodi's Game API
+  debug symbols for Libretro wrapper for Kodi's Game API
