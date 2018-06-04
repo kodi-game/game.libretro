@@ -243,7 +243,7 @@ bool CInputManager::InputEvent(const game_input_event& event)
     {
       // Resize devices if necessary
       if (port >= m_controllers.size())
-        m_controllers.resize(port);
+        m_controllers.resize(port + 1);
 
       if (m_controllers[port])
         bHandled = m_controllers[port]->Input().InputEvent(event);
