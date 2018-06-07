@@ -26,10 +26,13 @@
 
 #include "kodi_game_types.h"
 
+#include <memory>
 #include <string>
 
 namespace ADDON { class CHelper_libXBMC_addon; }
 class CHelper_libKODI_game;
+
+struct retro_game_geometry;
 
 namespace LIBRETRO
 {
@@ -57,8 +60,9 @@ namespace LIBRETRO
     CVideoStream& Video(void) { return m_videoStream; }
     CAudioStream& Audio(void) { return m_audioStream; }
 
-    game_system_av_info GetSystemInfo(void) const { return m_systemInfo; }
-    void UpdateSystemInfo(game_system_av_info info) { m_systemInfo = info; }
+    void CloseStreams();
+
+    void UpdateVideoGeometry(const retro_game_geometry &geometry);
 
     /*!
      * Returns the pixel format set by the libretro core. Instead of forwarding
@@ -76,6 +80,11 @@ namespace LIBRETRO
 
     std::string GetResourcePath(const char* relPath);
 
+    /*!
+     * \brief Called after game has been run for a frame
+     */
+    void OnFrameEnd();
+
     bool EnvironmentCallback(unsigned cmd, void* data);
 
   private:
@@ -88,7 +97,6 @@ namespace LIBRETRO
     CVideoStream                  m_videoStream;
     CAudioStream                  m_audioStream;
 
-    game_system_av_info m_systemInfo;
     GAME_PIXEL_FORMAT   m_videoFormat;
     GAME_VIDEO_ROTATION m_videoRotation;
 

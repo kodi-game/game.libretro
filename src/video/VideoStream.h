@@ -21,10 +21,14 @@
 
 #include "kodi_game_types.h"
 
+#include <memory>
+
 class CHelper_libKODI_game;
 
 namespace LIBRETRO
 {
+  class CVideoGeometry;
+
   class CVideoStream
   {
   public:
@@ -33,15 +37,30 @@ namespace LIBRETRO
     void Initialize(CHelper_libKODI_game* frontend);
     void Deinitialize();
 
+    void SetGeometry(const CVideoGeometry &geometry);
+
+    void EnableHardwareRendering(const game_stream_hw_framebuffer_properties &properties);
+
+    uintptr_t GetHwFramebuffer();
+    bool GetSwFramebuffer(unsigned int width, unsigned int height, GAME_PIXEL_FORMAT requestedFormat, game_stream_sw_framebuffer_buffer &framebuffer);
+
     void AddFrame(const uint8_t* data, unsigned int size, unsigned int width, unsigned int height, GAME_PIXEL_FORMAT format, GAME_VIDEO_ROTATION rotation);
+    void DupeFrame() { } // Not supported
+    void RenderHwFrame();
+
+    void OnFrameEnd();
 
   private:
+    void CloseStream();
+
+    // Initialization parameters
     CHelper_libKODI_game* m_frontend;
 
-    bool              m_bVideoOpen;
-    GAME_PIXEL_FORMAT m_format;
-    unsigned int      m_width;
-    unsigned int      m_height;
-    GAME_VIDEO_ROTATION m_rotation;
+    // Stream properties
+    void *m_stream = nullptr;
+    std::unique_ptr<CVideoGeometry> m_geometry;
+    GAME_STREAM_TYPE m_streamType = GAME_STREAM_UNKNOWN;
+    GAME_PIXEL_FORMAT m_format = GAME_PIXEL_FORMAT_UNKNOWN; // Guard against libretro changing formats
+    std::unique_ptr<game_stream_buffer> m_framebuffer;
   };
 }

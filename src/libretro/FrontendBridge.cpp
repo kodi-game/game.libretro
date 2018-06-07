@@ -70,12 +70,12 @@ void CFrontendBridge::VideoRefresh(const void* data, unsigned int width, unsigne
 {
   if (data == RETRO_HW_FRAME_BUFFER_VALID)
   {
-    if (CLibretroEnvironment::Get().GetFrontend())
-      CLibretroEnvironment::Get().GetFrontend()->RenderFrame();
+    CLibretroEnvironment::Get().Video().RenderHwFrame();
   }
   else if (data == nullptr)
   {
     // Libretro is sending a frame dupe command
+    CLibretroEnvironment::Get().Video().DupeFrame();
   }
   else
   {
@@ -204,7 +204,7 @@ uintptr_t CFrontendBridge::HwGetCurrentFramebuffer(void)
   if (!CLibretroEnvironment::Get().GetFrontend())
     return 0;
 
-  return CLibretroEnvironment::Get().GetFrontend()->HwGetCurrentFramebuffer();
+  return CLibretroEnvironment::Get().Video().GetHwFramebuffer();
 }
 
 retro_proc_address_t CFrontendBridge::HwGetProcAddress(const char *sym)

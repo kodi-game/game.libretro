@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2016 Team Kodi
+ *      Copyright (C) 2018 Team Kodi
  *      http://kodi.tv
  *
  *  This Program is free software; you can redistribute it and/or modify
@@ -19,30 +19,30 @@
  */
 #pragma once
 
-#include "SingleFrameAudio.h"
-
-#include "kodi_game_types.h"
-
-class CHelper_libKODI_game;
+struct retro_game_geometry;
 
 namespace LIBRETRO
 {
-  class CAudioStream
+  class CVideoGeometry
   {
   public:
-    CAudioStream();
+    CVideoGeometry() = default;
+    CVideoGeometry(CVideoGeometry&) = default;
+    CVideoGeometry(const retro_game_geometry &geometry);
 
-    void Initialize(CHelper_libKODI_game* frontend);
-    void Deinitialize();
+    void UpdateVideoGeometry(const retro_game_geometry &geometry);
 
-    void AddFrame_S16NE(int16_t left, int16_t right) { m_singleFrameAudio.AddFrame(left, right); }
-
-    void AddFrames_S16NE(const uint8_t* data, unsigned int size);
+    unsigned int NominalWidth() const { return m_nominalWidth; }
+    unsigned int NominalHeight() const { return m_nominalHeight; }
+    unsigned int MaxWidth() const { return m_maxWidth; }
+    unsigned int MaxHeight() const { return m_maxHeight; }
+    float AspectRatio() const { return m_aspectRatio; }
 
   private:
-    CHelper_libKODI_game* m_frontend;
-    CSingleFrameAudio     m_singleFrameAudio;
-
-    void* m_stream = nullptr;
+    unsigned int m_nominalWidth = 0;
+    unsigned int m_nominalHeight = 0;
+    unsigned int m_maxWidth = 0;
+    unsigned int m_maxHeight = 0;
+    float m_aspectRatio = 0.0f;
   };
 }

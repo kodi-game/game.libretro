@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2016 Team Kodi
+ *      Copyright (C) 2018 Team Kodi
  *      http://kodi.tv
  *
  *  This Program is free software; you can redistribute it and/or modify
@@ -17,32 +17,22 @@
  *  <http://www.gnu.org/licenses/>.
  *
  */
-#pragma once
 
-#include "SingleFrameAudio.h"
+#include "VideoGeometry.h"
+#include "libretro/libretro.h"
 
-#include "kodi_game_types.h"
+using namespace LIBRETRO;
 
-class CHelper_libKODI_game;
-
-namespace LIBRETRO
+CVideoGeometry::CVideoGeometry(const retro_game_geometry &geometry)
 {
-  class CAudioStream
-  {
-  public:
-    CAudioStream();
+  UpdateVideoGeometry(geometry);
+}
 
-    void Initialize(CHelper_libKODI_game* frontend);
-    void Deinitialize();
-
-    void AddFrame_S16NE(int16_t left, int16_t right) { m_singleFrameAudio.AddFrame(left, right); }
-
-    void AddFrames_S16NE(const uint8_t* data, unsigned int size);
-
-  private:
-    CHelper_libKODI_game* m_frontend;
-    CSingleFrameAudio     m_singleFrameAudio;
-
-    void* m_stream = nullptr;
-  };
+void CVideoGeometry::UpdateVideoGeometry(const retro_game_geometry &geometry)
+{
+  m_nominalWidth = geometry.base_width;
+  m_nominalHeight = geometry.base_height;
+  m_maxWidth = geometry.max_width;
+  m_maxHeight = geometry.max_height;
+  m_aspectRatio = geometry.aspect_ratio;
 }

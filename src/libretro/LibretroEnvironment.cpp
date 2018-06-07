@@ -27,6 +27,7 @@
 #include "input/InputManager.h"
 #include "log/Log.h"
 #include "settings/Settings.h"
+#include "video/VideoGeometry.h"
 
 #include "libKODI_game.h"
 #include "libXBMC_addon.h"
@@ -89,11 +90,22 @@ void CLibretroEnvironment::Initialize(ADDON::CHelper_libXBMC_addon* xbmc,
 
 void CLibretroEnvironment::Deinitialize()
 {
+  CloseStreams();
+
   m_resources.Deinitialize();
   m_settings.Deinitialize();
+}
 
+void CLibretroEnvironment::CloseStreams()
+{
   m_videoStream.Deinitialize();
   m_audioStream.Deinitialize();
+}
+
+void CLibretroEnvironment::UpdateVideoGeometry(const retro_game_geometry &geometry)
+{
+  CVideoGeometry videoGeometry(geometry);
+  m_videoStream.SetGeometry(videoGeometry);
 }
 
 void CLibretroEnvironment::SetSetting(const std::string& name, const std::string& value)
@@ -104,6 +116,11 @@ void CLibretroEnvironment::SetSetting(const std::string& name, const std::string
 std::string CLibretroEnvironment::GetResourcePath(const char* relPath)
 {
   return m_resources.GetFullPath(relPath);
+}
+
+void CLibretroEnvironment::OnFrameEnd()
+{
+  m_videoStream.OnFrameEnd();
 }
 
 bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
@@ -211,7 +228,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       if (typedData)
       {
         // Translate struct and report hw info to frontend
-        game_hw_info hw_info;
+        game_stream_hw_framebuffer_properties hw_info;
         hw_info.context_type       = LibretroTranslator::GetHWContextType(typedData->context_type);
         hw_info.depth              = typedData->depth;
         hw_info.stencil            = typedData->stencil;
@@ -220,7 +237,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
         hw_info.version_minor      = typedData->version_minor;
         hw_info.cache_context      = typedData->cache_context;
         hw_info.debug_context      = typedData->debug_context;
-        m_frontend->EnableHardwareRendering(&hw_info);
+        m_videoStream.EnableHardwareRendering(hw_info);
 
         // Store callbacks from libretro client
         m_clientBridge->SetHwContextReset(typedData->context_reset);
@@ -410,14 +427,14 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       if (!typedData)
         return false;
 
-      // Translate struct
-      m_systemInfo.geometry.base_width   = typedData->geometry.base_width;
-      m_systemInfo.geometry.base_height  = typedData->geometry.base_height;
-      m_systemInfo.geometry.max_width    = typedData->geometry.max_width;
-      m_systemInfo.geometry.max_height   = typedData->geometry.max_height;
-      m_systemInfo.geometry.aspect_ratio = typedData->geometry.aspect_ratio;
-      m_systemInfo.timing.fps            = typedData->timing.fps;
-      m_systemInfo.timing.sample_rate    = typedData->timing.sample_rate;
+      CVideoGeometry videoGeometry(typedData->geometry);
+      m_videoStream.SetGeometry(videoGeometry);
+
+      //! @todo Reopen streams if geometry changes
+
+      //! @todo Report updating timing info to frontend
+      const double fps = typedData->timing.fps;
+      const double sampleRate = typedData->timing.sample_rate;
 
       break;
     }
@@ -495,8 +512,24 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     retro_framebuffer* typedData = reinterpret_cast<retro_framebuffer*>(data);
     if (typedData)
     {
-      // Not implemented
-      return false;
+      // Get framebuffer params from core
+      const unsigned int accessFlags = typedData->access_flags;
+      const unsigned int width = typedData->width;
+      const unsigned int height = typedData->height;
+
+      // Reading framebuffers not supported
+      if (accessFlags & RETRO_MEMORY_ACCESS_READ)
+        return false;
+
+      game_stream_sw_framebuffer_buffer framebuffer{};
+      if (!m_videoStream.GetSwFramebuffer(width, height, m_videoFormat, framebuffer))
+        return false;
+
+      // Report framebuffer info to frontend
+      typedData->data = framebuffer.data;
+      typedData->pitch = framebuffer.size / height;
+      typedData->format = LibretroTranslator::GetLibretroVideoFormat(framebuffer.format);
+      typedData->memory_flags = 0;
     }
     break;
   }

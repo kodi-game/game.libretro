@@ -50,6 +50,13 @@ namespace LIBRETRO
     static GAME_PIXEL_FORMAT GetVideoFormat(retro_pixel_format format);
 
     /*!
+     * \brief Translate video format (Game API to libretro).
+     * \param format The video format to translate.
+     * \return Translated video format.
+     */
+    static retro_pixel_format GetLibretroVideoFormat(GAME_PIXEL_FORMAT format);
+
+    /*!
      * \brief Translate video format (libretro to string suitable for logging)
      * \param format The video format to translate
      * \return String representation of video format
