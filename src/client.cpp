@@ -433,24 +433,34 @@ size_t CGameLibRetro::SerializeSize()
   return m_client.retro_serialize_size();
 }
 
-GAME_ERROR CGameLibRetro::Serialize(uint8_t* data, size_t size)
+GAME_ERROR CGameLibRetro::Serialize(const game_stream_memory_buffer &buffer)
 {
-  if (data == nullptr)
+  if (buffer.data == nullptr)
     return GAME_ERROR_INVALID_PARAMETERS;
 
-  bool result = m_client.retro_serialize(data, size);
+  bool result = m_client.retro_serialize(buffer.data, buffer.size);
 
   return result ? GAME_ERROR_NO_ERROR : GAME_ERROR_FAILED;
 }
 
-GAME_ERROR CGameLibRetro::Deserialize(const uint8_t* data, size_t size)
+GAME_ERROR CGameLibRetro::Deserialize(const game_stream_memory_packet &packet)
 {
-  if (data == nullptr)
+  if (packet.data == nullptr)
     return GAME_ERROR_INVALID_PARAMETERS;
 
-  bool result = m_client.retro_unserialize(data, size);
+  bool result = m_client.retro_unserialize(packet.data, packet.size);
 
   return result ? GAME_ERROR_NO_ERROR : GAME_ERROR_FAILED;
+}
+
+GAME_ERROR CGameLibRetro::EnableMemoryStream()
+{
+  return GAME_ERROR_NOT_IMPLEMENTED; // TODO
+}
+
+void CGameLibRetro::DisableMemoryStream()
+{
+  // TODO
 }
 
 GAME_ERROR CGameLibRetro::CheatReset()
