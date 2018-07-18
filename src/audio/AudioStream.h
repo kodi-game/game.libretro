@@ -23,6 +23,8 @@
 
 #include "kodi_game_types.h"
 
+#include <stdint.h>
+
 class CHelper_libKODI_game;
 
 namespace LIBRETRO
