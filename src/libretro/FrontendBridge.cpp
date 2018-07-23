@@ -116,7 +116,7 @@ int16_t CFrontendBridge::InputState(unsigned int port, unsigned int device, unsi
   switch (device)
   {
   case RETRO_DEVICE_JOYPAD:
-  //case RETRO_DEVICE_KEYBOARD: // TODO
+  case RETRO_DEVICE_KEYBOARD:
     inputState = CInputManager::Get().ButtonState(device, port, id) ? 1 : 0;
     break;
 
