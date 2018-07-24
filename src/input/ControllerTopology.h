@@ -105,6 +105,8 @@ namespace LIBRETRO
 
     static PortPtr CreateDefaultPort(const std::string &acceptedController);
 
+    static void SplitAddress(const std::string &address, std::string &nodeId, std::string &remainingAddress);
+
     std::vector<PortPtr> m_ports;
     int m_playerLimit = -1;
   };

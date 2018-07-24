@@ -34,6 +34,8 @@ using namespace LIBRETRO;
 
 #define TOPOLOGY_XML          "topology.xml"
 
+#define ADDRESS_SEPARATOR  '/'
+
 CControllerTopology& CControllerTopology::GetInstance()
 {
   static CControllerTopology instance;
@@ -147,17 +149,7 @@ int CControllerTopology::GetPortIndex(const PortPtr &port, const std::string &po
 
   std::string portId;
   std::string remainingAddress;
-
-  size_t pos = portAddress.find('/');
-  if (pos == std::string::npos)
-  {
-    portId = portAddress;
-  }
-  else
-  {
-    portId = portAddress.substr(0, pos);
-    remainingAddress = portAddress.substr(pos + 1);
-  }
+  SplitAddress(portAddress, portId, remainingAddress);
 
   if (port->portId == portId)
   {
@@ -196,17 +188,7 @@ int CControllerTopology::GetPortIndex(const ControllerPtr &controller, const std
 
   std::string portControllerId;
   std::string remainingAddress;
-
-  size_t pos = portAddress.find('/');
-  if (pos == std::string::npos)
-  {
-    portControllerId = portAddress;
-  }
-  else
-  {
-    portControllerId = portAddress.substr(0, pos);
-    remainingAddress = portAddress.substr(pos + 1);
-  }
+  SplitAddress(portAddress, portControllerId, remainingAddress);
 
   if (controller->controllerId == portControllerId)
   {
@@ -258,7 +240,7 @@ std::string CControllerTopology::GetAddress(const PortPtr &port, unsigned int po
   if (portIndex == playerCount)
   {
     // Base case
-    address = port->portId;
+    address = ADDRESS_SEPARATOR + port->portId;
   }
   else if (!port->activeId.empty())
   {
@@ -276,7 +258,7 @@ std::string CControllerTopology::GetAddress(const PortPtr &port, unsigned int po
       const ControllerPtr &controller = *it;
       std::string controllerAddress = GetAddress(controller, portIndex, playerCount);
       if (!controllerAddress.empty())
-        address = port->portId + '/' + controllerAddress;
+        address = ADDRESS_SEPARATOR + port->portId + controllerAddress;
     }
   }
 
@@ -295,7 +277,7 @@ std::string CControllerTopology::GetAddress(const ControllerPtr &controller, uns
     std::string portAddress = GetAddress(port, portIndex, playerCount);
     if (!portAddress.empty())
     {
-      address = controller->controllerId + '/' + portAddress;
+      address = ADDRESS_SEPARATOR + controller->controllerId + portAddress;
       break;
     }
   }
@@ -366,17 +348,7 @@ bool CControllerTopology::SetController(const PortPtr &port, const std::string &
 
   std::string portId;
   std::string remainingAddress;
-
-  size_t pos = portAddress.find('/');
-  if (pos == std::string::npos)
-  {
-    portId = portAddress;
-  }
-  else
-  {
-    portId = portAddress.substr(0, pos);
-    remainingAddress = portAddress.substr(pos + 1);
-  }
+  SplitAddress(portAddress, portId, remainingAddress);
 
   if (port->portId == portId)
   {
@@ -423,17 +395,7 @@ bool CControllerTopology::SetController(const ControllerPtr &controller, const s
 {
   std::string portControllerId;
   std::string remainingAddress;
-
-  size_t pos = portAddress.find('/');
-  if (pos == std::string::npos)
-  {
-    portControllerId = portAddress;
-  }
-  else
-  {
-    portControllerId = portAddress.substr(0, pos);
-    remainingAddress = portAddress.substr(pos + 1);
-  }
+  SplitAddress(portAddress, portControllerId, remainingAddress);
 
   if (controller->controllerId == portControllerId)
   {
@@ -461,17 +423,7 @@ void CControllerTopology::RemoveController(const PortPtr &port, const std::strin
 {
   std::string portId;
   std::string remainingAddress;
-
-  size_t pos = portAddress.find('/');
-  if (pos == std::string::npos)
-  {
-    portId = portAddress;
-  }
-  else
-  {
-    portId = portAddress.substr(0, pos);
-    remainingAddress = portAddress.substr(pos + 1);
-  }
+  SplitAddress(portAddress, portId, remainingAddress);
 
   if (port->portId == portId)
   {
@@ -504,17 +456,7 @@ void CControllerTopology::RemoveController(const ControllerPtr &controller, cons
 {
   std::string portControllerId;
   std::string remainingAddress;
-
-  size_t pos = portAddress.find('/');
-  if (pos == std::string::npos)
-  {
-    portControllerId = portAddress;
-  }
-  else
-  {
-    portControllerId = portAddress.substr(0, pos);
-    remainingAddress = portAddress.substr(pos + 1);
-  }
+  SplitAddress(portAddress, portControllerId, remainingAddress);
 
   if (controller->controllerId == portControllerId)
   {
@@ -707,4 +649,22 @@ CControllerTopology::PortPtr CControllerTopology::CreateDefaultPort(const std::s
   port->accepts.emplace_back(new Controller{ acceptedController });
 
   return port;
+}
+
+void CControllerTopology::SplitAddress(const std::string &address, std::string &nodeId, std::string &remainingAddress)
+{
+  // Start searching after leading /
+  size_t pos = address.find(ADDRESS_SEPARATOR, 1);
+  if (pos == std::string::npos)
+  {
+    // Skip leading / to extract node ID
+    nodeId = address.substr(1);
+    remainingAddress.clear();
+  }
+  else
+  {
+    // Skip leading / to extract node ID
+    nodeId = address.substr(1, pos);
+    remainingAddress = address.substr(pos);
+  }
 }
