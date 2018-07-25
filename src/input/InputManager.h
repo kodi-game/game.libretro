@@ -20,11 +20,14 @@
 #pragma once
 
 #include "InputTypes.h"
+#include "ControllerLayout.h"
 #include "LibretroDevice.h"
 
 #include "kodi_game_types.h"
 #include "p8-platform/threads/mutex.h"
 
+#include <map>
+#include <memory>
 #include <stdint.h>
 #include <string>
 #include <vector>
@@ -52,13 +55,18 @@ namespace LIBRETRO
     libretro_device_caps_t GetDeviceCaps(void) const;
 
     /*!
+     * \brief
+     */
+    void SetControllerLayouts(const std::vector<game_controller_layout> &controllers);
+
+    /*!
      * \brief Enable the keyboard
      *
-     * \param controller The keyboard's controller profile
+     * \param controllerId The keyboard's controller ID
      *
      * \return True if keyboard was enabled, false otherwise
      */
-    bool EnableKeyboard(const game_controller &controller);
+    bool EnableKeyboard(const std::string &controller);
 
     /*!
      * \brief Disable the keyboard and free any resources it held
@@ -68,11 +76,11 @@ namespace LIBRETRO
     /*!
      * \brief Enable mouse input
      *
-     * \param controller The mouse's controller profile
+     * \param controllerId The mouse's controller ID
      *
      * \return True if mouse input was enabled, false otherwise
      */
-    bool EnableMouse(const game_controller &controller);
+    bool EnableMouse(const std::string &controllerId);
 
     /*!
      * \brief Disable the mouse and free any resources it held
@@ -82,7 +90,7 @@ namespace LIBRETRO
     /*!
      * \brief Called when a device has been connected to a port
      */
-    libretro_device_t ConnectController(const std::string &address, const game_controller &controller);
+    libretro_device_t ConnectController(const std::string &address, const std::string &controllerId);
 
     /*!
      * \brief Called when a device has been disconnected from a port
@@ -149,5 +157,6 @@ namespace LIBRETRO
     DevicePtr m_keyboard;
     DevicePtr m_mouse;
     DeviceVector m_controllers;
+    std::map<std::string, std::unique_ptr<CControllerLayout>> m_controllerLayouts;
   };
 }

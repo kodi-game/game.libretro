@@ -433,14 +433,26 @@ void FreeTopology(game_input_topology* topology)
   CControllerTopology::FreeTopology(topology);
 }
 
-bool EnableKeyboard(bool enable, const game_controller* controller)
+void SetControllerLayouts(const game_controller_layout* controllers, unsigned int controller_count)
+{
+  if (controllers == nullptr)
+    return;
+
+  std::vector<game_controller_layout> controllerStructs;
+  for (unsigned int i = 0; i < controller_count; i++)
+    controllerStructs.emplace_back(controllers[i]);
+
+  CInputManager::Get().SetControllerLayouts(controllerStructs);
+}
+
+bool EnableKeyboard(bool enable, const char* controller_id)
 {
   bool bSuccess = false;
 
   if (enable)
   {
-    if (controller != nullptr)
-      bSuccess = CInputManager::Get().EnableKeyboard(*controller);
+    if (controller_id != nullptr)
+      bSuccess = CInputManager::Get().EnableKeyboard(controller_id);
   }
   else
   {
@@ -451,14 +463,14 @@ bool EnableKeyboard(bool enable, const game_controller* controller)
   return bSuccess;
 }
 
-bool EnableMouse(bool enable, const game_controller* controller)
+bool EnableMouse(bool enable, const char* controller_id)
 {
   bool bSuccess = false;
 
   if (enable)
   {
-    if (controller != nullptr)
-      bSuccess = CInputManager::Get().EnableMouse(*controller);
+    if (controller_id != nullptr)
+      bSuccess = CInputManager::Get().EnableMouse(controller_id);
   }
   else
   {
@@ -469,7 +481,7 @@ bool EnableMouse(bool enable, const game_controller* controller)
   return bSuccess;
 }
 
-bool ConnectController(bool connect, const char *port_address, const game_controller* controller)
+bool ConnectController(bool connect, const char *port_address, const char* controller_id)
 {
   if (port_address == nullptr)
     return false;
@@ -479,10 +491,10 @@ bool ConnectController(bool connect, const char *port_address, const game_contro
 
   if (connect)
   {
-    if (controller == nullptr || controller->controller_id == nullptr)
+    if (controller_id == nullptr)
       return false;
 
-    strController = controller->controller_id;
+    strController = controller_id;
   }
 
   const int port = CInputManager::Get().GetPortIndex(strPortAddress);
@@ -496,7 +508,7 @@ bool ConnectController(bool connect, const char *port_address, const game_contro
 
     if (connect)
     {
-      device = CInputManager::Get().ConnectController(strPortAddress, *controller);
+      device = CInputManager::Get().ConnectController(strPortAddress, controller_id);
     }
     else
     {

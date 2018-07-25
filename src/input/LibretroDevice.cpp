@@ -37,16 +37,12 @@ CLibretroDevice::CLibretroDevice() :
 {
 }
 
-CLibretroDevice::CLibretroDevice(const game_controller &controller)
-  : m_type(RETRO_DEVICE_NONE),
-    m_input(new CLibretroDeviceInput(controller))
+CLibretroDevice::CLibretroDevice(const std::string &controllerId)
+  : m_controllerId(controllerId),
+    m_type(CButtonMapper::Get().GetLibretroType(controllerId)),
+    m_subclass(CButtonMapper::Get().GetSubclass(controllerId)),
+    m_input(new CLibretroDeviceInput(controllerId))
 {
-  if (controller.controller_id != nullptr)
-  {
-    m_controllerId = controller.controller_id;
-    m_type = CButtonMapper::Get().GetLibretroType(m_controllerId);
-    m_subclass = CButtonMapper::Get().GetSubclass(m_controllerId);
-  }
 }
 
 CLibretroDevice::~CLibretroDevice()

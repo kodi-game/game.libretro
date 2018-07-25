@@ -38,7 +38,7 @@ namespace LIBRETRO
   {
   public:
     CLibretroDevice();
-    CLibretroDevice(const game_controller &controller);
+    CLibretroDevice(const std::string &controller);
     ~CLibretroDevice();
 
     const std::string& ControllerID(void) const { return m_controllerId; }

@@ -54,11 +54,21 @@ libretro_device_caps_t CInputManager::GetDeviceCaps(void) const
          1 << RETRO_DEVICE_POINTER;
 }
 
-bool CInputManager::EnableKeyboard(const game_controller &controller)
+
+void CInputManager::SetControllerLayouts(const std::vector<game_controller_layout> &controllers)
+{
+  m_controllerLayouts.clear();
+
+  for (const auto &controller : controllers)
+  {
+    if (controller.controller_id != nullptr)
+      m_controllerLayouts[controller.controller_id].reset(new CControllerLayout(controller));
+  }
+}
+
+bool CInputManager::EnableKeyboard(const std::string &controllerId)
 {
   bool bSuccess = false;
-
-  const std::string controllerId  = controller.controller_id != nullptr ? controller.controller_id : "";
 
   if (!CControllerTopology::GetInstance().SetDevice(GAME_PORT_KEYBOARD, controllerId))
   {
@@ -66,7 +76,7 @@ bool CInputManager::EnableKeyboard(const game_controller &controller)
   }
   else
   {
-    DevicePtr device(new CLibretroDevice(controller));
+    DevicePtr device(new CLibretroDevice(controllerId));
     m_keyboard = std::move(device);
     bSuccess = true;
   }
@@ -80,11 +90,9 @@ void CInputManager::DisableKeyboard()
   m_keyboard.reset();
 }
 
-bool CInputManager::EnableMouse(const game_controller &controller)
+bool CInputManager::EnableMouse(const std::string &controllerId)
 {
   bool bSuccess = false;
-
-  const std::string controllerId  = controller.controller_id != nullptr ? controller.controller_id : "";
 
   if (!CControllerTopology::GetInstance().SetDevice(GAME_PORT_MOUSE, controllerId))
   {
@@ -92,7 +100,7 @@ bool CInputManager::EnableMouse(const game_controller &controller)
   }
   else
   {
-    DevicePtr device(new CLibretroDevice(controller));
+    DevicePtr device(new CLibretroDevice(controllerId));
     m_mouse = std::move(device);
     bSuccess = true;
   }
@@ -106,7 +114,7 @@ void CInputManager::DisableMouse()
   m_mouse.reset();
 }
 
-libretro_device_t CInputManager::ConnectController(const std::string &address, const game_controller &controller)
+libretro_device_t CInputManager::ConnectController(const std::string &address, const std::string &controllerId)
 {
   unsigned int deviceType = RETRO_DEVICE_NONE; // Unmasked device type
 
@@ -115,28 +123,34 @@ libretro_device_t CInputManager::ConnectController(const std::string &address, c
   {
     esyslog("Failed to connect controller, invalid port address: %s", address.c_str());
   }
-  else if (controller.controller_id)
+  else if (!controllerId.empty())
   {
-    const bool bProvidesInput = controller.provides_input;
-
-    if (!CControllerTopology::GetInstance().SetController(address, controller.controller_id, bProvidesInput))
+    auto it = m_controllerLayouts.find(controllerId);
+    if (it != m_controllerLayouts.end())
     {
-      esyslog("Error: Controller port \"%s\" (libretro port %d) does not accept %s",
-          address.c_str(), port, controller.controller_id);
-    }
-    else
-    {
-      DevicePtr device(new CLibretroDevice(controller));
+      const CControllerLayout &controller = *it->second;
 
-      if (device->Subclass() != RETRO_SUBCLASS_NONE)
-        deviceType = RETRO_DEVICE_SUBCLASS(device->Type(), device->Subclass());
+      const bool bProvidesInput = controller.ProvidesInput();
+
+      if (!CControllerTopology::GetInstance().SetController(address, controllerId, bProvidesInput))
+      {
+        esyslog("Error: Controller port \"%s\" (libretro port %d) does not accept %s",
+            address.c_str(), port, controllerId.c_str());
+      }
       else
-        deviceType = device->Type();
+      {
+        DevicePtr device(new CLibretroDevice(controllerId));
 
-      if (port >= m_controllers.size())
-        m_controllers.resize(port + 1);
+        if (device->Subclass() != RETRO_SUBCLASS_NONE)
+          deviceType = RETRO_DEVICE_SUBCLASS(device->Type(), device->Subclass());
+        else
+          deviceType = device->Type();
 
-      m_controllers[port] = std::move(device);
+        if (port >= m_controllers.size())
+          m_controllers.resize(port + 1);
+
+        m_controllers[port] = std::move(device);
+      }
     }
   }
 
