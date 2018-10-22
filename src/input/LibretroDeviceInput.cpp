@@ -40,48 +40,45 @@ using namespace P8PLATFORM;
 
 #define ANALOG_DIGITAL_THRESHHOLD  0.5f
 
-CLibretroDeviceInput::CLibretroDeviceInput(const game_controller &controller)
+CLibretroDeviceInput::CLibretroDeviceInput(const std::string &controllerId)
 {
-  if (controller.controller_id != nullptr)
+  unsigned int type = CButtonMapper::Get().GetLibretroType(controllerId);
+
+  switch (type)
   {
-    unsigned int type = CButtonMapper::Get().GetLibretroType(controller.controller_id);
+    case RETRO_DEVICE_JOYPAD:
+      m_buttons.resize(LIBRETRO_JOYPAD_BUTTON_COUNT);
+      break;
 
-    switch (type)
-    {
-      case RETRO_DEVICE_JOYPAD:
-        m_buttons.resize(LIBRETRO_JOYPAD_BUTTON_COUNT);
-        break;
+    case RETRO_DEVICE_MOUSE:
+      m_buttons.resize(LIBRETRO_MOUSE_BUTTON_COUNT);
+      m_relativePointers.resize(LIBRETRO_RELATIVE_POINTER_COUNT);
+      break;
 
-      case RETRO_DEVICE_MOUSE:
-        m_buttons.resize(LIBRETRO_MOUSE_BUTTON_COUNT);
-        m_relativePointers.resize(LIBRETRO_RELATIVE_POINTER_COUNT);
-        break;
+    case RETRO_DEVICE_LIGHTGUN:
+      m_buttons.resize(LIBRETRO_LIGHTGUN_BUTTON_COUNT);
+      m_relativePointers.resize(LIBRETRO_RELATIVE_POINTER_COUNT);
+      break;
 
-      case RETRO_DEVICE_LIGHTGUN:
-        m_buttons.resize(LIBRETRO_LIGHTGUN_BUTTON_COUNT);
-        m_relativePointers.resize(LIBRETRO_RELATIVE_POINTER_COUNT);
-        break;
+    case RETRO_DEVICE_ANALOG:
+      m_buttons.resize(LIBRETRO_JOYPAD_BUTTON_COUNT);
+      m_analogButtons.resize(LIBRETRO_JOYPAD_BUTTON_COUNT);
+      m_analogSticks.resize(LIBRETRO_ANALOG_STICK_COUNT);
+      break;
 
-      case RETRO_DEVICE_ANALOG:
-        m_buttons.resize(LIBRETRO_JOYPAD_BUTTON_COUNT);
-        m_analogButtons.resize(LIBRETRO_JOYPAD_BUTTON_COUNT);
-        m_analogSticks.resize(LIBRETRO_ANALOG_STICK_COUNT);
-        break;
+    case RETRO_DEVICE_POINTER:
+      m_absolutePointers.resize(LIBRETRO_ABSOLUTE_POINTER_COUNT);
+      break;
 
-      case RETRO_DEVICE_POINTER:
-        m_absolutePointers.resize(LIBRETRO_ABSOLUTE_POINTER_COUNT);
-        break;
+    case RETRO_DEVICE_KEYBOARD:
+      m_buttons.resize(RETROK_LAST - 1);
+      break;
 
-      case RETRO_DEVICE_KEYBOARD:
-        m_buttons.resize(RETROK_LAST - 1);
-        break;
-
-      default:
-        break;
-    }
-
-    m_accelerometers.resize(LIBRETRO_ACCELEROMETER_COUNT);
+    default:
+      break;
   }
+
+  m_accelerometers.resize(LIBRETRO_ACCELEROMETER_COUNT);
 }
 
 bool CLibretroDeviceInput::ButtonState(unsigned int buttonIndex) const

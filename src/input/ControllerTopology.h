@@ -19,16 +19,13 @@
  */
 #pragma once
 
-#include <kodi/kodi_game_types.h>
+#include "kodi_game_types.h"
 
 #include <memory>
 #include <string>
 #include <vector>
 
 class TiXmlElement;
-
-struct game_input_device;
-struct game_input_port;
 
 namespace LIBRETRO
 {
@@ -104,6 +101,8 @@ namespace LIBRETRO
     static void RemoveController(const ControllerPtr &controller, const std::string &portAddress);
 
     static PortPtr CreateDefaultPort(const std::string &acceptedController);
+
+    static void SplitAddress(const std::string &address, std::string &nodeId, std::string &remainingAddress);
 
     std::vector<PortPtr> m_ports;
     int m_playerLimit = -1;

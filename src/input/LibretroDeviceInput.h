@@ -32,7 +32,7 @@ namespace LIBRETRO
   class CLibretroDeviceInput
   {
   public:
-    CLibretroDeviceInput(const game_controller &controller);
+    CLibretroDeviceInput(const std::string &controllerId);
 
     bool  ButtonState(unsigned int buttonIndex) const;
     float AnalogButtonState(unsigned int buttonIndex) const;
