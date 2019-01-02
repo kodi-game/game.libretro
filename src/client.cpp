@@ -28,6 +28,7 @@
 #include "log/Log.h"
 #include "log/LogAddon.h"
 #include "settings/Settings.h"
+#include "utils/Timer.h"
 #include "GameInfoLoader.h"
 
 #include "libXBMC_addon.h"
@@ -64,6 +65,8 @@ namespace LIBRETRO
   CClientBridge*                CLIENT_BRIDGE = nullptr;
   std::vector<CGameInfoLoader*> GAME_INFO;
   bool                          SUPPORTS_VFS = false; // TODO
+  int64_t                       FRAME_TIME_LAST = 0;
+  Timer                         timer;
 }
 
 extern "C"
@@ -357,6 +360,16 @@ GAME_ERROR RunFrame(void)
 {
   if (!CLIENT)
     return GAME_ERROR_FAILED;
+
+  // Trigger the frame time callback before running the core.
+  uint64_t current = timer.microseconds();
+  int64_t delta = 0;
+
+  if (FRAME_TIME_LAST > 0)
+    delta = current - FRAME_TIME_LAST;
+
+  FRAME_TIME_LAST = current;
+  CLIENT_BRIDGE->FrameTime(delta);
 
   CLIENT->retro_run();
 
