@@ -319,7 +319,8 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       const retro_frame_time_callback *typedData = reinterpret_cast<const retro_frame_time_callback*>(data);
       if (typedData)
       {
-        // Frame time callback not implemented
+        // Store callbacks from libretro client.
+        m_clientBridge->SetFrameTime(typedData->callback);
         return false;
       }
       break;

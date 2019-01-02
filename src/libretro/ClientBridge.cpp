@@ -35,7 +35,8 @@ CClientBridge::CClientBridge()
     m_retro_hw_context_reset(nullptr),
     m_retro_hw_context_destroy(nullptr),
     m_retro_audio_set_state_callback(nullptr),
-    m_retro_audio_callback(nullptr)
+    m_retro_audio_callback(nullptr),
+    m_retro_frame_time_callback(nullptr)
 {
 }
 
@@ -85,6 +86,16 @@ GAME_ERROR CClientBridge::AudioAvailable(void)
     return GAME_ERROR_FAILED;
 
   m_retro_audio_callback();
+
+  return GAME_ERROR_NO_ERROR;
+}
+
+GAME_ERROR CClientBridge::FrameTime(int64_t usec)
+{
+  if (!m_retro_frame_time_callback)
+    return GAME_ERROR_FAILED;
+
+  m_retro_frame_time_callback(usec);
 
   return GAME_ERROR_NO_ERROR;
 }
