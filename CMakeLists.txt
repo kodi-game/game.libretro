@@ -4,17 +4,15 @@ project(game.libretro)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR})
 
 find_package(Kodi REQUIRED)
-find_package(kodiplatform REQUIRED)
 find_package(p8-platform REQUIRED)
 find_package(TinyXML REQUIRED)
 
 include_directories(${KODI_INCLUDE_DIR}
-                    ${kodiplatform_INCLUDE_DIRS}
                     ${p8-platform_INCLUDE_DIRS}
                     ${PROJECT_SOURCE_DIR}/src
                     ${TINYXML_INCLUDE_DIRS})
 
-list(APPEND DEPLIBS ${kodiplatform_LIBRARIES} ${p8-platform_LIBRARIES} ${TINYXML_LIBRARIES})
+list(APPEND DEPLIBS ${p8-platform_LIBRARIES} ${TINYXML_LIBRARIES})
 
 set(LIBRETRO_SOURCES src/client.cpp
                      src/audio/AudioStream.cpp
