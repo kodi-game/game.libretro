@@ -25,7 +25,7 @@
 #include "log/Log.h"
 
 #include "kodi_game_types.h"
-#include "tinyxml.h"
+#include <tinyxml.h>
 
 #include <algorithm>
 #include <sstream>

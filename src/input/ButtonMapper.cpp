@@ -29,7 +29,7 @@
 #include "libretro/libretro.h"
 #include "log/Log.h"
 
-#include "tinyxml.h"
+#include <tinyxml.h>
 
 #include <algorithm>
 #include <sstream>
