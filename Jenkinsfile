@@ -1,1 +1,1 @@
-buildPlugin()
+buildPlugin(version: "Matrix")

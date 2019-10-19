@@ -22,9 +22,7 @@ matrix:
       sudo: required
       compiler: clang
     - os: osx
-      osx_image: xcode9
-    - os: osx
-      osx_image: xcode9.3
+      osx_image: xcode10.2
 
 #
 # The addon source is automatically checked out in $TRAVIS_BUILD_DIR,
@@ -32,7 +30,7 @@ matrix:
 #
 before_script:
   - cd $TRAVIS_BUILD_DIR/..
-  - git clone --depth=1 https://github.com/xbmc/xbmc.git
+  - git clone --branch master --depth=1  https://github.com/xbmc/xbmc.git
   - cd ${app_id} && mkdir build && cd build
   - mkdir -p definition/${app_id}
   - echo ${app_id} $TRAVIS_BUILD_DIR $TRAVIS_COMMIT > definition/${app_id}/${app_id}.txt
