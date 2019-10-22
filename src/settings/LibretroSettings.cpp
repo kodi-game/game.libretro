@@ -94,12 +94,12 @@ void CLibretroSettings::SetAllSettings(const retro_variable* libretroVariables)
       {
         if (std::find(setting.Values().begin(), setting.Values().end(), valueBuf) != setting.Values().end())
         {
-          dsyslog("Setting %s has value \"%s\" in Kodi",  setting.Key().c_str(), valueBuf);
+          dsyslog("Setting %s has value \"%s\" in Kodi",  setting.Key().c_str(), valueBuf.c_str());
           setting.SetCurrentValue(valueBuf);
         }
         else
         {
-          esyslog("Setting %s: invalid value \"%s\" (values are: %s)", setting.Key().c_str(), valueBuf, variable->value);
+          esyslog("Setting %s: invalid value \"%s\" (values are: %s)", setting.Key().c_str(), valueBuf.c_str(), variable->value);
           bValid = false;
         }
       }
