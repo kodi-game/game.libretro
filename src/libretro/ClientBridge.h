@@ -19,7 +19,7 @@
  */
 #pragma once
 
-#include "kodi_game_types.h"
+#include <kodi/addon-instance/Game.h>
 
 struct retro_game_info;
 

@@ -21,8 +21,7 @@
 #include "LibretroDLL.h"
 #include "log/Log.h"
 
-#include "libKODI_game.h"
-#include "kodi_game_types.h"
+#include <kodi/addon-instance/Game.h>
 
 #ifdef _WIN32
   #include "dlfcn-win32.h" // TODO: Use file from kodi-platform
@@ -32,7 +31,6 @@
 
 #include <assert.h>
 
-using namespace ADDON;
 using namespace LIBRETRO;
 
 CLibretroDLL::CLibretroDLL(void) :
@@ -86,11 +84,12 @@ bool RegisterSymbol(void* dll, T& functionPtr, const char* strFunctionPtr)
   return (functionPtr = (T)dlsym(dll, strFunctionPtr)) != nullptr;
 }
 
-bool CLibretroDLL::Load(const AddonProps_Game* gameClientProps)
+bool CLibretroDLL::Load(const std::string& gameClientDllPath)
 {
   Unload();
 
-  m_libretroClient = dlopen(gameClientProps->game_client_dll_path, RTLD_LAZY);
+  m_strPath = gameClientDllPath;
+  m_libretroClient = dlopen(m_strPath.c_str(), RTLD_LAZY);
   if (m_libretroClient == nullptr)
   {
     esyslog("Unable to load: %s", dlerror());
@@ -130,8 +129,6 @@ bool CLibretroDLL::Load(const AddonProps_Game* gameClientProps)
     esyslog("Unable to assign function: %s", dlerror());
     return bSuccess;
   }
-
-  m_strPath = gameClientProps->game_client_dll_path;
 
   return true;
 }

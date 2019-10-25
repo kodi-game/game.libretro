@@ -22,35 +22,35 @@
 #include "VideoGeometry.h"
 #include "libretro/LibretroEnvironment.h"
 
-#include "libKODI_game.h"
+#include "client.h"
 
 using namespace LIBRETRO;
 
 CVideoStream::CVideoStream() :
-  m_frontend(nullptr),
+  m_addon(nullptr),
   m_geometry(new CVideoGeometry)
 {
 }
 
-void CVideoStream::Initialize(CHelper_libKODI_game* frontend)
+void CVideoStream::Initialize(CGameLibRetro* addon)
 {
-  m_frontend = frontend;
+  m_addon = addon;
 }
 
 void CVideoStream::Deinitialize()
 {
-  if (m_frontend == nullptr)
+  if (m_addon == nullptr)
     return;
 
   CloseStream();
 
-  m_frontend = nullptr;
+  m_addon = nullptr;
 }
 
 void CVideoStream::SetGeometry(const CVideoGeometry &geometry)
 {
   // Close stream so it can be reopened with the updated geometry
-  if (m_frontend != nullptr)
+  if (m_addon != nullptr)
     CloseStream();
 
   *m_geometry = geometry;
@@ -58,7 +58,7 @@ void CVideoStream::SetGeometry(const CVideoGeometry &geometry)
 
 void CVideoStream::EnableHardwareRendering(const game_stream_hw_framebuffer_properties &properties)
 {
-  if (m_frontend == nullptr)
+  if (m_addon == nullptr)
     return;
 
   CloseStream();
@@ -68,23 +68,23 @@ void CVideoStream::EnableHardwareRendering(const game_stream_hw_framebuffer_prop
   streamProps.type = GAME_STREAM_HW_FRAMEBUFFER;
   streamProps.hw_framebuffer = properties;
 
-  m_stream = m_frontend->OpenStream(streamProps);
+  m_stream.Open(streamProps);
   m_streamType = GAME_STREAM_HW_FRAMEBUFFER;
 }
 
 uintptr_t CVideoStream::GetHwFramebuffer()
 {
-  if (m_frontend == nullptr)
+  if (m_addon == nullptr)
     return 0;
 
-  if (m_stream == nullptr || m_streamType != GAME_STREAM_HW_FRAMEBUFFER)
+  if (!m_stream.IsOpen() || m_streamType != GAME_STREAM_HW_FRAMEBUFFER)
     return 0;
 
   if (!m_framebuffer)
   {
     m_framebuffer.reset(new game_stream_buffer{});
 
-    if (!m_frontend->GetStreamBuffer(m_stream, 0, 0, *m_framebuffer))
+    if (!m_stream.GetBuffer(0, 0, *m_framebuffer))
       return 0;
   }
 
@@ -93,10 +93,10 @@ uintptr_t CVideoStream::GetHwFramebuffer()
 
 bool CVideoStream::GetSwFramebuffer(unsigned int width, unsigned int height, GAME_PIXEL_FORMAT requestedFormat, game_stream_sw_framebuffer_buffer &framebuffer)
 {
-  if (m_frontend == nullptr)
+  if (m_addon == nullptr)
     return false;
 
-  if (m_stream == nullptr)
+  if (!m_stream.IsOpen())
   {
     game_stream_properties properties{};
 
@@ -108,18 +108,18 @@ bool CVideoStream::GetSwFramebuffer(unsigned int width, unsigned int height, GAM
     properties.sw_framebuffer.max_height = m_geometry->MaxHeight();
     properties.sw_framebuffer.aspect_ratio = m_geometry->AspectRatio();
 
-    m_stream = m_frontend->OpenStream(properties);
+    m_stream.Open(properties);
     m_streamType = GAME_STREAM_SW_FRAMEBUFFER;
   }
 
-  if (m_stream == nullptr || m_streamType != GAME_STREAM_SW_FRAMEBUFFER)
+  if (!m_stream.IsOpen() || m_streamType != GAME_STREAM_SW_FRAMEBUFFER)
     return false;
 
   if (!m_framebuffer)
   {
     m_framebuffer.reset(new game_stream_buffer{});
 
-    if (!m_frontend->GetStreamBuffer(m_stream, width, height, *m_framebuffer))
+    if (!m_stream.GetBuffer(width, height, *m_framebuffer))
       return false;
   }
 
@@ -130,7 +130,7 @@ bool CVideoStream::GetSwFramebuffer(unsigned int width, unsigned int height, GAM
 
 void CVideoStream::AddFrame(const uint8_t* data, unsigned int size, unsigned int width, unsigned int height, GAME_PIXEL_FORMAT format, GAME_VIDEO_ROTATION rotation)
 {
-  if (m_frontend == nullptr)
+  if (m_addon == nullptr)
     return;
 
   // Only care if format changes for video stream
@@ -143,7 +143,7 @@ void CVideoStream::AddFrame(const uint8_t* data, unsigned int size, unsigned int
     }
   }
 
-  if (m_stream == nullptr)
+  if (!m_stream.IsOpen())
   {
     game_stream_properties properties{};
 
@@ -155,14 +155,14 @@ void CVideoStream::AddFrame(const uint8_t* data, unsigned int size, unsigned int
     properties.video.max_height = m_geometry->MaxHeight();
     properties.video.aspect_ratio = m_geometry->AspectRatio();
 
-    m_stream = m_frontend->OpenStream(properties);
+    m_stream.Open(properties);
     m_streamType = GAME_STREAM_VIDEO;
 
     // Save format to detect unwanted changes
     m_format = format;
   }
 
-  if (m_stream == nullptr)
+  if (!m_stream.IsOpen())
     return;
 
   game_stream_packet packet{};
@@ -193,15 +193,15 @@ void CVideoStream::AddFrame(const uint8_t* data, unsigned int size, unsigned int
     return;
   }
 
-  m_frontend->AddStreamData(m_stream, packet);
+  m_stream.AddData(packet);
 }
 
 void CVideoStream::RenderHwFrame()
 {
-  if (m_frontend == nullptr)
+  if (m_addon == nullptr)
     return;
 
-  if (m_stream == nullptr || m_streamType != GAME_STREAM_HW_FRAMEBUFFER)
+  if (!m_stream.IsOpen() || m_streamType != GAME_STREAM_HW_FRAMEBUFFER)
     return;
 
   if (!m_framebuffer)
@@ -212,30 +212,29 @@ void CVideoStream::RenderHwFrame()
   packet.type = GAME_STREAM_HW_FRAMEBUFFER;
   packet.hw_framebuffer.framebuffer = m_framebuffer->hw_framebuffer.framebuffer;
 
-  m_frontend->AddStreamData(m_stream, packet);
+  m_stream.AddData(packet);
 }
 
 void CVideoStream::OnFrameEnd()
 {
-  if (m_frontend == nullptr)
+  if (m_addon == nullptr)
     return;
 
-  if (m_stream == nullptr)
+  if (!m_stream.IsOpen())
     return;
 
   if (!m_framebuffer)
     return;
 
-  m_frontend->ReleaseStreamBuffer(m_stream, *m_framebuffer);
+  m_stream.ReleaseBuffer(*m_framebuffer);
   m_framebuffer.reset();
 }
 
 void CVideoStream::CloseStream()
 {
-  if (m_stream != nullptr)
+  if (m_stream.IsOpen())
   {
-    m_frontend->CloseStream(m_stream);
-    m_stream = nullptr;
+    m_stream.Close();
     m_format = GAME_PIXEL_FORMAT_UNKNOWN;
   }
 }

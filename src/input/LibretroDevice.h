@@ -21,7 +21,7 @@
 
 #include "InputTypes.h"
 
-#include "kodi_game_types.h"
+#include <kodi/addon-instance/Game.h>
 
 #include <map>
 #include <memory>

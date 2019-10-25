@@ -22,7 +22,7 @@
 #include "input/LibretroDevice.h"
 #include "libretro.h"
 
-#include "kodi_game_types.h"
+#include <kodi/addon-instance/Game.h>
 
 #include <string>
 

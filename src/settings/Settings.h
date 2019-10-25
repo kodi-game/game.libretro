@@ -19,6 +19,7 @@
  */
 #pragma once
 
+#include <kodi/AddonBase.h>
 #include <string>
 
 namespace LIBRETRO
@@ -33,7 +34,7 @@ namespace LIBRETRO
 
     bool IsInitialized(void) const { return m_bInitialized; }
 
-    void SetSetting(const std::string& strName, const void* value);
+    void SetSetting(const std::string& strName, const kodi::CSettingValue& value);
 
     /*!
      * \brief True if the libretro core should crop overscan

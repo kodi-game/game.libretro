@@ -19,6 +19,8 @@
  */
 #pragma once
 
+#include <kodi/addon-instance/Game.h>
+
 #include <string>
 #include <vector>
 
@@ -29,21 +31,12 @@ namespace LIBRETRO
   class CControllerLayout
   {
   public:
-    CControllerLayout(const game_controller_layout &controller);
+    CControllerLayout(const AddonGameControllerLayout& controller);
 
-    const std::string &ControllerID() const { return m_controllerId; }
-    bool ProvidesInput() const { return m_bProvidesInput; }
+    const std::string &ControllerID() const { return m_controller.controller_id; }
+    bool ProvidesInput() const { return m_controller.provides_input; }
 
   private:
-    std::string m_controllerId;
-    bool m_bProvidesInput;
-    std::vector<std::string> m_digitalButtons;
-    std::vector<std::string> m_analogButtons;
-    std::vector<std::string> m_analogSticks;
-    std::vector<std::string> m_accelerometers;
-    std::vector<std::string> m_keys;
-    std::vector<std::string> m_relPointers;
-    std::vector<std::string> m_absPointers;
-    std::vector<std::string> m_motors;
+    AddonGameControllerLayout m_controller;
   };
 }

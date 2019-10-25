@@ -24,13 +24,12 @@
 #include "settings/LibretroSettings.h"
 #include "video/VideoStream.h"
 
-#include "kodi_game_types.h"
+#include <kodi/addon-instance/Game.h>
 
 #include <memory>
 #include <string>
 
-namespace ADDON { class CHelper_libXBMC_addon; }
-class CHelper_libKODI_game;
+class CGameLibRetro;
 
 struct retro_game_geometry;
 
@@ -44,16 +43,13 @@ namespace LIBRETRO
   public:
     static CLibretroEnvironment& Get(void);
 
-    void Initialize(ADDON::CHelper_libXBMC_addon* xbmc,
-                    CHelper_libKODI_game*         frontend,
+    void Initialize(CGameLibRetro*                addon,
                     CLibretroDLL*                 client,
-                    CClientBridge*                clientBridge,
-                    const AddonProps_Game*        gameClientProps);
+                    CClientBridge*                clientBridge);
 
     void Deinitialize(void);
 
-    ADDON::CHelper_libXBMC_addon* GetXBMC(void)         { return m_xbmc; }
-    CHelper_libKODI_game*         GetFrontend(void)     { return m_frontend; }
+    CGameLibRetro*                GetAddon(void)        { return m_addon; }
     CLibretroDLL*                 GetClient(void)       { return m_client; }
     CClientBridge*                GetClientBridge(void) { return m_clientBridge; }
 
@@ -90,8 +86,7 @@ namespace LIBRETRO
   private:
     CLibretroEnvironment(void);
 
-    ADDON::CHelper_libXBMC_addon* m_xbmc;
-    CHelper_libKODI_game*         m_frontend;
+    CGameLibRetro*                m_addon;
     CLibretroDLL*                 m_client;
     CClientBridge*                m_clientBridge;
     CVideoStream                  m_videoStream;

@@ -21,35 +21,30 @@
 #include "AudioStream.h"
 #include "libretro/LibretroEnvironment.h"
 
-#include "libKODI_game.h"
+#include "client.h"
 
 using namespace LIBRETRO;
 
 CAudioStream::CAudioStream() :
-  m_frontend(nullptr),
+  m_addon(nullptr),
   m_singleFrameAudio(this)
 {
 }
 
-void CAudioStream::Initialize(CHelper_libKODI_game* frontend)
+void CAudioStream::Initialize(CGameLibRetro* addon)
 {
-  m_frontend = frontend;
+  m_addon = addon;
 }
 
 void CAudioStream::Deinitialize()
 {
-  if (m_stream != nullptr)
-  {
-    m_frontend->CloseStream(m_stream);
-    m_stream = nullptr;
-  }
-
-  m_frontend = nullptr;
+  m_stream.Close();
+  m_addon = nullptr;
 }
 
 void CAudioStream::AddFrames_S16NE(const uint8_t* data, unsigned int size)
 {
-  if (m_frontend && m_stream == nullptr)
+  if (m_addon && !m_stream.IsOpen())
   {
     static const GAME_AUDIO_CHANNEL channelMap[] = { GAME_CH_FL, GAME_CH_FR, GAME_CH_NULL };
 
@@ -59,17 +54,15 @@ void CAudioStream::AddFrames_S16NE(const uint8_t* data, unsigned int size)
     properties.audio.format = GAME_PCM_FORMAT_S16NE;
     properties.audio.channel_map = channelMap;
 
-    m_stream = m_frontend->OpenStream(properties);
+    if (m_stream.Open(properties))
+      return;
   }
 
-  if (m_stream != nullptr)
-  {
-    game_stream_packet packet{};
+  game_stream_packet packet{};
 
-    packet.type = GAME_STREAM_AUDIO;
-    packet.audio.data = data;
-    packet.audio.size = size;
+  packet.type = GAME_STREAM_AUDIO;
+  packet.audio.data = data;
+  packet.audio.size = size;
 
-    m_frontend->AddStreamData(m_stream, packet);
-  }
+  m_stream.AddData(packet);
 }

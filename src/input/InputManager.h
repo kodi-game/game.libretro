@@ -23,7 +23,7 @@
 #include "ControllerLayout.h"
 #include "LibretroDevice.h"
 
-#include "kodi_game_types.h"
+#include <kodi/addon-instance/Game.h>
 #include "p8-platform/threads/mutex.h"
 
 #include <map>
@@ -57,7 +57,7 @@ namespace LIBRETRO
     /*!
      * \brief
      */
-    void SetControllerLayouts(const std::vector<game_controller_layout> &controllers);
+    void SetControllerLayouts(const std::vector<AddonGameControllerLayout>& controllers);
 
     /*!
      * \brief Enable the keyboard

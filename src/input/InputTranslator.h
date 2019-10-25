@@ -19,7 +19,7 @@
  */
 #pragma once
 
-#include <kodi/kodi_game_types.h>
+#include <kodi/addon-instance/Game.h>
 
 namespace LIBRETRO
 {

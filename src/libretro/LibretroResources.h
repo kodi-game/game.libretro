@@ -23,9 +23,7 @@
 #include <string>
 #include <vector>
 
-namespace ADDON { class CHelper_libXBMC_addon; }
-
-struct AddonProps_Game;
+class CGameLibRetro;
 
 namespace LIBRETRO
 {
@@ -35,7 +33,7 @@ namespace LIBRETRO
     CLibretroResources();
     ~CLibretroResources() { Deinitialize(); }
 
-    void Initialize(ADDON::CHelper_libXBMC_addon* addon, const AddonProps_Game* gameClientProps);
+    void Initialize(CGameLibRetro* addon);
     void Deinitialize();
 
     const char* GetSystemDir() const { return m_systemDirectory.c_str(); }
@@ -50,8 +48,7 @@ namespace LIBRETRO
   private:
     const char* ApendSystemFolder(const std::string& path);
 
-    ADDON::CHelper_libXBMC_addon* m_addon;
-
+    CGameLibRetro*                     m_addon;
     std::vector<std::string>           m_resourceDirectories;
     std::map<std::string, std::string> m_pathMap;
     std::string                        m_systemDirectory;

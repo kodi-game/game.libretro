@@ -26,9 +26,7 @@
 #include <map>
 #include <string>
 
-namespace ADDON { class CHelper_libXBMC_addon; }
-
-struct AddonProps_Game;
+class CGameLibRetro;
 struct retro_variable;
 
 namespace LIBRETRO
@@ -38,7 +36,7 @@ namespace LIBRETRO
   public:
     CLibretroSettings();
 
-    void Initialize(ADDON::CHelper_libXBMC_addon* addon, const AddonProps_Game* props);
+    void Initialize(CGameLibRetro* addon);
     void Deinitialize();
 
     bool Changed();
@@ -57,7 +55,7 @@ namespace LIBRETRO
     void GenerateSettings();
 
     // Frontend variables
-    ADDON::CHelper_libXBMC_addon* m_addon;
+    CGameLibRetro*                m_addon;
     std::string                   m_profileDirectory;
 
     // Settings variables

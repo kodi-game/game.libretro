@@ -21,24 +21,16 @@
 
 #include "ILog.h"
 
-namespace ADDON
-{
-  class CHelper_libXBMC_addon;
-}
-
 namespace LIBRETRO
 {
   class CLogAddon : public ILog
   {
   public:
-    CLogAddon(ADDON::CHelper_libXBMC_addon* frontend);
+    CLogAddon() = default;
     virtual ~CLogAddon(void) { }
 
     // implementation of ILog
     virtual void Log(SYS_LOG_LEVEL level, const char* logline);
     virtual SYS_LOG_TYPE Type(void) const { return SYS_LOG_TYPE_ADDON; }
-
-  private:
-    ADDON::CHelper_libXBMC_addon* const m_frontend;
   };
 }
