@@ -25,8 +25,6 @@
 #include <string>
 #include <vector>
 
-namespace ADDON { class CHelper_libXBMC_addon; }
-
 namespace LIBRETRO
 {
   /*!
@@ -39,7 +37,7 @@ namespace LIBRETRO
   class CGameInfoLoader
   {
   public:
-    CGameInfoLoader(const char* path, ADDON::CHelper_libXBMC_addon* XBMC, bool bSupportsVFS);
+    CGameInfoLoader(const std::string& path, bool bSupportsVFS);
 
     bool Load(void);
 
@@ -58,7 +56,6 @@ namespace LIBRETRO
 
   private:
     const std::string                   m_path;
-    ADDON::CHelper_libXBMC_addon* const m_xbmc;
     const bool                          m_bSupportsVfs;
     std::vector<uint8_t>                m_dataBuffer;
   };

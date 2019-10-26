@@ -21,11 +21,10 @@
 #include "LibretroResources.h"
 #include "LibretroDefines.h"
 #include "log/Log.h"
-#include "utils/PathUtils.h"
 
-#include "kodi_game_types.h"
-#include "libXBMC_addon.h"
+#include "client.h"
 
+#include <kodi/Filesystem.h>
 #include <assert.h>
 #include <utility>
 
@@ -36,52 +35,42 @@ CLibretroResources::CLibretroResources() :
 {
 }
 
-void CLibretroResources::Initialize(ADDON::CHelper_libXBMC_addon* addon, const AddonProps_Game* gameClientProps)
+void CLibretroResources::Initialize(CGameLibRetro* addon)
 {
   m_addon = addon;
 
   assert(m_addon != nullptr);
 
-  for (unsigned int i = 0; i < gameClientProps->resource_directory_count; i++)
+  std::vector<std::string> dirs;
+  m_addon->ResourceDirectories(dirs);
+  for (const auto& dir : dirs)
   {
-    if (gameClientProps->resource_directories[i] == nullptr)
-      break;
-
-    std::string resourcePath = gameClientProps->resource_directories[i];
-
-    PathUtils::RemoveSlashAtEnd(resourcePath);
-
-    if (resourcePath.empty())
+    if (dir.empty())
       continue;
 
     // Set system path to first resource path discovered
     if (m_systemDirectory.empty())
     {
-      m_systemDirectory = resourcePath + "/" LIBRETRO_SYSTEM_DIRECTORY_NAME;
+      m_systemDirectory = dir + "/" LIBRETRO_SYSTEM_DIRECTORY_NAME;
 
       // Ensure folder exists
-      if (!m_addon->DirectoryExists(m_systemDirectory.c_str()))
+      if (!kodi::vfs::DirectoryExists(m_systemDirectory))
       {
         dsyslog("Creating system directory: %s", m_systemDirectory.c_str());
-        m_addon->CreateDirectory(m_systemDirectory.c_str());
+        kodi::vfs::CreateDirectory(m_systemDirectory);
       }
     }
 
-    m_resourceDirectories.push_back(std::move(resourcePath));
-  }
+  m_resourceDirectories.push_back(std::move(dir));
+}
 
-  if (gameClientProps->profile_directory != nullptr)
+  m_saveDirectory = m_addon->ProfileDirectory() + "/" LIBRETRO_SAVE_DIRECTORY_NAME;
+
+  // Ensure folder exists
+  if (!kodi::vfs::DirectoryExists(m_saveDirectory))
   {
-    m_saveDirectory = gameClientProps->profile_directory;
-    PathUtils::RemoveSlashAtEnd(m_saveDirectory);
-    m_saveDirectory += "/" LIBRETRO_SAVE_DIRECTORY_NAME;
-
-    // Ensure folder exists
-    if (!m_addon->DirectoryExists(m_saveDirectory.c_str()))
-    {
-      dsyslog("Creating save directory: %s", m_saveDirectory.c_str());
-      m_addon->CreateDirectory(m_saveDirectory.c_str());
-    }
+    dsyslog("Creating save directory: %s", m_saveDirectory.c_str());
+    kodi::vfs::CreateDirectory(m_saveDirectory);
   }
 }
 
@@ -101,7 +90,7 @@ const char* CLibretroResources::GetBasePath(const std::string& relPath)
       std::string resourcePath = dir + "/" + relPath;
 
       // Check for path existence
-      if (m_addon->FileExists(resourcePath.c_str(), true))
+      if (kodi::vfs::FileExists(resourcePath, true))
       {
         m_pathMap.insert(std::make_pair(relPath, std::move(dir)));
         it = m_pathMap.find(relPath);

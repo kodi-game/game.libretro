@@ -4,15 +4,19 @@ project(game.libretro)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR})
 
 find_package(Kodi REQUIRED)
-find_package(p8-platform REQUIRED)
 find_package(TinyXML REQUIRED)
 
 include_directories(${KODI_INCLUDE_DIR}
-                    ${p8-platform_INCLUDE_DIRS}
                     ${PROJECT_SOURCE_DIR}/src
                     ${TINYXML_INCLUDE_DIRS})
 
-list(APPEND DEPLIBS ${p8-platform_LIBRARIES} ${TINYXML_LIBRARIES})
+list(APPEND DEPLIBS ${TINYXML_LIBRARIES})
+
+if(WIN32)
+  find_package(dlfcn-win32 REQUIRED)
+  list(APPEND DEPLIBS ${dlfcn-win32_LIBRARIES})
+  include_directories(${dlfcn-win32_INCLUDE_DIRS})
+endif()
 
 set(LIBRETRO_SOURCES src/client.cpp
                      src/audio/AudioStream.cpp
@@ -41,7 +45,6 @@ set(LIBRETRO_SOURCES src/client.cpp
                      src/settings/LibretroSettings.cpp
                      src/settings/Settings.cpp
                      src/settings/SettingsGenerator.cpp
-                     src/utils/PathUtils.cpp
                      src/utils/Timer.cpp
                      src/video/VideoGeometry.cpp
                      src/video/VideoStream.cpp)
@@ -80,7 +83,6 @@ set(LIBRETRO_HEADERS src/GameInfoLoader.h
                      src/settings/SettingsGenerator.h
                      src/settings/Settings.h
                      src/settings/SettingsTypes.h
-                     src/utils/PathUtils.h
                      src/utils/Timer.h
                      src/video/VideoGeometry.h
                      src/video/VideoStream.h)

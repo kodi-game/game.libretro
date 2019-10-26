@@ -28,7 +28,6 @@
 #include "log/Log.h"
 
 using namespace LIBRETRO;
-using namespace P8PLATFORM;
 
 #define LIBRETRO_JOYPAD_BUTTON_COUNT     16
 #define LIBRETRO_ANALOG_STICK_COUNT      2
@@ -136,7 +135,7 @@ int CLibretroDeviceInput::RelativePointerDeltaX(void)
 
   if (!m_relativePointers.empty())
   {
-    CLockObject lock(m_relativePtrMutex);
+    std::unique_lock<std::mutex> lock(m_relativePtrMutex);
 
     deltaX = m_relativePointers[0].x;
     m_relativePointers[0].x = 0;
@@ -151,7 +150,7 @@ int CLibretroDeviceInput::RelativePointerDeltaY(void)
 
   if (!m_relativePointers.empty())
   {
-    CLockObject lock(m_relativePtrMutex);
+    std::unique_lock<std::mutex> lock(m_relativePtrMutex);
 
     deltaY = m_relativePointers[0].y;
     m_relativePointers[0].y = 0;
@@ -285,7 +284,7 @@ bool CLibretroDeviceInput::InputEvent(const game_input_event& event)
       case GAME_INPUT_EVENT_RELATIVE_POINTER:
         if (index < (int)m_relativePointers.size())
         {
-          CLockObject lock(m_relativePtrMutex);
+          std::unique_lock<std::mutex> lock(m_relativePtrMutex);
 
           m_relativePointers[index].x += event.rel_pointer.x;
           m_relativePointers[index].y += event.rel_pointer.y;

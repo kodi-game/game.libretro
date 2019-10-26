@@ -28,13 +28,10 @@
 #include "libretro/LibretroTranslator.h"
 #include "log/Log.h"
 
-#include "libKODI_game.h"
-
 #include <algorithm>
 #include <sstream>
 
 using namespace LIBRETRO;
-using namespace P8PLATFORM;
 
 #define PORT_MAX_COUNT  32 // Large enough
 
@@ -55,14 +52,13 @@ libretro_device_caps_t CInputManager::GetDeviceCaps(void) const
 }
 
 
-void CInputManager::SetControllerLayouts(const std::vector<game_controller_layout> &controllers)
+void CInputManager::SetControllerLayouts(const std::vector<AddonGameControllerLayout>& controllers)
 {
   m_controllerLayouts.clear();
 
   for (const auto &controller : controllers)
   {
-    if (controller.controller_id != nullptr)
-      m_controllerLayouts[controller.controller_id].reset(new CControllerLayout(controller));
+    m_controllerLayouts[controller.controller_id].reset(new CControllerLayout(controller));
   }
 }
 

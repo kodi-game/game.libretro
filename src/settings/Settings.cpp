@@ -36,11 +36,11 @@ CSettings& CSettings::Get(void)
   return _instance;
 }
 
-void CSettings::SetSetting(const std::string& strName, const void* value)
+void CSettings::SetSetting(const std::string& strName, const kodi::CSettingValue& value)
 {
   if (strName == SETTING_CROP_OVERSCAN)
   {
-    m_bCropOverscan = *static_cast<const bool*>(value);
+    m_bCropOverscan = value.GetBoolean();
     //dsyslog("Setting \"%s\" set to %f", SETTING_CROP_OVERSCAN, m_bCropOverscan ? "true" : "false");
   }
 

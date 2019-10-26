@@ -23,17 +23,15 @@
 #include "SettingsGenerator.h"
 #include "libretro/libretro.h"
 #include "log/Log.h"
-#include "utils/PathUtils.h"
+#include "client.h"
 
-#include "kodi_game_types.h"
-#include "libXBMC_addon.h"
+#include <kodi/Filesystem.h>
 
 #include <algorithm>
 #include <assert.h>
 #include <utility>
 
 using namespace LIBRETRO;
-using namespace P8PLATFORM;
 
 CLibretroSettings::CLibretroSettings() :
   m_addon(nullptr),
@@ -42,14 +40,12 @@ CLibretroSettings::CLibretroSettings() :
 {
 }
 
-void CLibretroSettings::Initialize(ADDON::CHelper_libXBMC_addon* addon, const AddonProps_Game* props)
+void CLibretroSettings::Initialize(CGameLibRetro* addon)
 {
   m_addon = addon;
-
-  if (props->profile_directory != nullptr)
-    m_profileDirectory = props->profile_directory;
-
   assert(m_addon != nullptr);
+
+  m_profileDirectory = m_addon->ProfileDirectory();
 }
 
 void CLibretroSettings::Deinitialize()
@@ -59,13 +55,13 @@ void CLibretroSettings::Deinitialize()
 
 bool CLibretroSettings::Changed()
 {
-  CLockObject lock(m_mutex);
+  std::unique_lock<std::mutex> lock(m_mutex);
   return m_bChanged;
 }
 
 void CLibretroSettings::SetUnchanged()
 {
-  CLockObject lock(m_mutex);
+  std::unique_lock<std::mutex> lock(m_mutex);
   m_bChanged = false;
 }
 
@@ -74,7 +70,7 @@ void CLibretroSettings::SetAllSettings(const retro_variable* libretroVariables)
   // Keep track of whether Kodi has the correct settings
   bool bValid = true;
 
-  CLockObject lock(m_mutex);
+  std::unique_lock<std::mutex> lock(m_mutex);
 
   if (m_settings.empty())
   {
@@ -89,8 +85,8 @@ void CLibretroSettings::SetAllSettings(const retro_variable* libretroVariables)
       }
 
       // Query current value for setting from the frontend
-      char valueBuf[1024] = { };
-      if (m_addon->GetSetting(variable->key, valueBuf))
+      std::string valueBuf;
+      if (kodi::CheckSettingString(variable->key, valueBuf))
       {
         if (std::find(setting.Values().begin(), setting.Values().end(), valueBuf) != setting.Values().end())
         {
@@ -121,7 +117,7 @@ void CLibretroSettings::SetAllSettings(const retro_variable* libretroVariables)
 
 const char* CLibretroSettings::GetCurrentValue(const std::string& settingName)
 {
-  CLockObject lock(m_mutex);
+  std::unique_lock<std::mutex> lock(m_mutex);
 
   auto it = m_settings.find(settingName);
   if (it == m_settings.end())
@@ -135,7 +131,7 @@ const char* CLibretroSettings::GetCurrentValue(const std::string& settingName)
 
 void CLibretroSettings::SetCurrentValue(const std::string& name, const std::string& value)
 {
-  CLockObject lock(m_mutex);
+  std::unique_lock<std::mutex> lock(m_mutex);
 
   if (m_settings.empty())
   {
@@ -173,17 +169,15 @@ void CLibretroSettings::GenerateSettings()
 
     std::string generatedPath = m_profileDirectory;
 
-    PathUtils::RemoveSlashAtEnd(generatedPath);
-
-    std::string addonId = PathUtils::GetBasename(generatedPath);
+    std::string addonId = kodi::vfs::GetFileName(generatedPath);
 
     generatedPath += "/" SETTINGS_GENERATED_DIRECTORY_NAME;
 
     // Ensure folder exists
-    if (!m_addon->DirectoryExists(generatedPath.c_str()))
+    if (!kodi::vfs::DirectoryExists(generatedPath))
     {
       dsyslog("Creating directory for settings and language files: %s", generatedPath.c_str());
-      m_addon->CreateDirectory(generatedPath.c_str());
+      kodi::vfs::CreateDirectory(generatedPath);
     }
 
     bool bSuccess = false;
@@ -197,19 +191,19 @@ void CLibretroSettings::GenerateSettings()
     generatedPath += "/" SETTINGS_GENERATED_LANGUAGE_SUBDIR;
 
     // Ensure language folder exists
-    if (!m_addon->DirectoryExists(generatedPath.c_str()))
+    if (!kodi::vfs::DirectoryExists(generatedPath))
     {
       dsyslog("Creating directory for settings and language files: %s", generatedPath.c_str());
-      m_addon->CreateDirectory(generatedPath.c_str());
+      kodi::vfs::CreateDirectory(generatedPath);
     }
 
     generatedPath += "/" SETTINGS_GENERATED_LANGUAGE_ENGLISH_SUBDIR;
 
     // Ensure English folder exists
-    if (!m_addon->DirectoryExists(generatedPath.c_str()))
+    if (!kodi::vfs::DirectoryExists(generatedPath))
     {
       dsyslog("Creating directory for settings and language files: %s", generatedPath.c_str());
-      m_addon->CreateDirectory(generatedPath.c_str());
+      kodi::vfs::CreateDirectory(generatedPath);
     }
 
     CLanguageGenerator languageGen(addonId, generatedPath);

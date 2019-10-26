@@ -23,14 +23,12 @@
 #include "LibretroTranslator.h"
 #include "input/ButtonMapper.h"
 #include "input/InputManager.h"
-
-#include "libXBMC_addon.h"
-#include "libKODI_game.h"
+#include "client.h"
 
 #include <algorithm>
 #include <assert.h>
+#include <kodi/General.h>
 
-using namespace ADDON;
 using namespace LIBRETRO;
 
 #define S16NE_FRAMESIZE  4 // int16 L + int16 R
@@ -44,17 +42,14 @@ using namespace LIBRETRO;
 
 void CFrontendBridge::LogFrontend(retro_log_level level, const char *fmt, ...)
 {
-  if (!CLibretroEnvironment::Get().GetXBMC())
-    return;
-
-  addon_log_t xbmcLevel;
+  AddonLog xbmcLevel;
   switch (level)
   {
-  case RETRO_LOG_DEBUG: xbmcLevel = LOG_DEBUG; break;
-  case RETRO_LOG_INFO:  xbmcLevel = LOG_INFO;  break;
-  case RETRO_LOG_WARN:  xbmcLevel = LOG_ERROR; break;
-  case RETRO_LOG_ERROR: xbmcLevel = LOG_ERROR; break;
-  default:              xbmcLevel = LOG_ERROR; break;
+  case RETRO_LOG_DEBUG: xbmcLevel = ADDON_LOG_DEBUG; break;
+  case RETRO_LOG_INFO:  xbmcLevel = ADDON_LOG_INFO;  break;
+  case RETRO_LOG_WARN:  xbmcLevel = ADDON_LOG_ERROR; break;
+  case RETRO_LOG_ERROR: xbmcLevel = ADDON_LOG_ERROR; break;
+  default:              xbmcLevel = ADDON_LOG_ERROR; break;
   }
 
   char buffer[16384];
@@ -63,7 +58,7 @@ void CFrontendBridge::LogFrontend(retro_log_level level, const char *fmt, ...)
   vsprintf(buffer, fmt, args);
   va_end(args);
 
-  CLibretroEnvironment::Get().GetXBMC()->Log(xbmcLevel, buffer);
+  kodi::Log(xbmcLevel, buffer);
 }
 
 void CFrontendBridge::VideoRefresh(const void* data, unsigned int width, unsigned int height, size_t pitch)
@@ -201,7 +196,7 @@ int16_t CFrontendBridge::InputState(unsigned int port, unsigned int device, unsi
 
 uintptr_t CFrontendBridge::HwGetCurrentFramebuffer(void)
 {
-  if (!CLibretroEnvironment::Get().GetFrontend())
+  if (!CLibretroEnvironment::Get().GetAddon())
     return 0;
 
   return CLibretroEnvironment::Get().Video().GetHwFramebuffer();
@@ -209,15 +204,15 @@ uintptr_t CFrontendBridge::HwGetCurrentFramebuffer(void)
 
 retro_proc_address_t CFrontendBridge::HwGetProcAddress(const char *sym)
 {
-  if (!CLibretroEnvironment::Get().GetFrontend())
+  if (!CLibretroEnvironment::Get().GetAddon())
     return nullptr;
 
-  return CLibretroEnvironment::Get().GetFrontend()->HwGetProcAddress(sym);
+  return CLibretroEnvironment::Get().GetAddon()->HwGetProcAddress(sym);
 }
 
 bool CFrontendBridge::RumbleSetState(unsigned int port, retro_rumble_effect effect, uint16_t strength)
 {
-  if (!CLibretroEnvironment::Get().GetFrontend())
+  if (!CLibretroEnvironment::Get().GetAddon())
     return false;
 
   std::string controllerId  = CInputManager::Get().ControllerID(port);
@@ -237,7 +232,7 @@ bool CFrontendBridge::RumbleSetState(unsigned int port, retro_rumble_effect effe
   eventStruct.feature_name    = featureName.c_str();
   eventStruct.motor.magnitude = CONSTRAIN(magnitude, 0.0f, 1.0f);
 
-  CLibretroEnvironment::Get().GetFrontend()->InputEvent(eventStruct);
+  CLibretroEnvironment::Get().GetAddon()->KodiInputEvent(eventStruct);
   return true;
 }
 

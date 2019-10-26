@@ -36,7 +36,7 @@ namespace LIBRETRO
     ~CLibretroDLL(void) { Unload(); }
 
     void Unload(void);
-    bool Load(const AddonProps_Game* gameClientProps);
+    bool Load(const std::string& gameClientDllPath);
 
     const std::string& GetPath() const { return m_strPath; }
 

@@ -19,12 +19,12 @@
  */
 #pragma once
 
-#include "kodi_game_types.h"
+#include <kodi/addon-instance/Game.h>
 
 #include <memory>
 #include <stdint.h>
 
-class CHelper_libKODI_game;
+class CGameLibRetro;
 
 namespace LIBRETRO
 {
@@ -35,7 +35,7 @@ namespace LIBRETRO
   public:
     CVideoStream();
 
-    void Initialize(CHelper_libKODI_game* frontend);
+    void Initialize(CGameLibRetro* addon);
     void Deinitialize();
 
     void SetGeometry(const CVideoGeometry &geometry);
@@ -55,10 +55,10 @@ namespace LIBRETRO
     void CloseStream();
 
     // Initialization parameters
-    CHelper_libKODI_game* m_frontend;
+    CGameLibRetro* m_addon;
 
     // Stream properties
-    void *m_stream = nullptr;
+    kodi::addon::CInstanceGame::CStream m_stream;
     std::unique_ptr<CVideoGeometry> m_geometry;
     GAME_STREAM_TYPE m_streamType = GAME_STREAM_UNKNOWN;
     GAME_PIXEL_FORMAT m_format = GAME_PIXEL_FORMAT_UNKNOWN; // Guard against libretro changing formats

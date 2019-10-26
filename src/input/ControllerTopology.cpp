@@ -24,7 +24,6 @@
 #include "libretro/LibretroEnvironment.h"
 #include "log/Log.h"
 
-#include "kodi_game_types.h"
 #include <tinyxml.h>
 
 #include <algorithm>

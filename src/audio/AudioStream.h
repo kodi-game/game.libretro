@@ -21,11 +21,11 @@
 
 #include "SingleFrameAudio.h"
 
-#include "kodi_game_types.h"
+#include <kodi/addon-instance/Game.h>
 
 #include <stdint.h>
 
-class CHelper_libKODI_game;
+class CGameLibRetro;
 
 namespace LIBRETRO
 {
@@ -34,7 +34,7 @@ namespace LIBRETRO
   public:
     CAudioStream();
 
-    void Initialize(CHelper_libKODI_game* frontend);
+    void Initialize(CGameLibRetro* addon);
     void Deinitialize();
 
     void AddFrame_S16NE(int16_t left, int16_t right) { m_singleFrameAudio.AddFrame(left, right); }
@@ -42,9 +42,9 @@ namespace LIBRETRO
     void AddFrames_S16NE(const uint8_t* data, unsigned int size);
 
   private:
-    CHelper_libKODI_game* m_frontend;
+    CGameLibRetro*        m_addon;
     CSingleFrameAudio     m_singleFrameAudio;
 
-    void* m_stream = nullptr;
+    kodi::addon::CInstanceGame::CStream m_stream;
   };
 }

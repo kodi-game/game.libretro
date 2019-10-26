@@ -20,59 +20,9 @@
 
 #include "ControllerLayout.h"
 
-#include "kodi_game_types.h"
-
 using namespace LIBRETRO;
 
-CControllerLayout::CControllerLayout(const game_controller_layout &controller) :
-  m_controllerId(controller.controller_id != nullptr ? controller.controller_id : ""),
-  m_bProvidesInput(controller.provides_input)
+CControllerLayout::CControllerLayout(const AddonGameControllerLayout& controller) :
+  m_controller(controller)
 {
-  if (controller.digital_buttons != nullptr)
-  {
-    for (unsigned int i = 0; i < controller.digital_button_count; i++)
-      m_digitalButtons.emplace_back(controller.digital_buttons[i]);
-  }
-
-  if (controller.analog_buttons != nullptr)
-  {
-    for (unsigned int i = 0; i < controller.analog_button_count; i++)
-      m_analogButtons.emplace_back(controller.analog_buttons[i]);
-  }
-
-  if (controller.analog_sticks != nullptr)
-  {
-    for (unsigned int i = 0; i < controller.analog_stick_count; i++)
-      m_analogSticks.emplace_back(controller.analog_sticks[i]);
-  }
-
-  if (controller.accelerometers != nullptr)
-  {
-    for (unsigned int i = 0; i < controller.accelerometer_count; i++)
-      m_accelerometers.emplace_back(controller.accelerometers[i]);
-  }
-
-  if (controller.keys != nullptr)
-  {
-    for (unsigned int i = 0; i < controller.key_count; i++)
-      m_keys.emplace_back(controller.keys[i]);
-  }
-
-  if (controller.rel_pointers != nullptr)
-  {
-    for (unsigned int i = 0; i < controller.rel_pointer_count; i++)
-      m_relPointers.emplace_back(controller.rel_pointers[i]);
-  }
-
-  if (controller.abs_pointers != nullptr)
-  {
-    for (unsigned int i = 0; i < controller.abs_pointer_count; i++)
-      m_absPointers.emplace_back(controller.abs_pointers[i]);
-  }
-
-  if (controller.motors != nullptr)
-  {
-    for (unsigned int i = 0; i < controller.motor_count; i++)
-      m_motors.emplace_back(controller.motors[i]);
-  }
 }

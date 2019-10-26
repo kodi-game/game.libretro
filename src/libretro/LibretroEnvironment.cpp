@@ -28,13 +28,11 @@
 #include "log/Log.h"
 #include "settings/Settings.h"
 #include "video/VideoGeometry.h"
+#include "client.h"
 
-#include "libKODI_game.h"
-#include "libXBMC_addon.h"
+#include <kodi/General.h>
 
-using namespace ADDON;
 using namespace LIBRETRO;
-using namespace P8PLATFORM;
 
 namespace LIBRETRO
 {
@@ -45,8 +43,7 @@ namespace LIBRETRO
 }
 
 CLibretroEnvironment::CLibretroEnvironment(void) :
-  m_xbmc(nullptr),
-  m_frontend(nullptr),
+  m_addon(nullptr),
   m_client(nullptr),
   m_clientBridge(nullptr),
   m_videoFormat(GAME_PIXEL_FORMAT_0RGB1555), // Default libretro format
@@ -60,22 +57,19 @@ CLibretroEnvironment& CLibretroEnvironment::Get(void)
   return _instance;
 }
 
-void CLibretroEnvironment::Initialize(ADDON::CHelper_libXBMC_addon* xbmc,
-                                      CHelper_libKODI_game*         frontend,
+void CLibretroEnvironment::Initialize(CGameLibRetro*                addon,
                                       CLibretroDLL*                 client,
-                                      CClientBridge*                clientBridge,
-                                      const AddonProps_Game*        gameClientProps)
+                                      CClientBridge*                clientBridge)
 {
-  m_xbmc         = xbmc;
-  m_frontend     = frontend;
+  m_addon        = addon;
   m_client       = client;
   m_clientBridge = clientBridge;
 
-  m_videoStream.Initialize(m_frontend);
-  m_audioStream.Initialize(m_frontend);
+  m_videoStream.Initialize(m_addon);
+  m_audioStream.Initialize(m_addon);
 
-  m_settings.Initialize(xbmc, gameClientProps);
-  m_resources.Initialize(xbmc, gameClientProps);
+  m_settings.Initialize(m_addon);
+  m_resources.Initialize(m_addon);
 
   // Install environment callback
   m_client->retro_set_environment(EnvCallback);
@@ -125,7 +119,7 @@ void CLibretroEnvironment::OnFrameEnd()
 
 bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
 {
-  if (!m_frontend || !m_clientBridge)
+  if (!m_addon || !m_clientBridge)
     return false;
 
   switch (cmd)
@@ -158,13 +152,13 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       if (typedData)
       {
         const char* msg = typedData->msg;
-        m_xbmc->QueueNotification(QUEUE_INFO, msg);
+        kodi::QueueFormattedNotification(QUEUE_INFO, msg);
       }
       break;
     }
   case RETRO_ENVIRONMENT_SHUTDOWN:
     {
-      m_frontend->CloseGame();
+      m_addon->CloseGame();
       break;
     }
   case RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL:
@@ -290,7 +284,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       {
         const bool bSupportsNoGame = *typedData;
         if (bSupportsNoGame)
-          m_xbmc->Log(LOG_DEBUG, "Libretro client supports loading with no game");
+          kodi::Log(ADDON_LOG_DEBUG, "Libretro client supports loading with no game");
       }
       break;
     }

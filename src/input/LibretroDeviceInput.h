@@ -19,8 +19,8 @@
  */
 #pragma once
 
-#include "kodi_game_types.h"
-#include "p8-platform/threads/mutex.h"
+#include <kodi/addon-instance/Game.h>
+#include <mutex>
 
 #include <string>
 #include <vector>
@@ -59,6 +59,6 @@ namespace LIBRETRO
     std::vector<game_accelerometer_event>  m_accelerometers;
     std::vector<game_rel_pointer_event>    m_relativePointers;
     std::vector<game_abs_pointer_event>    m_absolutePointers;
-    P8PLATFORM::CMutex                     m_relativePtrMutex;
+    std::mutex                             m_relativePtrMutex;
   };
 }

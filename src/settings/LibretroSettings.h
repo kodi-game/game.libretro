@@ -21,14 +21,12 @@
 
 #include "SettingsTypes.h"
 
-#include "p8-platform/threads/mutex.h"
+#include <mutex>
 
 #include <map>
 #include <string>
 
-namespace ADDON { class CHelper_libXBMC_addon; }
-
-struct AddonProps_Game;
+class CGameLibRetro;
 struct retro_variable;
 
 namespace LIBRETRO
@@ -38,7 +36,7 @@ namespace LIBRETRO
   public:
     CLibretroSettings();
 
-    void Initialize(ADDON::CHelper_libXBMC_addon* addon, const AddonProps_Game* props);
+    void Initialize(CGameLibRetro* addon);
     void Deinitialize();
 
     bool Changed();
@@ -57,13 +55,13 @@ namespace LIBRETRO
     void GenerateSettings();
 
     // Frontend variables
-    ADDON::CHelper_libXBMC_addon* m_addon;
+    CGameLibRetro*                m_addon;
     std::string                   m_profileDirectory;
 
     // Settings variables
     LibretroSettings   m_settings;
     bool               m_bChanged;
     bool               m_bGenerated; // True if settings and language files have been generated
-    P8PLATFORM::CMutex m_mutex;
+    std::mutex         m_mutex;
   };
 } // namespace LIBRETRO

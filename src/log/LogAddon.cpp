@@ -20,7 +20,7 @@
 
 #include "LogAddon.h"
 
-#include "libXBMC_addon.h"
+#include <kodi/General.h>
 
 #include <assert.h>
 
@@ -28,29 +28,22 @@ using namespace LIBRETRO;
 
 // --- TranslateLogLevel() -----------------------------------------------------
 
-ADDON::addon_log_t TranslateLogLevel(SYS_LOG_LEVEL level)
+AddonLog TranslateLogLevel(SYS_LOG_LEVEL level)
 {
   switch (level)
   {
-    case SYS_LOG_ERROR: return ADDON::LOG_ERROR;
-    case SYS_LOG_INFO:  return ADDON::LOG_INFO;
-    case SYS_LOG_DEBUG: return ADDON::LOG_DEBUG;
+    case SYS_LOG_ERROR: return ADDON_LOG_ERROR;
+    case SYS_LOG_INFO:  return ADDON_LOG_INFO;
+    case SYS_LOG_DEBUG: return ADDON_LOG_DEBUG;
     default:
       break;
   }
-  return ADDON::LOG_INFO;
+  return ADDON_LOG_INFO;
 }
 
 // -- CLogAddon ----------------------------------------------------------------
 
-CLogAddon::CLogAddon(ADDON::CHelper_libXBMC_addon* frontend) :
-  m_frontend(frontend)
-{
-  assert(m_frontend);
-}
-
 void CLogAddon::Log(SYS_LOG_LEVEL level, const char* logline)
 {
-  if (m_frontend)
-    m_frontend->Log(TranslateLogLevel(level), "%s", logline);
+  kodi::Log(TranslateLogLevel(level), "%s", logline);
 }
