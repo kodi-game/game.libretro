@@ -33,7 +33,6 @@
 #include <kodi/General.h>
 
 using namespace LIBRETRO;
-using namespace P8PLATFORM;
 
 namespace LIBRETRO
 {

@@ -32,7 +32,6 @@
 #include <sstream>
 
 using namespace LIBRETRO;
-using namespace P8PLATFORM;
 
 #define PORT_MAX_COUNT  32 // Large enough
 

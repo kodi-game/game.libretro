@@ -32,7 +32,6 @@
 #include <utility>
 
 using namespace LIBRETRO;
-using namespace P8PLATFORM;
 
 CLibretroSettings::CLibretroSettings() :
   m_addon(nullptr),
@@ -56,13 +55,13 @@ void CLibretroSettings::Deinitialize()
 
 bool CLibretroSettings::Changed()
 {
-  CLockObject lock(m_mutex);
+  std::unique_lock<std::mutex> lock(m_mutex);
   return m_bChanged;
 }
 
 void CLibretroSettings::SetUnchanged()
 {
-  CLockObject lock(m_mutex);
+  std::unique_lock<std::mutex> lock(m_mutex);
   m_bChanged = false;
 }
 
@@ -71,7 +70,7 @@ void CLibretroSettings::SetAllSettings(const retro_variable* libretroVariables)
   // Keep track of whether Kodi has the correct settings
   bool bValid = true;
 
-  CLockObject lock(m_mutex);
+  std::unique_lock<std::mutex> lock(m_mutex);
 
   if (m_settings.empty())
   {
@@ -118,7 +117,7 @@ void CLibretroSettings::SetAllSettings(const retro_variable* libretroVariables)
 
 const char* CLibretroSettings::GetCurrentValue(const std::string& settingName)
 {
-  CLockObject lock(m_mutex);
+  std::unique_lock<std::mutex> lock(m_mutex);
 
   auto it = m_settings.find(settingName);
   if (it == m_settings.end())
@@ -132,7 +131,7 @@ const char* CLibretroSettings::GetCurrentValue(const std::string& settingName)
 
 void CLibretroSettings::SetCurrentValue(const std::string& name, const std::string& value)
 {
-  CLockObject lock(m_mutex);
+  std::unique_lock<std::mutex> lock(m_mutex);
 
   if (m_settings.empty())
   {

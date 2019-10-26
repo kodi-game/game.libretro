@@ -23,11 +23,10 @@
 #include <iostream>
 
 using namespace LIBRETRO;
-using namespace P8PLATFORM;
 
 void CLogConsole::Log(SYS_LOG_LEVEL level, const char* logline)
 {
-  CLockObject lock(m_mutex);
+  std::unique_lock<std::mutex> lock(m_mutex);
 
   // TODO: Prepend current date
   std::cout << logline << std::endl;

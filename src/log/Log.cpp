@@ -26,7 +26,6 @@
 #include <stdio.h>
 
 using namespace LIBRETRO;
-using namespace P8PLATFORM;
 
 #define SYS_LOG_BUFFER_SIZE  256 // bytes
 
@@ -49,7 +48,7 @@ CLog::~CLog(void)
 
 bool CLog::SetType(SYS_LOG_TYPE type)
 {
-  P8PLATFORM::CLockObject lock(m_mutex);
+  std::unique_lock<std::mutex> lock(m_mutex);
   if (m_pipe && m_pipe->Type() == type)
     return true; // Already set
 
@@ -72,7 +71,7 @@ bool CLog::SetType(SYS_LOG_TYPE type)
 
 void CLog::SetPipe(ILog* pipe)
 {
-  P8PLATFORM::CLockObject lock(m_mutex);
+  std::unique_lock<std::mutex> lock(m_mutex);
 
   delete m_pipe;
   m_pipe = pipe;
@@ -80,7 +79,7 @@ void CLog::SetPipe(ILog* pipe)
 
 void CLog::SetLevel(SYS_LOG_LEVEL level)
 {
-  P8PLATFORM::CLockObject lock(m_mutex);
+  std::unique_lock<std::mutex> lock(m_mutex);
 
   m_level = level;
 }
@@ -108,7 +107,7 @@ void CLog::Log(SYS_LOG_LEVEL level, const char* format, ...)
   vsnprintf(buf, SYS_LOG_BUFFER_SIZE - 1, fmt, ap);
   va_end(ap);
 
-  P8PLATFORM::CLockObject lock(m_mutex);
+  std::unique_lock<std::mutex> lock(m_mutex);
 
   if (level > m_level)
     return;

@@ -21,7 +21,7 @@
 
 #include "SettingsTypes.h"
 
-#include "p8-platform/threads/mutex.h"
+#include <mutex>
 
 #include <map>
 #include <string>
@@ -62,6 +62,6 @@ namespace LIBRETRO
     LibretroSettings   m_settings;
     bool               m_bChanged;
     bool               m_bGenerated; // True if settings and language files have been generated
-    P8PLATFORM::CMutex m_mutex;
+    std::mutex         m_mutex;
   };
 } // namespace LIBRETRO
