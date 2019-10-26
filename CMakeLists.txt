@@ -12,6 +12,12 @@ include_directories(${KODI_INCLUDE_DIR}
 
 list(APPEND DEPLIBS ${TINYXML_LIBRARIES})
 
+if(WIN32)
+  find_package(dlfcn-win32 REQUIRED)
+  list(APPEND DEPLIBS ${dlfcn-win32_LIBRARIES})
+  include_directories(${dlfcn-win32_INCLUDE_DIRS})
+endif()
+
 set(LIBRETRO_SOURCES src/client.cpp
                      src/audio/AudioStream.cpp
                      src/audio/SingleFrameAudio.cpp

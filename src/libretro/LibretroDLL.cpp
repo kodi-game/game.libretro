@@ -23,11 +23,7 @@
 
 #include <kodi/addon-instance/Game.h>
 
-#ifdef _WIN32
-  #include "dlfcn-win32.h" // TODO: Use file from kodi-platform
-#else
-  #include <dlfcn.h>
-#endif
+#include <dlfcn.h>
 
 #include <assert.h>
 
