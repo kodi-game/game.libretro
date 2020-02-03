@@ -6,6 +6,7 @@ This add-on depends on the Game API, which was added in Kodi 18 (Leia).
 
 [![Build Status](https://travis-ci.org/kodi-game/game.libretro.svg?branch=master)](https://travis-ci.org/kodi-game/game.libretro)
 [![Build Status](https://ci.appveyor.com/api/projects/status/github/kodi-game/game.libretro?svg=true)](https://ci.appveyor.com/project/kodi-game/game-libretro)
+[![Build Status](https://dev.azure.com/alwinus/binary-addons/_apis/build/status/kodi-game.game.libretro?branchName=Matrix)](https://dev.azure.com/alwinus/binary-addons/_build/latest?definitionId=2&branchName=Matrix)
 
 ## Loading mechanism
 
