@@ -269,6 +269,8 @@ GAME_ERROR CGameLibRetro::RunFrame()
   m_frameTimeLast = current;
   m_clientBridge.FrameTime(delta);
 
+  CLibretroEnvironment::Get().OnFrameBegin();
+
   m_client.retro_run();
 
   CLibretroEnvironment::Get().OnFrameEnd();

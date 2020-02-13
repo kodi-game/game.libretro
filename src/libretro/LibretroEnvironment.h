@@ -65,6 +65,11 @@ namespace LIBRETRO
     std::string GetResourcePath(const char* relPath);
 
     /*!
+     * \brief Called before a game is run for a frame
+     */
+    void OnFrameBegin();
+
+    /*!
      * \brief Called after game has been run for a frame
      */
     void OnFrameEnd();
