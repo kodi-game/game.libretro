@@ -9,8 +9,8 @@
        library_@PLATFORM@="@LIBRARY_FILENAME@">
   </extension>
   <extension point="xbmc.addon.metadata">
-    <summary lang="en">Libretro compatibility layer for Kodi's Game API</summary>
-    <description>This add-on provides a wrapper for libretro cores, allowing them to be loaded as game add-ons.</description>
+    <summary lang="en_GB">Libretro compatibility layer for Kodi's Game API</summary>
+    <description lang="en_GB">This add-on provides a wrapper for libretro cores, allowing them to be loaded as game add-ons.</description>
     <platform>@PLATFORM@</platform>
     <assets>
       <icon>icon.png</icon>
