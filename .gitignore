@@ -1,18 +1,47 @@
-# IDE ignorables
-.build
-.cproject
-.deps
-.libs
-.project
-.settings
+# build artifacts
+build/
+game.*/addon.xml
 
-# CMake ignorables
-build
-Build
+# Debian build files
+debian/changelog
+debian/files
+debian/*.log
+debian/*.substvars
+debian/.debhelper/
+debian/tmp/
+debian/kodi-game-*/
+obj-x86_64-linux-gnu/
 
-# Add-on specific files
-game.libretro/project/VS2010Express/Debug
-game.libretro/project/VS2010Express/Release
-game.libretro/*.so
-game.libretro/*.dll
-game.libretro/addon.xml
+# commonly used editors
+# vim
+*.swp
+
+# Eclipse
+*.project
+*.cproject
+.classpath
+*.sublime-*
+.settings/
+
+# KDevelop 4
+*.kdev4
+
+# gedit
+*~
+
+# CLion
+/.idea
+
+# clion
+.idea/
+
+# to prevent add after a "git format-patch VALUE" and "git add ." call
+/*.patch
+
+# to prevent add if project code opened by Visual Studio over CMake file
+.vs/
+
+# General MacOS
+.DS_Store
+.AppleDouble
+.LSOverride

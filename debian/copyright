@@ -3,7 +3,7 @@ Upstream-Name: game.libretro
 Source: https://github.com/kodi-game/game.libretro
 
 Files: *
-Copyright: 2014-2018 Team XBMC
+Copyright: 2014-2020 Team Kodi
 License: GPL-2+
  This package is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
