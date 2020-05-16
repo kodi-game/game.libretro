@@ -4,7 +4,7 @@ This add-on provides a wrapper that allows Libretro cores to be loaded as game a
 
 This add-on depends on the Game API, which was added in Kodi 18 (Leia).
 
-[![License: GPL v2+](https://img.shields.io/badge/License-GPL%20v2+-blue.svg)](LICENSE.md)
+[![License: GPL-2.0-or-later](https://img.shields.io/badge/License-GPL%20v2+-blue.svg)](LICENSE.md)
 [![Build Status](https://travis-ci.org/kodi-game/game.libretro.svg?branch=Matrix)](https://travis-ci.org/kodi-game/game.libretro/branches)
 [![Build Status](https://dev.azure.com/teamkodi/kodi-game/_apis/build/status/kodi-game.game.libretro?branchName=Matrix)](https://dev.azure.com/teamkodi/kodi-game/_build/latest?definitionId=25&branchName=Matrix)
 [![Build Status](https://jenkins.kodi.tv/view/Addons/job/kodi-game/job/game.libretro/job/Matrix/badge/icon)](https://jenkins.kodi.tv/blue/organizations/jenkins/kodi-game%2Fgame.libretro/branches/)
