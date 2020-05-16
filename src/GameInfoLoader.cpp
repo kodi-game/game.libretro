@@ -41,7 +41,7 @@ bool CGameInfoLoader::Load(void)
   if (!m_bSupportsVfs)
     return false;
 
-  STAT_STRUCTURE statStruct = {0};
+  kodi::vfs::FileStatus statStruct;
   bool bExists = kodi::vfs::StatFile(m_path, statStruct);
 
   // Not all VFS protocols necessarily support StatFile(), so also check if file exists
@@ -66,7 +66,7 @@ bool CGameInfoLoader::Load(void)
     return false;
   }
 
-  int64_t size = statStruct.size;
+  int64_t size = statStruct.GetSize();
   if (size > 0)
   {
     // Size is known, read entire file at once (unless it is too big)
