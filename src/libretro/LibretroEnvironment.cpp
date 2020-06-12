@@ -99,6 +99,11 @@ std::string CLibretroEnvironment::GetResourcePath(const char* relPath)
   return m_resources.GetFullPath(relPath);
 }
 
+void CLibretroEnvironment::OnFrameBegin()
+{
+  m_videoStream.OnFrameBegin();
+}
+
 void CLibretroEnvironment::OnFrameEnd()
 {
   m_videoStream.OnFrameEnd();
@@ -209,7 +214,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       if (typedData)
       {
         // Translate struct and report hw info to frontend
-        game_stream_hw_framebuffer_properties hw_info;
+        game_hw_rendering_properties hw_info;
         hw_info.context_type       = LibretroTranslator::GetHWContextType(typedData->context_type);
         hw_info.depth              = typedData->depth;
         hw_info.stencil            = typedData->stencil;
@@ -218,7 +223,9 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
         hw_info.version_minor      = typedData->version_minor;
         hw_info.cache_context      = typedData->cache_context;
         hw_info.debug_context      = typedData->debug_context;
-        if (!m_videoStream.EnableHardwareRendering(hw_info))
+
+        // Set up the video stream
+        if (!m_videoStream.EnableHardwareRendering())
           return false;
 
         // Store callbacks from libretro client
@@ -228,6 +235,9 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
         // Expose frontend callbacks to libretro client
         typedData->get_current_framebuffer = CFrontendBridge::HwGetCurrentFramebuffer;
         typedData->get_proc_address        = CFrontendBridge::HwGetProcAddress;
+
+        // Now that hooks are installed, enable HW rendering in the frontend
+        m_addon->EnableHardwareRendering(hw_info);
       }
       break;
     }
