@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "cheevos/Cheevos.h"
 #include "libretro/ClientBridge.h"
 #include "libretro/LibretroDLL.h"
 #include "utils/Timer.h"
@@ -70,6 +71,10 @@ public:
   GAME_ERROR GetMemory(GAME_MEMORY type, uint8_t*& data, size_t& size) override;
   GAME_ERROR SetCheat(unsigned int index, bool enabled, const std::string& code) override;
 
+  // --- RCheevos ----------------------------------------------------------------
+  GAME_ERROR EnableRichPresence(const char* script) override;
+  GAME_ERROR GetRichPresenceEvaluation(char* evaluation, size_t size) override;
+
 private:
   GAME_ERROR AudioAvailable();
 
@@ -79,4 +84,5 @@ private:
   std::vector<LIBRETRO::CGameInfoLoader*> m_gameInfo;
   bool                                    m_supportsVFS = false; // TODO
   int64_t                                 m_frameTimeLast = 0;
+  LIBRETRO::CCheevos* m_cheevos;
 };

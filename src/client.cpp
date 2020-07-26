@@ -5,6 +5,7 @@
  *  See LICENSE.md for more information.
  */
 
+//#include "cheevos/Cheevos.h"
 #include "input/ButtonMapper.h"
 #include "input/ControllerTopology.h"
 #include "input/InputManager.h"
@@ -35,6 +36,7 @@ void SAFE_DELETE_GAME_INFO(std::vector<CGameInfoLoader*>& vec)
 
 CGameLibRetro::CGameLibRetro()
 {
+  m_cheevos = new CCheevos();
 }
 
 CGameLibRetro::~CGameLibRetro()
@@ -50,6 +52,8 @@ CGameLibRetro::~CGameLibRetro()
   CControllerTopology::GetInstance().Clear();
 
   CLibretroEnvironment::Get().Deinitialize();
+
+  //CCheevos::Get().Deinitialize();
 
   CLog::Get().SetType(SYS_LOG_TYPE_CONSOLE);
 
@@ -82,6 +86,8 @@ ADDON_STATUS CGameLibRetro::Create()
 
     CButtonMapper::Get().LoadButtonMap();
     CControllerTopology::GetInstance().LoadTopology();
+
+    //CCheevos::Get().Initialize();
 
     m_client.retro_init();
 
@@ -466,6 +472,22 @@ GAME_ERROR CGameLibRetro::GetMemory(GAME_MEMORY type, uint8_t*& data, size_t& si
 GAME_ERROR CGameLibRetro::SetCheat(unsigned int index, bool enabled, const std::string& code)
 {
   m_client.retro_cheat_set(index, enabled, code.c_str());
+
+  return GAME_ERROR_NO_ERROR;
+}
+
+GAME_ERROR CGameLibRetro::EnableRichPresence(const char* script)
+{
+  //CCheevos::Get().EnableRichPresence(script);
+  m_cheevos->EnableRichPresence(script);
+
+  return GAME_ERROR_NO_ERROR;
+}
+
+GAME_ERROR CGameLibRetro::GetRichPresenceEvaluation(char* evaluation, size_t size)
+{
+  //CCheevos::Get().EvaluateRichPresence(evaluation, size);
+  m_cheevos->EvaluateRichPresence(evaluation, size);
 
   return GAME_ERROR_NO_ERROR;
 }
