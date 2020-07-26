@@ -70,6 +70,26 @@ public:
   GAME_ERROR GetMemory(GAME_MEMORY type, uint8_t*& data, size_t& size) override;
   GAME_ERROR SetCheat(unsigned int index, bool enabled, const std::string& code) override;
 
+  // --- RCheevos ----------------------------------------------------------------
+  GAME_ERROR RCGenerateHashFromFile(char* hash, int consoleID, const char* filePath) override;
+  GAME_ERROR RCGetGameIDUrl(char* url, size_t size, const char* hash) override;
+  GAME_ERROR RCGetPatchFileUrl(char* url,
+                               size_t size,
+                               const char* username,
+                               const char* token,
+                               unsigned gameID) override;
+  GAME_ERROR RCPostRichPresenceUrl(char* url,
+                                   size_t urlSize,
+                                   char* postData,
+                                   size_t postSize,
+                                   const char* username,
+                                   const char* token,
+                                   unsigned gameID,
+                                   const char* richPresence) override;
+  GAME_ERROR EnableRichPresence(const char* script) override;
+  GAME_ERROR GetRichPresenceEvaluation(char* evaluation, size_t size, int consoleID) override;
+  GAME_ERROR RCResetRuntime() override;
+
 private:
   GAME_ERROR AudioAvailable();
 

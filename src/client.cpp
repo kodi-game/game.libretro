@@ -5,6 +5,7 @@
  *  See LICENSE.md for more information.
  */
 
+#include "cheevos/Cheevos.h"
 #include "input/ButtonMapper.h"
 #include "input/ControllerTopology.h"
 #include "input/InputManager.h"
@@ -51,6 +52,8 @@ CGameLibRetro::~CGameLibRetro()
 
   CLibretroEnvironment::Get().Deinitialize();
 
+  CCheevos::Get().Deinitialize();
+
   CLog::Get().SetType(SYS_LOG_TYPE_CONSOLE);
 
   SAFE_DELETE_GAME_INFO(m_gameInfo);
@@ -82,6 +85,8 @@ ADDON_STATUS CGameLibRetro::Create()
 
     CButtonMapper::Get().LoadButtonMap();
     CControllerTopology::GetInstance().LoadTopology();
+
+    CCheevos::Get().Initialize();
 
     m_client.retro_init();
 
@@ -466,6 +471,71 @@ GAME_ERROR CGameLibRetro::GetMemory(GAME_MEMORY type, uint8_t*& data, size_t& si
 GAME_ERROR CGameLibRetro::SetCheat(unsigned int index, bool enabled, const std::string& code)
 {
   m_client.retro_cheat_set(index, enabled, code.c_str());
+
+  return GAME_ERROR_NO_ERROR;
+}
+
+GAME_ERROR CGameLibRetro::RCGenerateHashFromFile(char* hash, int consoleID, const char* filePath)
+{
+  if (!CCheevos::Get().GenerateHashFromFile(hash, consoleID, filePath))
+    return GAME_ERROR_FAILED;
+
+  return GAME_ERROR_NO_ERROR;
+}
+
+GAME_ERROR CGameLibRetro::RCGetGameIDUrl(char* url, size_t size, const char* hash)
+{
+  if (!CCheevos::Get().GetGameIDUrl(url, size, hash))
+    return GAME_ERROR_FAILED;
+
+  return GAME_ERROR_NO_ERROR;
+}
+
+GAME_ERROR CGameLibRetro::RCGetPatchFileUrl(char* url,
+                                            size_t size,
+                                            const char* username,
+                                            const char* token,
+                                            unsigned gameID)
+{
+  if (!CCheevos::Get().GetPatchFileUrl(url, size, username, token, gameID))
+    return GAME_ERROR_FAILED;
+
+  return GAME_ERROR_NO_ERROR;
+}
+
+GAME_ERROR CGameLibRetro::RCPostRichPresenceUrl(char* url,
+                                                size_t urlSize,
+                                                char* postData,
+                                                size_t postSize,
+                                                const char* username,
+                                                const char* token,
+                                                unsigned gameID,
+                                                const char* richPresence)
+{
+  if (!CCheevos::Get().PostRichPresenceUrl(url, urlSize, postData, postSize, username, token,
+                                           gameID, richPresence))
+    return GAME_ERROR_FAILED;
+
+  return GAME_ERROR_NO_ERROR;
+}
+
+GAME_ERROR CGameLibRetro::EnableRichPresence(const char* script)
+{
+  CCheevos::Get().EnableRichPresence(script);
+
+  return GAME_ERROR_NO_ERROR;
+}
+
+GAME_ERROR CGameLibRetro::GetRichPresenceEvaluation(char* evaluation, size_t size, int consoleID)
+{
+  CCheevos::Get().EvaluateRichPresence(evaluation, size, consoleID);
+
+  return GAME_ERROR_NO_ERROR;
+}
+
+GAME_ERROR CGameLibRetro::RCResetRuntime()
+{
+  CCheevos::Get().ResetRuntime();
 
   return GAME_ERROR_NO_ERROR;
 }
