@@ -453,10 +453,8 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   {
     const retro_memory_map* typedData = reinterpret_cast<const retro_memory_map*>(data);
     if (typedData)
-    {
-      // Not implemented
-      return false;
-    }
+      m_mmap.Initialize(*typedData);
+
     break;
   }
   case RETRO_ENVIRONMENT_SET_GEOMETRY:
@@ -587,4 +585,9 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   }
 
   return true;
+}
+
+const CMemoryMap& CLibretroEnvironment::GetMemoryMap()
+{
+  return m_mmap;
 }
