@@ -37,6 +37,7 @@ set(LIBRETRO_SOURCES src/client.cpp
                      src/libretro/LibretroEnvironment.cpp
                      src/libretro/LibretroResources.cpp
                      src/libretro/LibretroTranslator.cpp
+                     src/libretro/MemoryMap.cpp
                      src/log/Log.cpp
                      src/log/LogAddon.cpp
                      src/log/LogConsole.cpp
@@ -73,6 +74,7 @@ set(LIBRETRO_HEADERS src/GameInfoLoader.h
                      src/libretro/libretro.h
                      src/libretro/LibretroResources.h
                      src/libretro/LibretroTranslator.h
+                     src/libretro/MemoryMap.h
                      src/log/ILog.h
                      src/log/LogAddon.h
                      src/log/LogConsole.h
