@@ -2175,6 +2175,12 @@ struct retro_memory_descriptor
  * .len can be implied by .select in many of them, but was included for clarity.
  */
 
+struct retro_memory_descriptor_kodi
+{
+  retro_memory_descriptor descriptor;
+  size_t disconnectMask;
+};
+
 struct retro_memory_map
 {
    const struct retro_memory_descriptor *descriptors;
