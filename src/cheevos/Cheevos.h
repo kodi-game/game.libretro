@@ -8,6 +8,7 @@
 #pragma once
 
 #include "rcheevos/rcheevos.h"
+
 #include <memory>
 #include <stdint.h>
 #include <string>
@@ -26,6 +27,10 @@ public:
   static CCheevos& Get();
   void Initialize();
   void Deinitialize();
+  bool GenerateHashFromFile(char* hash, int consoleID, const char* filePath);
+  bool GetGameIDUrl(char* url, size_t size, const char* hash);
+  bool GetPatchFileUrl(
+      char* url, size_t size, const char* username, const char* token, unsigned gameID);
   void EnableRichPresence(const char* script);
   void EvaluateRichPresence(char* evaluation, size_t size);
   friend unsigned peek(unsigned address, unsigned num_bytes, void* ud);
