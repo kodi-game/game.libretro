@@ -463,6 +463,34 @@ GAME_ERROR CGameLibRetro::SetCheat(unsigned int index, bool enabled, const std::
   return GAME_ERROR_NO_ERROR;
 }
 
+GAME_ERROR CGameLibRetro::RCGenerateHashFromFile(char* hash, int consoleID, const char* filePath)
+{
+  if (!m_cheevos->GenerateHashFromFile(hash, consoleID, filePath))
+    return GAME_ERROR_FAILED;
+
+  return GAME_ERROR_NO_ERROR;
+}
+
+GAME_ERROR CGameLibRetro::RCGetGameIDUrl(char* url, size_t size, const char* hash)
+{
+  if (!m_cheevos->GetGameIDUrl(url, size, hash))
+    return GAME_ERROR_FAILED;
+
+  return GAME_ERROR_NO_ERROR;
+}
+
+GAME_ERROR CGameLibRetro::RCGetPatchFileUrl(char* url,
+                                            size_t size,
+                                            const char* username,
+                                            const char* token,
+                                            unsigned gameID)
+{
+  if (!m_cheevos->GetPatchFileUrl(url, size, username, token, gameID))
+    return GAME_ERROR_FAILED;
+
+  return GAME_ERROR_NO_ERROR;
+}
+
 GAME_ERROR CGameLibRetro::EnableRichPresence(const char* script)
 {
   //CCheevos::Get().EnableRichPresence(script);

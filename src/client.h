@@ -72,6 +72,13 @@ public:
   GAME_ERROR SetCheat(unsigned int index, bool enabled, const std::string& code) override;
 
   // --- RCheevos ----------------------------------------------------------------
+  GAME_ERROR RCGenerateHashFromFile(char* hash, int consoleID, const char* filePath) override;
+  GAME_ERROR RCGetGameIDUrl(char* url, size_t size, const char* hash) override;
+  GAME_ERROR RCGetPatchFileUrl(char* url,
+                               size_t size,
+                               const char* username,
+                               const char* token,
+                               unsigned gameID) override;
   GAME_ERROR EnableRichPresence(const char* script) override;
   GAME_ERROR GetRichPresenceEvaluation(char* evaluation, size_t size) override;
 

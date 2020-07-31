@@ -10,6 +10,8 @@
 #include "libretro/LibretroEnvironment.h"
 #include "libretro/MemoryMap.h"
 #include "rcheevos/rconsoles.h"
+#include "rcheevos/rhash.h"
+#include "rcheevos/rurl.h"
 
 using namespace LIBRETRO;
 
@@ -37,6 +39,25 @@ CCheevos& CCheevos::Get(void)
 {
   static CCheevos _instance;
   return _instance;
+}
+
+bool CCheevos::GenerateHashFromFile(char* hash, int consoleID, const char* filePath)
+{
+  return rc_hash_generate_from_file(hash, consoleID, filePath) != 0;
+}
+
+bool CCheevos::GetGameIDUrl(char* url, size_t size, const char* hash)
+{
+  return rc_url_get_gameid(url, size, hash) == 0;
+}
+
+bool CCheevos::GetPatchFileUrl(char* url, 
+                              size_t size, 
+                              const char* username, 
+                              const char* token, 
+                              unsigned gameID)
+{
+  return rc_url_get_patch(url, size, username, token, gameID) == 0;
 }
 
 void CCheevos::EnableRichPresence(const char* script)
