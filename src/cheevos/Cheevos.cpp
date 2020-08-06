@@ -60,6 +60,18 @@ bool CCheevos::GetPatchFileUrl(char* url,
   return rc_url_get_patch(url, size, username, token, gameID) == 0;
 }
 
+bool CCheevos::PostRichPresenceUrl(char* url,
+                                   size_t urlSize,
+                                   char* postData,
+                                   size_t postSize,
+                                   const char* username,
+                                   const char* token,
+                                   unsigned gameID,
+                                   const char* richPresence)
+{
+  return rc_url_ping(url, urlSize, postData, postSize, username, token, gameID, richPresence) >= 0;
+}
+
 void CCheevos::EnableRichPresence(const char* script)
 {
   rc_runtime_activate_richpresence(&m_runtime, script, NULL, 0);

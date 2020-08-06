@@ -491,6 +491,21 @@ GAME_ERROR CGameLibRetro::RCGetPatchFileUrl(char* url,
   return GAME_ERROR_NO_ERROR;
 }
 
+GAME_ERROR CGameLibRetro::RCPostRichPresenceUrl(char* url,
+                                                size_t urlSize,
+                                                char* postData,
+                                                size_t postSize,
+                                                const char* username,
+                                                const char* token,
+                                                unsigned gameID,
+                                                const char* richPresence)
+{
+  if (!m_cheevos->PostRichPresenceUrl(url, urlSize, postData, postSize, username, token, gameID, richPresence))
+    return GAME_ERROR_FAILED;
+
+  return GAME_ERROR_NO_ERROR;
+}
+
 GAME_ERROR CGameLibRetro::EnableRichPresence(const char* script)
 {
   //CCheevos::Get().EnableRichPresence(script);
