@@ -79,6 +79,14 @@ public:
                                const char* username,
                                const char* token,
                                unsigned gameID) override;
+  GAME_ERROR RCPostRichPresenceUrl(char* url,
+                                   size_t urlSize,
+                                   char* postData,
+                                   size_t postSize,
+                                   const char* username,
+                                   const char* token,
+                                   unsigned gameID,
+                                   const char* richPresence) override;
   GAME_ERROR EnableRichPresence(const char* script) override;
   GAME_ERROR GetRichPresenceEvaluation(char* evaluation, size_t size) override;
 

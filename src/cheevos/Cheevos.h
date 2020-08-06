@@ -31,6 +31,14 @@ public:
   bool GetGameIDUrl(char* url, size_t size, const char* hash);
   bool GetPatchFileUrl(
       char* url, size_t size, const char* username, const char* token, unsigned gameID);
+  bool PostRichPresenceUrl(char* url,
+                           size_t urlSize,
+                           char* postData,
+                           size_t postSize,
+                           const char* username,
+                           const char* token,
+                           unsigned gameID,
+                           const char* richPresence);
   void EnableRichPresence(const char* script);
   void EvaluateRichPresence(char* evaluation, size_t size);
   friend unsigned peek(unsigned address, unsigned num_bytes, void* ud);
