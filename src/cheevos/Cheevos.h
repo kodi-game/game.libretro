@@ -23,7 +23,6 @@ class CCheevos
 {
 public:
   CCheevos();
-  ~CCheevos();
   static CCheevos& Get();
   void Initialize();
   void Deinitialize();
@@ -53,7 +52,7 @@ private:
   std::unordered_map<unsigned, const uint8_t*> m_addressFixups;
 
   // Rich Presence
-  std::unique_ptr<rc_richpresence_t> m_richPresence;
+  rc_richpresence_t* m_richPresence;
   std::vector<char> m_richPresenceBuffer;
 };
 }

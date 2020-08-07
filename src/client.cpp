@@ -5,7 +5,7 @@
  *  See LICENSE.md for more information.
  */
 
-//#include "cheevos/Cheevos.h"
+#include "cheevos/Cheevos.h"
 #include "input/ButtonMapper.h"
 #include "input/ControllerTopology.h"
 #include "input/InputManager.h"
@@ -36,7 +36,6 @@ void SAFE_DELETE_GAME_INFO(std::vector<CGameInfoLoader*>& vec)
 
 CGameLibRetro::CGameLibRetro()
 {
-  m_cheevos = new CCheevos();
 }
 
 CGameLibRetro::~CGameLibRetro()
@@ -53,7 +52,7 @@ CGameLibRetro::~CGameLibRetro()
 
   CLibretroEnvironment::Get().Deinitialize();
 
-  //CCheevos::Get().Deinitialize();
+  CCheevos::Get().Deinitialize();
 
   CLog::Get().SetType(SYS_LOG_TYPE_CONSOLE);
 
@@ -87,7 +86,7 @@ ADDON_STATUS CGameLibRetro::Create()
     CButtonMapper::Get().LoadButtonMap();
     CControllerTopology::GetInstance().LoadTopology();
 
-    //CCheevos::Get().Initialize();
+    CCheevos::Get().Initialize();
 
     m_client.retro_init();
 
@@ -478,7 +477,7 @@ GAME_ERROR CGameLibRetro::SetCheat(unsigned int index, bool enabled, const std::
 
 GAME_ERROR CGameLibRetro::RCGenerateHashFromFile(char* hash, int consoleID, const char* filePath)
 {
-  if (!m_cheevos->GenerateHashFromFile(hash, consoleID, filePath))
+  if (!CCheevos::Get().GenerateHashFromFile(hash, consoleID, filePath))
     return GAME_ERROR_FAILED;
 
   return GAME_ERROR_NO_ERROR;
@@ -486,7 +485,7 @@ GAME_ERROR CGameLibRetro::RCGenerateHashFromFile(char* hash, int consoleID, cons
 
 GAME_ERROR CGameLibRetro::RCGetGameIDUrl(char* url, size_t size, const char* hash)
 {
-  if (!m_cheevos->GetGameIDUrl(url, size, hash))
+  if (!CCheevos::Get().GetGameIDUrl(url, size, hash))
     return GAME_ERROR_FAILED;
 
   return GAME_ERROR_NO_ERROR;
@@ -498,7 +497,7 @@ GAME_ERROR CGameLibRetro::RCGetPatchFileUrl(char* url,
                                             const char* token,
                                             unsigned gameID)
 {
-  if (!m_cheevos->GetPatchFileUrl(url, size, username, token, gameID))
+  if (!CCheevos::Get().GetPatchFileUrl(url, size, username, token, gameID))
     return GAME_ERROR_FAILED;
 
   return GAME_ERROR_NO_ERROR;
@@ -513,7 +512,8 @@ GAME_ERROR CGameLibRetro::RCPostRichPresenceUrl(char* url,
                                                 unsigned gameID,
                                                 const char* richPresence)
 {
-  if (!m_cheevos->PostRichPresenceUrl(url, urlSize, postData, postSize, username, token, gameID, richPresence))
+  if (!CCheevos::Get().PostRichPresenceUrl(url, urlSize, postData, postSize, username, token,
+                                           gameID, richPresence))
     return GAME_ERROR_FAILED;
 
   return GAME_ERROR_NO_ERROR;
@@ -521,16 +521,14 @@ GAME_ERROR CGameLibRetro::RCPostRichPresenceUrl(char* url,
 
 GAME_ERROR CGameLibRetro::EnableRichPresence(const char* script)
 {
-  //CCheevos::Get().EnableRichPresence(script);
-  m_cheevos->EnableRichPresence(script);
+  CCheevos::Get().EnableRichPresence(script);
 
   return GAME_ERROR_NO_ERROR;
 }
 
 GAME_ERROR CGameLibRetro::GetRichPresenceEvaluation(char* evaluation, size_t size)
 {
-  //CCheevos::Get().EvaluateRichPresence(evaluation, size);
-  m_cheevos->EvaluateRichPresence(evaluation, size);
+  CCheevos::Get().EvaluateRichPresence(evaluation, size);
 
   return GAME_ERROR_NO_ERROR;
 }

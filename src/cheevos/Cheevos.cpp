@@ -20,11 +20,6 @@ CCheevos::CCheevos()
   rc_runtime_init(&m_runtime);
 }
 
-CCheevos::~CCheevos()
-{
-  rc_runtime_destroy(&m_runtime);
-}
-
 void CCheevos::Initialize()
 {
   rc_runtime_init(&m_runtime);
@@ -78,13 +73,12 @@ void CCheevos::EnableRichPresence(const char* script)
 
   m_richPresenceBuffer.resize(rc_richpresence_size(script));
 
-  m_richPresence.reset(
-      rc_parse_richpresence(m_richPresenceBuffer.data(), script, NULL, 0));
+  m_richPresence = rc_parse_richpresence(m_richPresenceBuffer.data(), script, NULL, 0);
 }
 
 void CCheevos::EvaluateRichPresence(char* evaluation, size_t size)
 {
-  rc_evaluate_richpresence(m_richPresence.get(), evaluation, size, peek, this, NULL);
+  rc_evaluate_richpresence(m_richPresence, evaluation, size, peek, this, NULL);
 }
 
 unsigned LIBRETRO::peek(unsigned address, unsigned num_bytes, void* ud)

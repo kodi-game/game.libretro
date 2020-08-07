@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include "cheevos/Cheevos.h"
 #include "libretro/ClientBridge.h"
 #include "libretro/LibretroDLL.h"
 #include "utils/Timer.h"
@@ -99,5 +98,4 @@ private:
   std::vector<LIBRETRO::CGameInfoLoader*> m_gameInfo;
   bool                                    m_supportsVFS = false; // TODO
   int64_t                                 m_frameTimeLast = 0;
-  LIBRETRO::CCheevos* m_cheevos;
 };
