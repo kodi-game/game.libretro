@@ -18,7 +18,7 @@ namespace LIBRETRO
 {
   class CVideoGeometry;
 
-  class CVideoStream
+  class ATTRIBUTE_HIDDEN CVideoStream
   {
   public:
     CVideoStream();
