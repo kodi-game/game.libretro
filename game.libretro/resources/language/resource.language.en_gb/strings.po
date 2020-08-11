@@ -19,3 +19,7 @@ msgstr ""
 msgctxt "#30000"
 msgid "Crop overscap"
 msgstr ""
+
+msgctxt "#30001"
+msgid "Crop away invisible edges of the screen, if the game is aware of any."
+msgstr ""
