@@ -82,7 +82,7 @@ void CLibretroSetting::Parse(const std::string& libretroValue)
         std::string strValue;
 
         size_t pos;
-        if ((pos = strValues.find('|')) == std::string::npos)
+        if ((pos = remainingValues.find('|')) == std::string::npos)
         {
           strValue = remainingValues;
           remainingValues.clear();
