@@ -32,6 +32,12 @@ void CCheevos::Deinitialize()
   rc_runtime_destroy(&m_runtime);
 }
 
+void CCheevos::ResetRuntime()
+{
+  rc_runtime_reset(&m_runtime);
+  m_richPresence = rc_parse_richpresence(m_richPresenceBuffer.data(), m_richPresenceScript.c_str(), NULL, 0);
+}
+
 CCheevos& CCheevos::Get(void)
 {
   static CCheevos _instance;
@@ -76,6 +82,8 @@ void CCheevos::EnableRichPresence(const char* script)
   m_richPresenceBuffer.resize(rc_richpresence_size(script));
 
   m_richPresence = rc_parse_richpresence(m_richPresenceBuffer.data(), script, NULL, 0);
+
+  m_richPresenceScript = script;
 }
 
 void CCheevos::EvaluateRichPresence(char* evaluation, size_t size)

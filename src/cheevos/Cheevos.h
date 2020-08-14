@@ -26,6 +26,8 @@ public:
   static CCheevos& Get();
   void Initialize();
   void Deinitialize();
+  // When the game is reset, the runtime should also be reset
+  void ResetRuntime();
   bool GenerateHashFromFile(char* hash, int consoleID, const char* filePath);
   bool GetGameIDUrl(char* url, size_t size, const char* hash);
   bool GetPatchFileUrl(
@@ -53,6 +55,7 @@ private:
 
   // Rich Presence
   rc_richpresence_t* m_richPresence;
+  std::string m_richPresenceScript;
   std::vector<char> m_richPresenceBuffer;
 };
 }

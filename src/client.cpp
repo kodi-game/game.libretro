@@ -520,4 +520,11 @@ GAME_ERROR CGameLibRetro::GetRichPresenceEvaluation(char* evaluation, size_t siz
   return GAME_ERROR_NO_ERROR;
 }
 
+GAME_ERROR CGameLibRetro::RCResetRuntime()
+{
+  CCheevos::Get().ResetRuntime();
+
+  return GAME_ERROR_NO_ERROR;
+}
+
 ADDONCREATOR(CGameLibRetro)

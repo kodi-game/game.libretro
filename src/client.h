@@ -88,6 +88,7 @@ public:
                                    const char* richPresence) override;
   GAME_ERROR EnableRichPresence(const char* script) override;
   GAME_ERROR GetRichPresenceEvaluation(char* evaluation, size_t size) override;
+  GAME_ERROR RCResetRuntime() override;
 
 private:
   GAME_ERROR AudioAvailable();
