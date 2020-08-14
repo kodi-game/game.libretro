@@ -1,4 +1,6 @@
 /*
+ *  This file is based on https://github.com/libretro/RetroArch/blob/96c5f5dfb07454c972c50838815330382d6b1911/cheevos/fixup.c
+ *
  *  Copyright (C) 2014-2020 Team Kodi (https://kodi.tv)
  *
  *  SPDX-License-Identifier: GPL-2.0-or-later
