@@ -42,13 +42,15 @@ public:
                            const char* richPresence);
   void EnableRichPresence(const char* script);
   void EvaluateRichPresence(char* evaluation, size_t size);
-  friend unsigned peek(unsigned address, unsigned num_bytes, void* ud);
+  unsigned int Peek(unsigned int address, unsigned int numBytes);
 
 private:
   const uint8_t* FixupFind(unsigned address, CMemoryMap& mmap, int consolecheevos);
   const uint8_t* PatchAddress(unsigned address, CMemoryMap& mmap, int console);
   size_t HighestBit(size_t n);
   size_t Reduse(size_t addr, size_t mask);
+
+  static unsigned int PeekInternal(unsigned address, unsigned num_bytes, void* ud);
 
   rc_runtime_t m_runtime;
   std::unordered_map<unsigned, const uint8_t*> m_addressFixups;

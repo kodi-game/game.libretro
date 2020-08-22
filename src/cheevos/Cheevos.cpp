@@ -88,27 +88,40 @@ void CCheevos::EnableRichPresence(const char* script)
 
 void CCheevos::EvaluateRichPresence(char* evaluation, size_t size)
 {
-  rc_evaluate_richpresence(m_richPresence, evaluation, size, peek, this, NULL);
+  rc_evaluate_richpresence(m_richPresence, evaluation, size, PeekInternal, this, NULL);
 }
 
-unsigned LIBRETRO::peek(unsigned address, unsigned num_bytes, void* ud)
+unsigned int CCheevos::PeekInternal(unsigned address, unsigned num_bytes, void* ud)
 {
-  CCheevos* cheevos = (CCheevos*)ud;
+  CCheevos* cheevos = static_cast<CCheevos*>(ud);
+  if (cheevos != nullptr)
+    return cheevos->Peek(address, num_bytes);
+
+  return 0;
+}
+
+unsigned int CCheevos::Peek(unsigned int address, unsigned int numBytes)
+{
   CMemoryMap mmap = CLibretroEnvironment::Get().GetMemoryMap();
 
-  const uint8_t* data = cheevos->FixupFind(address, mmap, 5);
+  const uint8_t* data = FixupFind(address, mmap, 5);
   unsigned value = 0;
 
   if (data)
   {
-    switch (num_bytes)
+    switch (numBytes)
     {
       case 4:
         value |= data[2] << 16 | data[3] << 24;
+        //no break
       case 2:
         value |= data[1] << 8;
+        //no break
       case 1:
         value |= data[0];
+        //no break
+      default:
+        break;
     }
   }
 
