@@ -26,6 +26,11 @@ matrix:
       sudo: required
       compiler: gcc
       env: DEBIAN_BUILD=true
+    - os: linux
+      dist: focal
+      sudo: required
+      compiler: gcc
+      env: DEBIAN_BUILD=true
     - os: osx
       osx_image: xcode10.2
 
