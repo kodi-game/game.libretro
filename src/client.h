@@ -52,7 +52,7 @@ public:
   bool HasFeature(const std::string& controller_id, const std::string& feature_name) override;
   game_input_topology* GetTopology() override;
   void FreeTopology(game_input_topology* topology) override;
-  void SetControllerLayouts(const std::vector<AddonGameControllerLayout>& controllers) override;
+  void SetControllerLayouts(const std::vector<kodi::addon::GameControllerLayout>& controllers) override;
   bool EnableKeyboard(bool enable, const std::string& controller_id) override;
   bool EnableMouse(bool enable, const std::string& controller_id) override;
   bool ConnectController(bool connect, const std::string& port_address, const std::string& controller_id) override;

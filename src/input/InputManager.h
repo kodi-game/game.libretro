@@ -45,7 +45,7 @@ namespace LIBRETRO
     /*!
      * \brief
      */
-    void SetControllerLayouts(const std::vector<AddonGameControllerLayout>& controllers);
+    void SetControllerLayouts(const std::vector<kodi::addon::GameControllerLayout>& controllers);
 
     /*!
      * \brief Enable the keyboard
