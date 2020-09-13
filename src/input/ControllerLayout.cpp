@@ -9,7 +9,7 @@
 
 using namespace LIBRETRO;
 
-CControllerLayout::CControllerLayout(const AddonGameControllerLayout& controller) :
+CControllerLayout::CControllerLayout(const kodi::addon::GameControllerLayout& controller) :
   m_controller(controller)
 {
 }

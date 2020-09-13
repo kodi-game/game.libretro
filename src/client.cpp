@@ -329,7 +329,7 @@ void CGameLibRetro::FreeTopology(game_input_topology* topology)
   CControllerTopology::FreeTopology(topology);
 }
 
-void CGameLibRetro::SetControllerLayouts(const std::vector<AddonGameControllerLayout>& controllers)
+void CGameLibRetro::SetControllerLayouts(const std::vector<kodi::addon::GameControllerLayout>& controllers)
 {
   CInputManager::Get().SetControllerLayouts(controllers);
 }

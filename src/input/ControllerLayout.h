@@ -19,12 +19,12 @@ namespace LIBRETRO
   class CControllerLayout
   {
   public:
-    CControllerLayout(const AddonGameControllerLayout& controller);
+    CControllerLayout(const kodi::addon::GameControllerLayout& controller);
 
     const std::string &ControllerID() const { return m_controller.controller_id; }
     bool ProvidesInput() const { return m_controller.provides_input; }
 
   private:
-    AddonGameControllerLayout m_controller;
+    kodi::addon::GameControllerLayout m_controller;
   };
 }

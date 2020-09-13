@@ -39,7 +39,7 @@ libretro_device_caps_t CInputManager::GetDeviceCaps(void) const
 }
 
 
-void CInputManager::SetControllerLayouts(const std::vector<AddonGameControllerLayout>& controllers)
+void CInputManager::SetControllerLayouts(const std::vector<kodi::addon::GameControllerLayout>& controllers)
 {
   m_controllerLayouts.clear();
 
