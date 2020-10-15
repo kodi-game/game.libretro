@@ -16,6 +16,7 @@
 #include <assert.h>
 #include <kodi/Filesystem.h>
 #include <kodi/General.h>
+#include <limits>
 #include <stdio.h>
 
 using namespace LIBRETRO;
@@ -547,6 +548,169 @@ int CFrontendBridge::RenameFile(const char *old_path, const char *new_path)
 
   if (!kodi::vfs::RenameFile(old_path, new_path))
     return -1;
+
+  // Return 0 on success
+  return 0;
+}
+
+int64_t CFrontendBridge::Truncate(retro_vfs_file_handle *stream, int64_t length)
+{
+  // Return -1 on error
+  if (stream == nullptr)
+    return -1;
+
+  FileHandle *fileHandle = reinterpret_cast<FileHandle*>(stream);
+
+  if (fileHandle->file->Truncate(length) < 0)
+    return -1;
+
+  // Return 0 on success
+  return 0;
+}
+
+int CFrontendBridge::Stat(const char *path, int32_t *size)
+{
+  int returnBitmask = 0;
+
+  // Return mask with no flags set if the path was not valid
+  if (path == nullptr)
+    return returnBitmask;
+
+  kodi::vfs::FileStatus statFile;
+  if (!kodi::vfs::StatFile(path, statFile))
+    return returnBitmask;
+
+  // Set bitmask flags
+  returnBitmask &= RETRO_VFS_STAT_IS_VALID;
+
+  if (statFile.GetIsDirectory())
+    returnBitmask &= RETRO_VFS_STAT_IS_DIRECTORY;
+
+  if (statFile.GetIsCharacter())
+    returnBitmask &= RETRO_VFS_STAT_IS_CHARACTER_SPECIAL;
+
+  // Set file size
+  if (size != nullptr)
+  {
+    // What to return if size > 2 GiB?
+    if (statFile.GetSize() <= std::numeric_limits<int32_t>::max())
+      *size = static_cast<int32_t>(statFile.GetSize());
+  }
+
+  // Return bitmask on success
+  return returnBitmask;
+}
+
+int CFrontendBridge::MakeDirectory(const char *dir)
+{
+  // Return -1 on unknown failure
+  if (dir == nullptr)
+    return -1;
+
+  if (!kodi::vfs::CreateDirectory(dir))
+  {
+    // Return -2 if already exists
+    if (kodi::vfs::DirectoryExists(dir))
+      return 2;
+
+    return -1;
+  }
+
+  // Return 0 on success
+  return 0;
+}
+
+retro_vfs_dir_handle *CFrontendBridge::OpenDirectory(const char *dir, bool include_hidden)
+{
+  // Return NULL for error
+  if (dir == nullptr)
+    return nullptr;
+
+  std::unique_ptr<DirectoryHandle> directoryHandle(new DirectoryHandle{ dir });
+
+  // Return the opaque dir handle
+  return reinterpret_cast<retro_vfs_dir_handle*>(directoryHandle.release());
+}
+
+bool CFrontendBridge::ReadDirectory(retro_vfs_dir_handle *dirstream)
+{
+  // What to return on error?
+  if (dirstream == nullptr)
+    return false;
+
+  DirectoryHandle *directoryHandle = reinterpret_cast<DirectoryHandle*>(dirstream);
+
+  if (!directoryHandle->bOpen)
+  {
+    if (kodi::vfs::GetDirectory(directoryHandle->path, "", directoryHandle->items))
+    {
+      directoryHandle->bOpen = true;
+
+      // Simulate a read
+      directoryHandle->currentPosition = directoryHandle->nextPosition = directoryHandle->items.begin();
+
+      // Simulate a dir entry pointer increment
+      if (directoryHandle->nextPosition != directoryHandle->items.end())
+        ++directoryHandle->nextPosition;
+    }
+  }
+  else
+  {
+    // Simulate a read
+    directoryHandle->currentPosition = directoryHandle->nextPosition;
+
+    // Simulate a dir entry pointer increment
+    if (directoryHandle->nextPosition != directoryHandle->items.end())
+      ++directoryHandle->nextPosition;
+  }
+
+  // Return false if already on the last entry
+  if (directoryHandle->currentPosition == directoryHandle->items.end())
+    return false;
+
+  // Return true on success
+  return true;
+}
+
+const char *CFrontendBridge::GetDirectoryName(retro_vfs_dir_handle *dirstream)
+{
+  // Return NULL for error
+  if (dirstream == nullptr)
+    return nullptr;
+
+  DirectoryHandle *directoryHandle = reinterpret_cast<DirectoryHandle*>(dirstream);
+
+  if (directoryHandle->currentPosition == directoryHandle->items.end())
+    return nullptr;
+
+  // The returned string pointer must be valid until the next call to
+  // ReadDirectory() or CloseDirectory()
+  return directoryHandle->currentPosition->Label().c_str();
+}
+
+bool CFrontendBridge::IsDirectory(retro_vfs_dir_handle *dirstream)
+{
+  // Return false on error
+  if (dirstream == nullptr)
+    return false;
+
+  DirectoryHandle *directoryHandle = reinterpret_cast<DirectoryHandle*>(dirstream);
+
+  if (directoryHandle->currentPosition == directoryHandle->items.end())
+    return false;
+
+  return directoryHandle->currentPosition->IsFolder();
+}
+
+int CFrontendBridge::CloseDirectory(retro_vfs_dir_handle *dirstream)
+{
+  // Return -1 on failure
+  if (dirstream == nullptr)
+    return -1;
+
+  DirectoryHandle *directoryHandle = reinterpret_cast<DirectoryHandle*>(dirstream);
+
+  delete directoryHandle;
 
   // Return 0 on success
   return 0;

@@ -11,11 +11,13 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace kodi
 {
 namespace vfs
 {
+  class CDirEntry;
   class CFile;
 }
 }
@@ -72,12 +74,29 @@ namespace LIBRETRO
     static int FlushFile(retro_vfs_file_handle *stream);
     static int RemoveFile(const char *path);
     static int RenameFile(const char *old_path, const char *new_path);
+    static int64_t Truncate(retro_vfs_file_handle *stream, int64_t length);
+    static int Stat(const char *path, int32_t *size);
+    static int MakeDirectory(const char *dir);
+    static retro_vfs_dir_handle *OpenDirectory(const char *dir, bool include_hidden);
+    static bool ReadDirectory(retro_vfs_dir_handle *dirstream);
+    static const char *GetDirectoryName(retro_vfs_dir_handle *dirstream);
+    static bool IsDirectory(retro_vfs_dir_handle *dirstream);
+    static int CloseDirectory(retro_vfs_dir_handle *dirstream);
 
   private:
     struct FileHandle
     {
       std::string path;
       std::unique_ptr<kodi::vfs::CFile> file;
+    };
+
+    struct DirectoryHandle
+    {
+      std::string path;
+      bool bOpen = false;
+      std::vector<kodi::vfs::CDirEntry> items;
+      std::vector<kodi::vfs::CDirEntry>::const_iterator currentPosition;
+      std::vector<kodi::vfs::CDirEntry>::const_iterator nextPosition;
     };
   };
 } // namespace LIBRETRO
