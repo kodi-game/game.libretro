@@ -25,6 +25,8 @@ set(LIBRETRO_SOURCES src/client.cpp
                      src/audio/AudioStream.cpp
                      src/audio/SingleFrameAudio.cpp
                      src/cheevos/Cheevos.cpp
+                     src/cheevos/CheevosEnvironment.cpp
+                     src/cheevos/CheevosFrontendBridge.cpp
                      src/GameInfoLoader.cpp
                      src/input/ButtonMapper.cpp
                      src/input/ControllerLayout.cpp
