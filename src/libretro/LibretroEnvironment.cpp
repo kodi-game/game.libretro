@@ -522,7 +522,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   }
   case RETRO_ENVIRONMENT_GET_VFS_INTERFACE:
   {
-    const uint32_t supported_vfs_version = 1;
+    const uint32_t supported_vfs_version = 3;
 
     retro_vfs_interface_info* typedData = reinterpret_cast<retro_vfs_interface_info*>(data);
     if (typedData)
@@ -541,6 +541,14 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
           CFrontendBridge::FlushFile,
           CFrontendBridge::RemoveFile,
           CFrontendBridge::RenameFile,
+          CFrontendBridge::Truncate,
+          CFrontendBridge::Stat,
+          CFrontendBridge::MakeDirectory,
+          CFrontendBridge::OpenDirectory,
+          CFrontendBridge::ReadDirectory,
+          CFrontendBridge::GetDirectoryName,
+          CFrontendBridge::IsDirectory,
+          CFrontendBridge::CloseDirectory,
         };
 
         typedData->required_interface_version = supported_vfs_version;
