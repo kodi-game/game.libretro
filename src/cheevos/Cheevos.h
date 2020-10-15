@@ -56,7 +56,7 @@ private:
   std::unordered_map<unsigned, const uint8_t*> m_addressFixups;
 
   // Rich Presence
-  rc_richpresence_t* m_richPresence;
+  rc_richpresence_t* m_richPresence = nullptr;
   std::string m_richPresenceScript;
   std::vector<char> m_richPresenceBuffer;
 };
