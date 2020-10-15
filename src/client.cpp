@@ -6,6 +6,7 @@
  */
 
 #include "cheevos/Cheevos.h"
+#include "cheevos/CheevosEnvironment.h"
 #include "input/ButtonMapper.h"
 #include "input/ControllerTopology.h"
 #include "input/InputManager.h"
@@ -51,6 +52,7 @@ CGameLibRetro::~CGameLibRetro()
   CControllerTopology::GetInstance().Clear();
 
   CLibretroEnvironment::Get().Deinitialize();
+  CCheevosEnvironment::Get().Deinitialize();
 
   CCheevos::Get().Deinitialize();
 
@@ -82,6 +84,7 @@ ADDON_STATUS CGameLibRetro::Create()
 
     // Environment must be initialized before calling retro_init()
     CLibretroEnvironment::Get().Initialize(this, &m_client, &m_clientBridge);
+    CCheevosEnvironment::Get().Initialize();
 
     CButtonMapper::Get().LoadButtonMap();
     CControllerTopology::GetInstance().LoadTopology();
