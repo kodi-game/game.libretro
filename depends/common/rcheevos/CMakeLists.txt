@@ -2,6 +2,9 @@ project(rcheevos)
 
 cmake_minimum_required(VERSION 3.0)
 
+# Compiler flags
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 # Disable Lua for now
 add_definitions(-DRC_DISABLE_LUA)
 
