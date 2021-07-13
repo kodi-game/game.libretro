@@ -1,0 +1,1 @@
+rcheevos https://github.com/RetroAchievements/rcheevos/archive/v9.2.0.tar.gz
