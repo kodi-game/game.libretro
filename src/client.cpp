@@ -280,6 +280,8 @@ GAME_ERROR CGameLibRetro::RunFrame()
 
   m_client.retro_run();
 
+  CCheevos::Get().TestCheevoStatusPerFrame();
+
   CLibretroEnvironment::Get().OnFrameEnd();
 
   return GAME_ERROR_NO_ERROR;
@@ -509,6 +511,12 @@ GAME_ERROR CGameLibRetro::RCGetPatchFileUrl(std::string& url,
   return GAME_ERROR_NO_ERROR;
 }
 
+GAME_ERROR CGameLibRetro::SetRetroAchievementsCredentials(const std::string& username, const std::string& token)
+{
+  CCheevos::Get().SetRetroAchievementsCredentials(username, token);
+  return GAME_ERROR_NO_ERROR;
+}
+
 GAME_ERROR CGameLibRetro::RCPostRichPresenceUrl(std::string& url,
                                                 std::string& postData,
                                                 const std::string& username,
@@ -534,6 +542,21 @@ GAME_ERROR CGameLibRetro::RCGetRichPresenceEvaluation(std::string& evaluation,
 {
   CCheevos::Get().EvaluateRichPresence(evaluation, consoleID);
 
+  return GAME_ERROR_NO_ERROR;
+}
+
+GAME_ERROR CGameLibRetro::ActivateAchievement(unsigned cheevo_id, const std::string& memAddrExpression)
+{
+  if (!CCheevos::Get().ActivateAchievement(cheevo_id, memAddrExpression))
+    return GAME_ERROR_FAILED;
+
+  return GAME_ERROR_NO_ERROR;
+}
+
+
+GAME_ERROR CGameLibRetro::GetCheevoUrlId(const std::function<void(const std::string& achievementUrl, unsigned int cheevoId)>& callback)
+{
+  CCheevos::Get().GetCheevoUrlId(callback);
   return GAME_ERROR_NO_ERROR;
 }
 

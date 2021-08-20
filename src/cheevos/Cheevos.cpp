@@ -15,6 +15,8 @@
 #include "rcheevos/rhash.h"
 #include "rcheevos/rurl.h"
 
+#include <limits>
+
 using namespace LIBRETRO;
 
 namespace
@@ -59,10 +61,31 @@ bool CCheevos::GenerateHashFromFile(std::string& hash,
 {
   char _hash[HASH_SIZE] = {};
 
-  int res = rc_hash_generate_from_file(_hash, consoleID, filePath.c_str());
-  hash = _hash;
+  if (consoleID > static_cast<unsigned int>(std::numeric_limits<int>::max()))
+  {
+    hash.clear();
+    m_hash.clear();
+    return false;
+  }
 
-  return res != RC_OK;
+  const int raConsoleID = static_cast<int>(consoleID);
+  int res = rc_hash_generate_from_file(_hash, raConsoleID, filePath.c_str());
+  const bool success = (res != 0);
+
+  hash = _hash;
+  if (success)
+  {
+    m_addressFixups.clear();
+    m_hash = hash;
+    m_consoleID = consoleID;
+  }
+  else
+  {
+    hash.clear();
+    m_hash.clear();
+  }
+
+  return success;
 }
 
 bool CCheevos::GetGameIDUrl(std::string& url, const std::string& hash)
@@ -86,6 +109,12 @@ bool CCheevos::GetPatchFileUrl(std::string& url,
   url = _url;
 
   return res == 0;
+}
+
+void CCheevos::SetRetroAchievementsCredentials(const std::string& username, const std::string& token)
+{
+  m_username = username;
+  m_token = token;
 }
 
 bool CCheevos::PostRichPresenceUrl(std::string& url,
@@ -129,6 +158,51 @@ void CCheevos::EvaluateRichPresence(std::string& evaluation, unsigned int consol
   evaluation = _evaluation;
 }
 
+bool CCheevos::ActivateAchievement(unsigned cheevo_id, const std::string& memAddrExpression)
+{
+  // Returns 0 when the achievement is activated successfully
+  return rc_runtime_activate_achievement(&m_runtime, cheevo_id, memAddrExpression.c_str(), NULL,
+                                         0) == 0;
+}
+
+bool CCheevos::AwardAchievement(
+    char* url, size_t size, unsigned cheevo_id, int hardcore, const std::string& game_hash)
+{
+  return rc_url_award_cheevo(url, size, m_username.c_str(), m_token.c_str(), cheevo_id, hardcore,
+                             game_hash.c_str()) >= 0;
+}
+
+void CCheevos::GetCheevoUrlId(const std::function<void(const std::string& achievementUrl,
+                                                       unsigned int cheevoId)>& callback)
+{
+  m_callback = callback;
+}
+
+void CCheevos::DeactivateTriggeredAchievement(unsigned cheevo_id)
+{
+  rc_runtime_deactivate_achievement(&m_runtime, cheevo_id);
+
+  if (m_hash.empty() || !m_callback)
+    return;
+
+  char url[URL_SIZE] = {};
+  if (AwardAchievement(url, URL_SIZE, cheevo_id, 0, m_hash))
+    m_callback(url, cheevo_id);
+}
+
+void CCheevos::RuntimeEventHandler(const rc_runtime_event_t* runtime_event)
+{
+  if (runtime_event->type == RC_RUNTIME_EVENT_ACHIEVEMENT_TRIGGERED)
+  {
+    CCheevos::Get().DeactivateTriggeredAchievement(runtime_event->id);
+  }
+}
+
+void CCheevos::TestCheevoStatusPerFrame()
+{
+  rc_runtime_do_frame(&m_runtime, &RuntimeEventHandler, PeekInternal, this, NULL);
+}
+
 unsigned int CCheevos::PeekInternal(unsigned address, unsigned num_bytes, void* ud)
 {
   CCheevos* cheevos = static_cast<CCheevos*>(ud);
@@ -166,24 +240,24 @@ unsigned int CCheevos::Peek(unsigned int address, unsigned int numBytes)
   return value;
 }
 
-const uint8_t* CCheevos::FixupFind(unsigned address, CMemoryMap& mmap, int console)
+const uint8_t* CCheevos::FixupFind(unsigned address, CMemoryMap& mmap, unsigned int consoleID)
 {
   auto location = m_addressFixups.find(address);
   if (location != m_addressFixups.end())
     return location->second;
 
-  const uint8_t* dataAddress = PatchAddress(address, mmap, console);
+  const uint8_t* dataAddress = PatchAddress(address, mmap, consoleID);
   m_addressFixups[address] = dataAddress;
 
   return dataAddress;
 }
 
-const uint8_t* CCheevos::PatchAddress(size_t address, CMemoryMap& mmap, int console)
+const uint8_t* CCheevos::PatchAddress(size_t address, CMemoryMap& mmap, unsigned int consoleID)
 {
   const void* pointer = NULL;
   size_t original_address = address;
 
-  switch (console)
+  switch (consoleID)
   {
     case RC_CONSOLE_NINTENDO:
       if (address >= 0x0800 && address < 0x2000)
@@ -199,7 +273,7 @@ const uint8_t* CCheevos::PatchAddress(size_t address, CMemoryMap& mmap, int cons
 
   if (mmap.Size() != 0)
   {
-    switch (console)
+    switch (consoleID)
     {
       case RC_CONSOLE_GAMEBOY_ADVANCE:
         if (address < 0x8000)
