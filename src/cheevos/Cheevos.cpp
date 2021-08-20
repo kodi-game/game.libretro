@@ -17,9 +17,13 @@
 
 using namespace LIBRETRO;
 
+constexpr int URL_SIZE = 512;
+
 CCheevos::CCheevos()
 {
   rc_runtime_init(&m_runtime);
+  m_cheevo_id = 0;
+  m_url = NULL;
 }
 
 void CCheevos::Initialize()
@@ -46,7 +50,9 @@ CCheevos& CCheevos::Get(void)
 
 bool CCheevos::GenerateHashFromFile(char* hash, int consoleID, const char* filePath)
 {
-  return rc_hash_generate_from_file(hash, consoleID, filePath) != 0;
+  int res = rc_hash_generate_from_file(hash, consoleID, filePath);
+  m_hash = hash;
+  return res != 0;
 }
 
 bool CCheevos::GetGameIDUrl(char* url, size_t size, const char* hash)
@@ -61,6 +67,12 @@ bool CCheevos::GetPatchFileUrl(char* url,
                               unsigned gameID)
 {
   return rc_url_get_patch(url, size, username, token, gameID) == 0;
+}
+
+void CCheevos::SetRetroAchievementsCredentials(const char* username, const char* token)
+{
+  m_username = username;
+  m_token = token;
 }
 
 bool CCheevos::PostRichPresenceUrl(char* url,
@@ -89,6 +101,48 @@ void CCheevos::EnableRichPresence(const char* script)
 void CCheevos::EvaluateRichPresence(char* evaluation, size_t size)
 {
   rc_evaluate_richpresence(m_richPresence, evaluation, size, PeekInternal, this, NULL);
+}
+
+void CCheevos::ActivateAchievement(unsigned cheevo_id, const char* memaddr)
+{
+  rc_runtime_activate_achievement(&m_runtime, cheevo_id, memaddr, NULL, 0);
+  // it will return integer value 0 in case achivement is activated successfully.
+}
+
+bool CCheevos::AwardAchievement(
+    char* url, size_t size, unsigned cheevo_id, int hardcore, const char* game_hash)
+{
+  return rc_url_award_cheevo(url, size, m_username.c_str(), m_token.c_str(), cheevo_id, 0,
+                             game_hash) >= 0;
+}
+
+void CCheevos::GetCheevo_URL_ID(void (*Callback)(const char* achievement_url, unsigned cheevo_id))
+{
+  this->Callback = Callback;
+}
+
+void CCheevos::DeactivateTriggeredAchievement(unsigned cheevo_id)
+{
+  rc_runtime_deactivate_achievement(&m_runtime, cheevo_id);
+  char url[URL_SIZE];
+  if (AwardAchievement(url, URL_SIZE, cheevo_id, 0, m_hash.c_str()))
+  {
+    std::string achievement_url = url;
+    this->Callback(url, cheevo_id);
+  }
+}
+
+void CCheevos::RuntimeEventHandler(const rc_runtime_event_t* runtime_event)
+{
+  if (runtime_event->type == RC_RUNTIME_EVENT_ACHIEVEMENT_TRIGGERED)
+  {
+    CCheevos::Get().DeactivateTriggeredAchievement(runtime_event->id);
+  }
+}
+
+void CCheevos::TestCheevoStatusPerFrame()
+{
+  rc_runtime_do_frame(&m_runtime, &RuntimeEventHandler, PeekInternal, this, NULL);
 }
 
 unsigned int CCheevos::PeekInternal(unsigned address, unsigned num_bytes, void* ud)
