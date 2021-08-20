@@ -88,6 +88,12 @@ bool CCheevos::GetPatchFileUrl(std::string& url,
   return res == 0;
 }
 
+void CCheevos::SetRetroAchievementsCredentials(const std::string& username, const std::string& token)
+{
+  m_username = username;
+  m_token = token;
+}
+
 bool CCheevos::PostRichPresenceUrl(std::string& url,
                                    std::string& postData,
                                    const std::string& username,
@@ -127,6 +133,48 @@ void CCheevos::EvaluateRichPresence(std::string& evaluation, unsigned int consol
   rc_evaluate_richpresence(m_richPresence, _evaluation, RICH_PRESENCE_EVAL_SIZE, PeekInternal, this,
                            NULL);
   evaluation = _evaluation;
+}
+
+void CCheevos::ActivateAchievement(unsigned cheevo_id, const char* memaddr)
+{
+  rc_runtime_activate_achievement(&m_runtime, cheevo_id, memaddr, NULL, 0);
+  // it will return integer value 0 in case achivement is activated successfully.
+}
+
+bool CCheevos::AwardAchievement(
+    char* url, size_t size, unsigned cheevo_id, int hardcore, const std::string& game_hash)
+{
+  return rc_url_award_cheevo(url, size, m_username.c_str(), m_token.c_str(), cheevo_id, 0,
+                             game_hash.c_str()) >= 0;
+}
+
+void CCheevos::GetCheevo_URL_ID(void (*callback)(const char* achievement_url, unsigned cheevo_id))
+{
+  m_callback = callback;
+}
+
+void CCheevos::DeactivateTriggeredAchievement(unsigned cheevo_id)
+{
+  rc_runtime_deactivate_achievement(&m_runtime, cheevo_id);
+  char url[URL_SIZE];
+  if (AwardAchievement(url, URL_SIZE, cheevo_id, 0, m_hash.c_str()))
+  {
+    std::string achievement_url = url;
+    m_callback(url, cheevo_id);
+  }
+}
+
+void CCheevos::RuntimeEventHandler(const rc_runtime_event_t* runtime_event)
+{
+  if (runtime_event->type == RC_RUNTIME_EVENT_ACHIEVEMENT_TRIGGERED)
+  {
+    CCheevos::Get().DeactivateTriggeredAchievement(runtime_event->id);
+  }
+}
+
+void CCheevos::TestCheevoStatusPerFrame()
+{
+  rc_runtime_do_frame(&m_runtime, &RuntimeEventHandler, PeekInternal, this, NULL);
 }
 
 unsigned int CCheevos::PeekInternal(unsigned address, unsigned num_bytes, void* ud)
