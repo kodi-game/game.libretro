@@ -16,6 +16,14 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
+msgctxt "Addon Summary"
+msgid "Libretro compatibility layer for Kodi's Game API"
+msgstr "Libretro-Kompatibilitätsschicht für Kodi's Spiele API"
+
+msgctxt "Addon Description"
+msgid "This add-on provides a wrapper for libretro cores, allowing them to be loaded as game add-ons."
+msgstr "Dieses Add-On bietet einen Umwandler für Libretro-Kerne, mit dem sie als Spielsystem Add-On's für Kodi geladen und genutzt werden können."
+
 msgctxt "#30000"
 msgid "Crop overscan"
 msgstr ""
