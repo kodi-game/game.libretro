@@ -9,15 +9,15 @@
        library_@PLATFORM@="@LIBRARY_FILENAME@">
   </extension>
   <extension point="xbmc.addon.metadata">
-    <summary lang="de_DE">Libretro-Kompatibilitätsschicht für Kodi's Spiele API</summary>
-    <summary lang="en_GB">Libretro compatibility layer for Kodi's Game API</summary>
-    <description lang="de_DE">Dieses Add-On bietet einen Umwandler für Libretro-Kerne, mit dem sie als Spielsystem Add-On's für Kodi geladen und genutzt werden können.</description>
-    <description lang="en_GB">This add-on provides a wrapper for libretro cores, allowing them to be loaded as game add-ons.</description>
     <platform>@PLATFORM@</platform>
     <license>GPL-2.0-or-later</license>
     <source>https://github.com/kodi-game/game.libretro</source>
     <assets>
       <icon>icon.png</icon>
     </assets>
+    <summary lang="de_DE">Libretro-Kompatibilitätsschicht für Kodi's Spiele API</summary>
+    <summary lang="en_GB">Libretro compatibility layer for Kodi's Game API</summary>
+    <description lang="de_DE">Dieses Add-On bietet einen Umwandler für Libretro-Kerne, mit dem sie als Spielsystem Add-On's für Kodi geladen und genutzt werden können.</description>
+    <description lang="en_GB">This add-on provides a wrapper for libretro cores, allowing them to be loaded as game add-ons.</description>
   </extension>
 </addon>
