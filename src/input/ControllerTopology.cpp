@@ -156,7 +156,7 @@ int CControllerTopology::GetPortIndex(const PortPtr &port, const std::string &po
     {
       const ControllerPtr& controller = GetActiveController(port);
       if (controller)
-        portIndex = GetPortIndex(controller, portAddress, playerCount);
+        portIndex = GetPortIndex(controller, remainingAddress, playerCount);
     }
   }
 
@@ -179,7 +179,7 @@ int CControllerTopology::GetPortIndex(const ControllerPtr &controller, const std
 
     for (const auto &port : ports)
     {
-      portIndex = GetPortIndex(port, portAddress, playerCount);
+      portIndex = GetPortIndex(port, remainingAddress, playerCount);
       if (portIndex >= 0)
         break;
     }
@@ -659,7 +659,7 @@ void CControllerTopology::SplitAddress(const std::string &address, std::string &
   else
   {
     // Skip leading / to extract node ID
-    nodeId = address.substr(1, pos);
+    nodeId = address.substr(1, pos - 1);
     remainingAddress = address.substr(pos);
   }
 }
