@@ -613,7 +613,10 @@ CControllerTopology::PortPtr CControllerTopology::DeserializePort(const TiXmlEle
     const char* strConnectionPort = pElement->Attribute(TOPOLOGY_XML_ATTR_CONNECTION_PORT);
     std::string connectionPort = strConnectionPort != nullptr ? strConnectionPort : "";
 
-    port.reset(new Port{ portType, portId, std::move(connectionPort) });
+    const char* strForceConnected = pElement->Attribute(TOPOLOGY_XML_ATTR_FORCE_CONNECTED);
+    bool forceConnected = (strForceConnected != nullptr && std::string(strForceConnected) == "true");
+
+    port.reset(new Port{ portType, portId, std::move(connectionPort), forceConnected });
 
     const TiXmlElement* pChild = pElement->FirstChildElement(TOPOLOGY_XML_ELEM_ACCEPTS);
     if (pChild == nullptr)
@@ -684,6 +687,7 @@ game_input_port *CControllerTopology::GetPorts(const std::vector<PortPtr> &portV
     {
       ports[i].type = portVec[i]->type;
       ports[i].port_id = portVec[i]->portId.c_str();
+      ports[i].force_connected = portVec[i]->forceConnected;
 
       unsigned int deviceCount = 0;
       ports[i].accepted_devices = GetControllers(portVec[i]->accepts, deviceCount);
