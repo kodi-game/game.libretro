@@ -33,11 +33,11 @@ bool CLanguageGenerator::GenerateLanguage(const LibretroSettings& settings)
   file << "msgid \"\"" << std::endl;
   file << "msgstr \"\"" << std::endl;
   file << "\"Project-Id-Version: " << m_strAddonId << "\\n\"" << std::endl;
-  file << "\"Report-Msgid-Bugs-To: alanwww1@xbmc.org\\n\"" << std::endl;
+  file << "\"Report-Msgid-Bugs-To: translations@kodi.tv\\n\"" << std::endl;
   file << "\"POT-Creation-Date: 2016-10-25 17:00+8\\n\"" << std::endl;
   file << "\"PO-Revision-Date: 2016-10-25 17:00+8\\n\"" << std::endl;
   file << "\"Last-Translator: Kodi Translation Team\\n\"" << std::endl;
-  file << "\"Language-Team: English (http://www.transifex.com/projects/p/xbmc-addons/language/en/)\\n\"" << std::endl;
+  file << "\"Language-Team: English (United Kingdom) (https://kodi.weblate.cloud/languages/en_gb/)\\n\"" << std::endl;
   file << "\"MIME-Version: 1.0\\n\"" << std::endl;
   file << "\"Content-Type: text/plain; charset=UTF-8\\n\"" << std::endl;
   file << "\"Content-Transfer-Encoding: 8bit\\n\"" << std::endl;
