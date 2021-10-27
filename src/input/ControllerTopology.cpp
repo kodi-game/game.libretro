@@ -222,6 +222,72 @@ int CControllerTopology::GetPortIndex(const ControllerPtr &controller, const std
   return portIndex;
 }
 
+bool CControllerTopology::GetConnectionPortIndex(const std::string &address, int &connectionPort) const
+{
+  for (const auto &port : m_ports)
+  {
+    if (GetConnectionPortIndex(port, address, connectionPort))
+      return true;
+  }
+
+  return false;
+}
+
+bool CControllerTopology::GetConnectionPortIndex(const PortPtr &port, const std::string &portAddress, int &connectionPort)
+{
+  std::string portId;
+  std::string remainingAddress;
+  SplitAddress(portAddress, portId, remainingAddress);
+
+  if (port->portId == portId)
+  {
+    if (remainingAddress.empty())
+    {
+      // Base case
+      if (!port->connectionPort.empty())
+      {
+        std::istringstream(port->connectionPort) >> connectionPort;
+        return true;
+      }
+      else
+      {
+        return false;
+      }
+    }
+    else
+    {
+      const ControllerPtr& controller = GetActiveController(port);
+      if (controller)
+      {
+        if (GetConnectionPortIndex(controller, remainingAddress, connectionPort))
+          return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+bool CControllerTopology::GetConnectionPortIndex(const ControllerPtr &controller, const std::string &portAddress, int &connectionPort)
+{
+  std::string portControllerId;
+  std::string remainingAddress;
+  SplitAddress(portAddress, portControllerId, remainingAddress);
+
+  if (controller->controllerId == portControllerId)
+  {
+    const auto &ports = controller->ports;
+
+    for (const auto &childPort : ports)
+    {
+      if (GetConnectionPortIndex(childPort, remainingAddress, connectionPort))
+        return true;
+    }
+  }
+
+  return false;
+}
+
 std::string CControllerTopology::GetAddress(unsigned int portIndex) const
 {
   std::string address;
@@ -544,7 +610,10 @@ CControllerTopology::PortPtr CControllerTopology::DeserializePort(const TiXmlEle
 
   if (!portId.empty())
   {
-    port.reset(new Port{ portType, portId });
+    const char* strConnectionPort = pElement->Attribute(TOPOLOGY_XML_ATTR_CONNECTION_PORT);
+    std::string connectionPort = strConnectionPort != nullptr ? strConnectionPort : "";
+
+    port.reset(new Port{ portType, portId, std::move(connectionPort) });
 
     const TiXmlElement* pChild = pElement->FirstChildElement(TOPOLOGY_XML_ELEM_ACCEPTS);
     if (pChild == nullptr)

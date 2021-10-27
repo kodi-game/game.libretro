@@ -92,6 +92,18 @@ namespace LIBRETRO
      */
     int GetPortIndex(const std::string &address) const;
 
+    /*!
+     * \brief Get the port number that we should use when setting the
+     * controller port
+     *
+     * \param address The port address
+     * \param[out] connectionPort The port used to change connections, or
+     * untouched if this function returns false
+     *
+     * \return True if a connection port was specified, false otherwise
+     */
+    bool GetConnectionPortIndex(const std::string &address, int& connectionPort) const;
+
     std::string GetAddress(unsigned int port) const;
 
     /*!
