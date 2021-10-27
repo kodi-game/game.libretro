@@ -76,6 +76,9 @@ namespace LIBRETRO
       bool bProvidesInput;
     };
 
+    static unsigned int GetPlayerCount(const PortPtr& port);
+    static unsigned int GetPlayerCount(const ControllerPtr& controller);
+
     static int GetPortIndex(const PortPtr &port, const std::string &portAddress, unsigned int &playerCount);
     static int GetPortIndex(const ControllerPtr &controller, const std::string &portAddress, unsigned int &playerCount);
 
