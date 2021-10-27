@@ -167,6 +167,11 @@ int CInputManager::GetPortIndex(const std::string &address) const
   return CControllerTopology::GetInstance().GetPortIndex(address);
 }
 
+bool CInputManager::GetLibretroPortIndex(const std::string &address, int& libretroPort) const
+{
+  return CControllerTopology::GetInstance().GetLibretroPortIndex(address, libretroPort);
+}
+
 std::string CInputManager::GetAddress(unsigned int port) const
 {
   return CControllerTopology::GetInstance().GetAddress(port);

@@ -376,7 +376,7 @@ bool CGameLibRetro::ConnectController(bool connect, const std::string& port_addr
   if (connect)
     strController = controller_id;
 
-  const int port = CInputManager::Get().GetPortIndex(strPortAddress);
+  int port = CInputManager::Get().GetPortIndex(strPortAddress);
   if (port < 0)
   {
     esyslog("Failed to connect controller, invalid port address: %s", strPortAddress.c_str());
@@ -394,10 +394,23 @@ bool CGameLibRetro::ConnectController(bool connect, const std::string& port_addr
       CInputManager::Get().DisconnectController(strPortAddress);
     }
 
-    dsyslog("Setting port \"%s\" (libretro port %d) to controller \"%s\" (libretro device ID %u)",
-        strPortAddress.c_str(), port, strController.c_str(), device);
+    // Get libretro port override if specified
+    int libretroPort = -1;
+    if (CInputManager::Get().GetLibretroPortIndex(strPortAddress, libretroPort))
+      port = libretroPort;
 
-    m_client.retro_set_controller_port_device(port, device);
+    if (port >= 0)
+    {
+      dsyslog("Setting port \"%s\" (libretro port %d) to controller \"%s\" (libretro device ID %u)",
+          strPortAddress.c_str(), port, strController.c_str(), device);
+
+      m_client.retro_set_controller_port_device(port, device);
+    }
+    else
+    {
+      dsyslog("Ignoring port \"%s\" with controller \"%s\" (libretro device ID %u)",
+          strPortAddress.c_str(), strController.c_str(), device);
+    }
 
     return true;
   }

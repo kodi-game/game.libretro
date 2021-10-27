@@ -36,6 +36,8 @@ namespace LIBRETRO
 
     int GetPortIndex(const std::string &address) const;
 
+    bool GetLibretroPortIndex(const std::string &address, int &libretroPortId) const;
+
     std::string GetAddress(unsigned int portIndex) const;
 
     bool SetDevice(GAME_PORT_TYPE portType, const std::string &controllerId);
@@ -65,6 +67,7 @@ namespace LIBRETRO
     {
       GAME_PORT_TYPE type;
       std::string portId;
+      std::string libretroPort; // Empty if no libretro port is specified in topology.xml
       std::vector<ControllerPtr> accepts;
       std::string activeId; // Empty if disconnected
     };
@@ -81,6 +84,9 @@ namespace LIBRETRO
 
     static int GetPortIndex(const PortPtr &port, const std::string &portAddress, unsigned int &playerCount);
     static int GetPortIndex(const ControllerPtr &controller, const std::string &portAddress, unsigned int &playerCount);
+
+    static bool GetLibretroPortIndex(const PortPtr &port, const std::string &portAddress, int &libretroPort);
+    static bool GetLibretroPortIndex(const ControllerPtr &controller, const std::string &portAddress, int &libretroPort);
 
     static std::string GetAddress(const PortPtr &port, unsigned int portIndex, unsigned int &playerCount);
     static std::string GetAddress(const ControllerPtr &controller, unsigned int portIndex, unsigned int &playerCount);

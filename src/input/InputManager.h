@@ -92,6 +92,18 @@ namespace LIBRETRO
      */
     int GetPortIndex(const std::string &address) const;
 
+    /*!
+     * \brief Get the port number that we should use when setting the
+     * controller port
+     *
+     * \param address The port address
+     * \param[out] libretroPort The libretro port, if specified, or untouched
+     * if this function returns false
+     *
+     * \return True if a specific libretro port was specified, false otherwise
+     */
+    bool GetLibretroPortIndex(const std::string &address, int& libretroPort) const;
+
     std::string GetAddress(unsigned int port) const;
 
     /*!

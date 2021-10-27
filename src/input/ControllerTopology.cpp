@@ -222,6 +222,72 @@ int CControllerTopology::GetPortIndex(const ControllerPtr &controller, const std
   return portIndex;
 }
 
+bool CControllerTopology::GetLibretroPortIndex(const std::string &address, int &libretroPort) const
+{
+  for (const auto &port : m_ports)
+  {
+    if (GetLibretroPortIndex(port, address, libretroPort))
+      return true;
+  }
+
+  return false;
+}
+
+bool CControllerTopology::GetLibretroPortIndex(const PortPtr &port, const std::string &portAddress, int &libretroPort)
+{
+  std::string portId;
+  std::string remainingAddress;
+  SplitAddress(portAddress, portId, remainingAddress);
+
+  if (port->portId == portId)
+  {
+    if (remainingAddress.empty())
+    {
+      // Base case
+      if (!port->libretroPort.empty())
+      {
+        std::istringstream(port->libretroPort) >> libretroPort;
+        return true;
+      }
+      else
+      {
+        return false;
+      }
+    }
+    else
+    {
+      const ControllerPtr& controller = GetActiveController(port);
+      if (controller)
+      {
+        if (GetLibretroPortIndex(controller, remainingAddress, libretroPort))
+          return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+bool CControllerTopology::GetLibretroPortIndex(const ControllerPtr &controller, const std::string &portAddress, int &libretroPort)
+{
+  std::string portControllerId;
+  std::string remainingAddress;
+  SplitAddress(portAddress, portControllerId, remainingAddress);
+
+  if (controller->controllerId == portControllerId)
+  {
+    const auto &ports = controller->ports;
+
+    for (const auto &childPort : ports)
+    {
+      if (GetLibretroPortIndex(childPort, remainingAddress, libretroPort))
+        return true;
+    }
+  }
+
+  return false;
+}
+
 std::string CControllerTopology::GetAddress(unsigned int portIndex) const
 {
   std::string address;
@@ -537,7 +603,10 @@ CControllerTopology::PortPtr CControllerTopology::DeserializePort(const TiXmlEle
 
   if (!portId.empty())
   {
-    port.reset(new Port{ portType, portId });
+    const char* strLibretroPort = pElement->Attribute(TOPOLOGY_XML_ATTR_LIBRETRO_PORT);
+    std::string libretroPort = strLibretroPort != nullptr ? strLibretroPort : "";
+
+    port.reset(new Port{ portType, portId, std::move(libretroPort) });
 
     const TiXmlElement* pChild = pElement->FirstChildElement(TOPOLOGY_XML_ELEM_ACCEPTS);
     if (pChild == nullptr)
