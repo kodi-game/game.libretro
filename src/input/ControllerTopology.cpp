@@ -606,7 +606,10 @@ CControllerTopology::PortPtr CControllerTopology::DeserializePort(const TiXmlEle
     const char* strLibretroPort = pElement->Attribute(TOPOLOGY_XML_ATTR_LIBRETRO_PORT);
     std::string libretroPort = strLibretroPort != nullptr ? strLibretroPort : "";
 
-    port.reset(new Port{ portType, portId, std::move(libretroPort) });
+    const char* strAllowDisconnect = pElement->Attribute(TOPOLOGY_XML_ATTR_ALLOW_DISCONNECT);
+    bool allowDisconnect = (strAllowDisconnect == nullptr || std::string(strAllowDisconnect) == "true");
+
+    port.reset(new Port{ portType, portId, std::move(libretroPort), allowDisconnect });
 
     const TiXmlElement* pChild = pElement->FirstChildElement(TOPOLOGY_XML_ELEM_ACCEPTS);
     if (pChild == nullptr)
@@ -677,6 +680,7 @@ game_input_port *CControllerTopology::GetPorts(const std::vector<PortPtr> &portV
     {
       ports[i].type = portVec[i]->type;
       ports[i].port_id = portVec[i]->portId.c_str();
+      ports[i].allow_disconnect = portVec[i]->allowDisconnect;
 
       unsigned int deviceCount = 0;
       ports[i].accepted_devices = GetControllers(portVec[i]->accepts, deviceCount);

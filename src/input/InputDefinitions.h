@@ -27,6 +27,7 @@
 #define TOPOLOGY_XML_ATTR_PORT_TYPE         "type"
 #define TOPOLOGY_XML_ATTR_PORT_ID           "id"
 #define TOPOLOGY_XML_ATTR_LIBRETRO_PORT     "libretroPort"
+#define TOPOLOGY_XML_ATTR_ALLOW_DISCONNECT  "allowDisconnect"
 #define TOPOLOGY_XML_ATTR_CONTROLLER_ID     "controller"
 
 // Game API strings

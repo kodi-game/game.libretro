@@ -68,6 +68,7 @@ namespace LIBRETRO
       GAME_PORT_TYPE type;
       std::string portId;
       std::string libretroPort; // Empty if no libretro port is specified in topology.xml
+      bool allowDisconnect = false;
       std::vector<ControllerPtr> accepts;
       std::string activeId; // Empty if disconnected
     };
