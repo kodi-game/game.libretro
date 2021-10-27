@@ -90,6 +90,8 @@ namespace LIBRETRO
 
     static PortPtr CreateDefaultPort(const std::string &acceptedController);
 
+    static const ControllerPtr& GetActiveController(const PortPtr& port);
+
     static void SplitAddress(const std::string &address, std::string &nodeId, std::string &remainingAddress);
 
     std::vector<PortPtr> m_ports;
