@@ -22,6 +22,14 @@ using namespace LIBRETRO;
 
 #define ADDRESS_SEPARATOR  '/'
 
+//! @todo Remove me when these are added to the Game API
+#if !defined(KEYBOARD_PORT_ID)
+#define KEYBOARD_PORT_ID "keyboard"
+#endif
+#if !defined(MOUSE_PORT_ID)
+#define MOUSE_PORT_ID "mouse"
+#endif
+
 CControllerTopology& CControllerTopology::GetInstance()
 {
   static CControllerTopology instance;
@@ -468,24 +476,49 @@ CControllerTopology::PortPtr CControllerTopology::DeserializePort(const TiXmlEle
   PortPtr port;
 
   const char* strPortType = pElement->Attribute(TOPOLOGY_XML_ATTR_PORT_TYPE);
-
   GAME_PORT_TYPE portType = CInputTranslator::GetPortType(strPortType != nullptr ? strPortType : "");
+
+  //! @todo Remove this hack
   if (portType == GAME_PORT_UNKNOWN)
     portType = GAME_PORT_CONTROLLER;
 
-  const char* strPortId = pElement->Attribute(TOPOLOGY_XML_ATTR_PORT_ID);
-  if (portType == GAME_PORT_CONTROLLER && strPortId == nullptr)
+  std::string portId;
+  switch (portType)
   {
-    esyslog("<%s> tag is missing attribute \"%s\", can't proceed without port ID", TOPOLOGY_XML_ELEM_PORT, TOPOLOGY_XML_ATTR_PORT_ID);
+  case GAME_PORT_CONTROLLER:
+  {
+    const char* strPortId = pElement->Attribute(TOPOLOGY_XML_ATTR_PORT_ID);
+    if (strPortId != nullptr)
+      portId = strPortId;
+    else
+      esyslog("<%s> tag is missing attribute \"%s\", can't proceed without port ID", TOPOLOGY_XML_ELEM_PORT, TOPOLOGY_XML_ATTR_PORT_ID);
+    break;
   }
-  else
+  case GAME_PORT_KEYBOARD:
   {
-    port.reset(new Port{ portType, strPortId != nullptr ? strPortId : "" });
+    portId = KEYBOARD_PORT_ID;
+    break;
+  }
+  case GAME_PORT_MOUSE:
+  {
+    portId = MOUSE_PORT_ID;
+    break;
+  }
+  default:
+  {
+    esyslog("<%s> tag attribute \"%s\" has unknown value: \"%s\"", TOPOLOGY_XML_ELEM_PORT, TOPOLOGY_XML_ATTR_PORT_TYPE, strPortType != nullptr ? strPortType : "");
+    break;
+  }
+  }
+
+  if (!portId.empty())
+  {
+    port.reset(new Port{ portType, portId });
 
     const TiXmlElement* pChild = pElement->FirstChildElement(TOPOLOGY_XML_ELEM_ACCEPTS);
     if (pChild == nullptr)
     {
-      dsyslog("<%s> tag with ID \"%s\" is missing <%s> node, port won't accept any controllers", TOPOLOGY_XML_ELEM_PORT, strPortId, TOPOLOGY_XML_ELEM_ACCEPTS);
+      dsyslog("<%s> tag with ID \"%s\" is missing <%s> node, port won't accept any controllers", TOPOLOGY_XML_ELEM_PORT, portId.c_str(), TOPOLOGY_XML_ELEM_ACCEPTS);
     }
     else
     {
