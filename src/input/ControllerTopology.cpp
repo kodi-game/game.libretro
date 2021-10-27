@@ -107,6 +107,30 @@ void CControllerTopology::FreePorts(game_input_port *ports, unsigned int portCou
   delete[] ports;
 }
 
+unsigned int CControllerTopology::GetPlayerCount(const PortPtr& port)
+{
+  unsigned int playerCount = 0;
+
+  const ControllerPtr& controller = GetActiveController(port);
+  if (controller)
+    playerCount += GetPlayerCount(controller);
+
+  return playerCount;
+}
+
+unsigned int CControllerTopology::GetPlayerCount(const ControllerPtr& controller)
+{
+  unsigned int playerCount = 0;
+
+  if (controller->bProvidesInput)
+    playerCount++;
+
+  for (const PortPtr &port : controller->ports)
+    playerCount += GetPlayerCount(port);
+
+  return playerCount;
+}
+
 int CControllerTopology::GetPortIndex(const std::string &address) const
 {
   int portIndex = -1;
@@ -156,11 +180,18 @@ int CControllerTopology::GetPortIndex(const PortPtr &port, const std::string &po
     {
       const ControllerPtr& controller = GetActiveController(port);
       if (controller)
+      {
+        // Player count is incremented as we visit controllers recursively
         portIndex = GetPortIndex(controller, remainingAddress, playerCount);
+      }
     }
   }
-
-  playerCount++;
+  else
+  {
+    // Player count wasn't incremented by visiting controllers for this port,
+    // so calculate and increment it now
+    playerCount += GetPlayerCount(port);
+  }
 
   return portIndex;
 }
