@@ -144,22 +144,11 @@ int CControllerTopology::GetPortIndex(const PortPtr &port, const std::string &po
       // Base case
       portIndex = playerCount;
     }
-    else if (!port->activeId.empty())
+    else
     {
-      // Visit active controller
-      const auto &accepts = port->accepts;
-
-      auto it = std::find_if(accepts.begin(), accepts.end(),
-        [&port](const ControllerPtr &controller)
-        {
-          return port->activeId == controller->controllerId;
-        });
-
-      if (it != accepts.end())
-      {
-        const ControllerPtr &controller = *it;
+      const ControllerPtr& controller = GetActiveController(port);
+      if (controller)
         portIndex = GetPortIndex(controller, portAddress, playerCount);
-      }
     }
   }
 
@@ -228,20 +217,12 @@ std::string CControllerTopology::GetAddress(const PortPtr &port, unsigned int po
     // Base case
     address = ADDRESS_SEPARATOR + port->portId;
   }
-  else if (!port->activeId.empty())
+  else
   {
-    // Visit active controller
-    const auto &accepts = port->accepts;
 
-    auto it = std::find_if(accepts.begin(), accepts.end(),
-      [&port](const ControllerPtr &controller)
-      {
-        return port->activeId == controller->controllerId;
-      });
-
-    if (it != accepts.end())
+    const ControllerPtr& controller = GetActiveController(port);
+    if (controller)
     {
-      const ControllerPtr &controller = *it;
       std::string controllerAddress = GetAddress(controller, portIndex, playerCount);
       if (!controllerAddress.empty())
         address = ADDRESS_SEPARATOR + port->portId + controllerAddress;
@@ -356,18 +337,11 @@ bool CControllerTopology::SetController(const PortPtr &port, const std::string &
         bSuccess = true;
       }
     }
-    else if (!port->activeId.empty())
+    else
     {
-      // Visit active controller
-      auto it = std::find_if(accepts.begin(), accepts.end(),
-        [&port](const ControllerPtr &controller)
-        {
-          return port->activeId == controller->controllerId;
-        });
-
-      if (it != accepts.end())
+      const ControllerPtr& controller = GetActiveController(port);
+      if (controller)
       {
-        const ControllerPtr &controller = *it;
         if (SetController(controller, remainingAddress, controllerId, bProvidesInput))
           bSuccess = true;
       }
@@ -418,22 +392,11 @@ void CControllerTopology::RemoveController(const PortPtr &port, const std::strin
       // Base case
       port->activeId.clear();
     }
-    else if (!port->activeId.empty())
+    else
     {
-      // Visit active controller
-      const auto &accepts = port->accepts;
-
-      auto it = std::find_if(accepts.begin(), accepts.end(),
-        [&port](const ControllerPtr &controller)
-        {
-          return port->activeId == controller->controllerId;
-        });
-
-      if (it != accepts.end())
-      {
-        const ControllerPtr &controller = *it;
+      const ControllerPtr& controller = GetActiveController(port);
+      if (controller)
         RemoveController(controller, remainingAddress);
-      }
     }
   }
 }
@@ -635,6 +598,26 @@ CControllerTopology::PortPtr CControllerTopology::CreateDefaultPort(const std::s
   port->accepts.emplace_back(new Controller{ acceptedController });
 
   return port;
+}
+
+const CControllerTopology::ControllerPtr& CControllerTopology::GetActiveController(const PortPtr& port)
+{
+  if (!port->activeId.empty())
+  {
+    const auto &accepts = port->accepts;
+
+    auto it = std::find_if(accepts.begin(), accepts.end(),
+      [&port](const ControllerPtr &controller)
+      {
+        return port->activeId == controller->controllerId;
+      });
+
+    if (it != accepts.end())
+      return *it;
+  }
+
+  static const ControllerPtr empty;
+  return empty;
 }
 
 void CControllerTopology::SplitAddress(const std::string &address, std::string &nodeId, std::string &remainingAddress)
