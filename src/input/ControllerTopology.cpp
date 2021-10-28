@@ -366,10 +366,17 @@ bool CControllerTopology::SetDevice(GAME_PORT_TYPE portType, const std::string &
   {
     if (port->type == portType)
     {
-      const ControllerPtr& controller = GetActiveController(port);
-      if (controller)
+      const auto &accepts = port->accepts;
+
+      auto it = std::find_if(accepts.begin(), accepts.end(),
+        [&controllerId](const ControllerPtr &controller)
+        {
+          return controllerId == controller->controllerId;
+        });
+
+      if (it != accepts.end())
       {
-        port->activeId = controller->controllerId;
+        port->activeId = controllerId;
         return true;
       }
     }
