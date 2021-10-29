@@ -218,7 +218,8 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
         hw_info.version_minor      = typedData->version_minor;
         hw_info.cache_context      = typedData->cache_context;
         hw_info.debug_context      = typedData->debug_context;
-        m_videoStream.EnableHardwareRendering(hw_info);
+        if (!m_videoStream.EnableHardwareRendering(hw_info))
+          return false;
 
         // Store callbacks from libretro client
         m_clientBridge->SetHwContextReset(typedData->context_reset);
