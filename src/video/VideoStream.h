@@ -28,7 +28,7 @@ namespace LIBRETRO
 
     void SetGeometry(const CVideoGeometry &geometry);
 
-    void EnableHardwareRendering(const game_stream_hw_framebuffer_properties &properties);
+    bool EnableHardwareRendering(const game_stream_hw_framebuffer_properties &properties);
 
     uintptr_t GetHwFramebuffer();
     bool GetSwFramebuffer(unsigned int width, unsigned int height, GAME_PIXEL_FORMAT requestedFormat, game_stream_sw_framebuffer_buffer &framebuffer);
