@@ -43,10 +43,10 @@ void CVideoStream::SetGeometry(const CVideoGeometry &geometry)
   *m_geometry = geometry;
 }
 
-void CVideoStream::EnableHardwareRendering(const game_stream_hw_framebuffer_properties &properties)
+bool CVideoStream::EnableHardwareRendering(const game_stream_hw_framebuffer_properties &properties)
 {
   if (m_addon == nullptr)
-    return;
+    return false;
 
   CloseStream();
 
@@ -55,8 +55,12 @@ void CVideoStream::EnableHardwareRendering(const game_stream_hw_framebuffer_prop
   streamProps.type = GAME_STREAM_HW_FRAMEBUFFER;
   streamProps.hw_framebuffer = properties;
 
-  m_stream.Open(streamProps);
+  if (!m_stream.Open(streamProps))
+    return false;
+
   m_streamType = GAME_STREAM_HW_FRAMEBUFFER;
+
+  return true;
 }
 
 uintptr_t CVideoStream::GetHwFramebuffer()
