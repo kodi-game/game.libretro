@@ -226,6 +226,15 @@ bool CFrontendBridge::RumbleSetState(unsigned int port, retro_rumble_effect effe
   return true;
 }
 
+void CFrontendBridge::LedSetState(int led, int state)
+{
+  if (!CLibretroEnvironment::Get().GetAddon())
+    return;
+
+  // TODO
+  kodi::Log(ADDON_LOG_DEBUG, "LED: %d, state: %d", led, state);
+}
+
 bool CFrontendBridge::SensorSetState(unsigned port, retro_sensor_action action, unsigned rate)
 {
   const bool bEnabled = (action == RETRO_SENSOR_ACCELEROMETER_ENABLE);

@@ -563,8 +563,8 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     retro_led_interface* typedData = reinterpret_cast<retro_led_interface*>(data);
     if (typedData)
     {
-      // Not implemented
-      return false;
+      // Expose callback to libretro core
+      typedData->set_led_state = CFrontendBridge::LedSetState;
     }
     break;
   }
