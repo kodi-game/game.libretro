@@ -44,6 +44,7 @@ namespace LIBRETRO
     static uintptr_t HwGetCurrentFramebuffer(void);
     static retro_proc_address_t HwGetProcAddress(const char *sym);
     static bool RumbleSetState(unsigned port, retro_rumble_effect effect, uint16_t strength);
+    static void LedSetState(int led, int state);
     static bool SensorSetState(unsigned port, retro_sensor_action action, unsigned rate);
     static float SensorGetInput(unsigned port, unsigned id);
     static bool StartCamera(void);
