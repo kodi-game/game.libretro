@@ -75,12 +75,6 @@ bool CLibretroDevice::Deserialize(const TiXmlElement* pElement, unsigned int but
 
   // Features
   const TiXmlElement* pFeature = pElement->FirstChildElement(BUTTONMAP_XML_ELM_FEATURE);
-  if (!pFeature)
-  {
-    esyslog("Can't find <%s> tag for controller \"%s\"", BUTTONMAP_XML_ELM_FEATURE, m_controllerId.c_str());
-    return false;
-  }
-
   while (pFeature)
   {
     const char* name = pFeature->Attribute(BUTTONMAP_XML_ATTR_FEATURE_NAME);

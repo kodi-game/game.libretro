@@ -22,6 +22,14 @@ using namespace LIBRETRO;
 
 #define ADDRESS_SEPARATOR  '/'
 
+//! @todo Remove me when these are added to the Game API
+#if !defined(KEYBOARD_PORT_ID)
+#define KEYBOARD_PORT_ID "keyboard"
+#endif
+#if !defined(MOUSE_PORT_ID)
+#define MOUSE_PORT_ID "mouse"
+#endif
+
 CControllerTopology& CControllerTopology::GetInstance()
 {
   static CControllerTopology instance;
@@ -99,6 +107,30 @@ void CControllerTopology::FreePorts(game_input_port *ports, unsigned int portCou
   delete[] ports;
 }
 
+unsigned int CControllerTopology::GetPlayerCount(const PortPtr& port)
+{
+  unsigned int playerCount = 0;
+
+  const ControllerPtr& controller = GetActiveController(port);
+  if (controller)
+    playerCount += GetPlayerCount(controller);
+
+  return playerCount;
+}
+
+unsigned int CControllerTopology::GetPlayerCount(const ControllerPtr& controller)
+{
+  unsigned int playerCount = 0;
+
+  if (controller->bProvidesInput)
+    playerCount++;
+
+  for (const PortPtr &port : controller->ports)
+    playerCount += GetPlayerCount(port);
+
+  return playerCount;
+}
+
 int CControllerTopology::GetPortIndex(const std::string &address) const
 {
   int portIndex = -1;
@@ -144,26 +176,22 @@ int CControllerTopology::GetPortIndex(const PortPtr &port, const std::string &po
       // Base case
       portIndex = playerCount;
     }
-    else if (!port->activeId.empty())
+    else
     {
-      // Visit active controller
-      const auto &accepts = port->accepts;
-
-      auto it = std::find_if(accepts.begin(), accepts.end(),
-        [&port](const ControllerPtr &controller)
-        {
-          return port->activeId == controller->controllerId;
-        });
-
-      if (it != accepts.end())
+      const ControllerPtr& controller = GetActiveController(port);
+      if (controller)
       {
-        const ControllerPtr &controller = *it;
-        portIndex = GetPortIndex(controller, portAddress, playerCount);
+        // Player count is incremented as we visit controllers recursively
+        portIndex = GetPortIndex(controller, remainingAddress, playerCount);
       }
     }
   }
-
-  playerCount++;
+  else
+  {
+    // Player count wasn't incremented by visiting controllers for this port,
+    // so calculate and increment it now
+    playerCount += GetPlayerCount(port);
+  }
 
   return portIndex;
 }
@@ -182,7 +210,7 @@ int CControllerTopology::GetPortIndex(const ControllerPtr &controller, const std
 
     for (const auto &port : ports)
     {
-      portIndex = GetPortIndex(port, portAddress, playerCount);
+      portIndex = GetPortIndex(port, remainingAddress, playerCount);
       if (portIndex >= 0)
         break;
     }
@@ -192,6 +220,72 @@ int CControllerTopology::GetPortIndex(const ControllerPtr &controller, const std
     playerCount++;
 
   return portIndex;
+}
+
+bool CControllerTopology::GetConnectionPortIndex(const std::string &address, int &connectionPort) const
+{
+  for (const auto &port : m_ports)
+  {
+    if (GetConnectionPortIndex(port, address, connectionPort))
+      return true;
+  }
+
+  return false;
+}
+
+bool CControllerTopology::GetConnectionPortIndex(const PortPtr &port, const std::string &portAddress, int &connectionPort)
+{
+  std::string portId;
+  std::string remainingAddress;
+  SplitAddress(portAddress, portId, remainingAddress);
+
+  if (port->portId == portId)
+  {
+    if (remainingAddress.empty())
+    {
+      // Base case
+      if (!port->connectionPort.empty())
+      {
+        std::istringstream(port->connectionPort) >> connectionPort;
+        return true;
+      }
+      else
+      {
+        return false;
+      }
+    }
+    else
+    {
+      const ControllerPtr& controller = GetActiveController(port);
+      if (controller)
+      {
+        if (GetConnectionPortIndex(controller, remainingAddress, connectionPort))
+          return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+bool CControllerTopology::GetConnectionPortIndex(const ControllerPtr &controller, const std::string &portAddress, int &connectionPort)
+{
+  std::string portControllerId;
+  std::string remainingAddress;
+  SplitAddress(portAddress, portControllerId, remainingAddress);
+
+  if (controller->controllerId == portControllerId)
+  {
+    const auto &ports = controller->ports;
+
+    for (const auto &childPort : ports)
+    {
+      if (GetConnectionPortIndex(childPort, remainingAddress, connectionPort))
+        return true;
+    }
+  }
+
+  return false;
 }
 
 std::string CControllerTopology::GetAddress(unsigned int portIndex) const
@@ -228,20 +322,12 @@ std::string CControllerTopology::GetAddress(const PortPtr &port, unsigned int po
     // Base case
     address = ADDRESS_SEPARATOR + port->portId;
   }
-  else if (!port->activeId.empty())
+  else
   {
-    // Visit active controller
-    const auto &accepts = port->accepts;
 
-    auto it = std::find_if(accepts.begin(), accepts.end(),
-      [&port](const ControllerPtr &controller)
-      {
-        return port->activeId == controller->controllerId;
-      });
-
-    if (it != accepts.end())
+    const ControllerPtr& controller = GetActiveController(port);
+    if (controller)
     {
-      const ControllerPtr &controller = *it;
       std::string controllerAddress = GetAddress(controller, portIndex, playerCount);
       if (!controllerAddress.empty())
         address = ADDRESS_SEPARATOR + port->portId + controllerAddress;
@@ -356,18 +442,11 @@ bool CControllerTopology::SetController(const PortPtr &port, const std::string &
         bSuccess = true;
       }
     }
-    else if (!port->activeId.empty())
+    else
     {
-      // Visit active controller
-      auto it = std::find_if(accepts.begin(), accepts.end(),
-        [&port](const ControllerPtr &controller)
-        {
-          return port->activeId == controller->controllerId;
-        });
-
-      if (it != accepts.end())
+      const ControllerPtr& controller = GetActiveController(port);
+      if (controller)
       {
-        const ControllerPtr &controller = *it;
         if (SetController(controller, remainingAddress, controllerId, bProvidesInput))
           bSuccess = true;
       }
@@ -418,22 +497,11 @@ void CControllerTopology::RemoveController(const PortPtr &port, const std::strin
       // Base case
       port->activeId.clear();
     }
-    else if (!port->activeId.empty())
+    else
     {
-      // Visit active controller
-      const auto &accepts = port->accepts;
-
-      auto it = std::find_if(accepts.begin(), accepts.end(),
-        [&port](const ControllerPtr &controller)
-        {
-          return port->activeId == controller->controllerId;
-        });
-
-      if (it != accepts.end())
-      {
-        const ControllerPtr &controller = *it;
+      const ControllerPtr& controller = GetActiveController(port);
+      if (controller)
         RemoveController(controller, remainingAddress);
-      }
     }
   }
 }
@@ -505,24 +573,55 @@ CControllerTopology::PortPtr CControllerTopology::DeserializePort(const TiXmlEle
   PortPtr port;
 
   const char* strPortType = pElement->Attribute(TOPOLOGY_XML_ATTR_PORT_TYPE);
-
   GAME_PORT_TYPE portType = CInputTranslator::GetPortType(strPortType != nullptr ? strPortType : "");
+
+  //! @todo Remove this hack
   if (portType == GAME_PORT_UNKNOWN)
     portType = GAME_PORT_CONTROLLER;
 
-  const char* strPortId = pElement->Attribute(TOPOLOGY_XML_ATTR_PORT_ID);
-  if (portType == GAME_PORT_CONTROLLER && strPortId == nullptr)
+  std::string portId;
+  switch (portType)
   {
-    esyslog("<%s> tag is missing attribute \"%s\", can't proceed without port ID", TOPOLOGY_XML_ELEM_PORT, TOPOLOGY_XML_ATTR_PORT_ID);
+  case GAME_PORT_CONTROLLER:
+  {
+    const char* strPortId = pElement->Attribute(TOPOLOGY_XML_ATTR_PORT_ID);
+    if (strPortId != nullptr)
+      portId = strPortId;
+    else
+      esyslog("<%s> tag is missing attribute \"%s\", can't proceed without port ID", TOPOLOGY_XML_ELEM_PORT, TOPOLOGY_XML_ATTR_PORT_ID);
+    break;
   }
-  else
+  case GAME_PORT_KEYBOARD:
   {
-    port.reset(new Port{ portType, strPortId != nullptr ? strPortId : "" });
+    portId = KEYBOARD_PORT_ID;
+    break;
+  }
+  case GAME_PORT_MOUSE:
+  {
+    portId = MOUSE_PORT_ID;
+    break;
+  }
+  default:
+  {
+    esyslog("<%s> tag attribute \"%s\" has unknown value: \"%s\"", TOPOLOGY_XML_ELEM_PORT, TOPOLOGY_XML_ATTR_PORT_TYPE, strPortType != nullptr ? strPortType : "");
+    break;
+  }
+  }
+
+  if (!portId.empty())
+  {
+    const char* strConnectionPort = pElement->Attribute(TOPOLOGY_XML_ATTR_CONNECTION_PORT);
+    std::string connectionPort = strConnectionPort != nullptr ? strConnectionPort : "";
+
+    const char* strForceConnected = pElement->Attribute(TOPOLOGY_XML_ATTR_FORCE_CONNECTED);
+    bool forceConnected = (strForceConnected != nullptr && std::string(strForceConnected) == "true");
+
+    port.reset(new Port{ portType, portId, std::move(connectionPort), forceConnected });
 
     const TiXmlElement* pChild = pElement->FirstChildElement(TOPOLOGY_XML_ELEM_ACCEPTS);
     if (pChild == nullptr)
     {
-      dsyslog("<%s> tag with ID \"%s\" is missing <%s> node, port won't accept any controllers", TOPOLOGY_XML_ELEM_PORT, strPortId, TOPOLOGY_XML_ELEM_ACCEPTS);
+      dsyslog("<%s> tag with ID \"%s\" is missing <%s> node, port won't accept any controllers", TOPOLOGY_XML_ELEM_PORT, portId.c_str(), TOPOLOGY_XML_ELEM_ACCEPTS);
     }
     else
     {
@@ -588,6 +687,7 @@ game_input_port *CControllerTopology::GetPorts(const std::vector<PortPtr> &portV
     {
       ports[i].type = portVec[i]->type;
       ports[i].port_id = portVec[i]->portId.c_str();
+      ports[i].force_connected = portVec[i]->forceConnected;
 
       unsigned int deviceCount = 0;
       ports[i].accepted_devices = GetControllers(portVec[i]->accepts, deviceCount);
@@ -637,6 +737,26 @@ CControllerTopology::PortPtr CControllerTopology::CreateDefaultPort(const std::s
   return port;
 }
 
+const CControllerTopology::ControllerPtr& CControllerTopology::GetActiveController(const PortPtr& port)
+{
+  if (!port->activeId.empty())
+  {
+    const auto &accepts = port->accepts;
+
+    auto it = std::find_if(accepts.begin(), accepts.end(),
+      [&port](const ControllerPtr &controller)
+      {
+        return port->activeId == controller->controllerId;
+      });
+
+    if (it != accepts.end())
+      return *it;
+  }
+
+  static const ControllerPtr empty;
+  return empty;
+}
+
 void CControllerTopology::SplitAddress(const std::string &address, std::string &nodeId, std::string &remainingAddress)
 {
   // Start searching after leading /
@@ -650,7 +770,7 @@ void CControllerTopology::SplitAddress(const std::string &address, std::string &
   else
   {
     // Skip leading / to extract node ID
-    nodeId = address.substr(1, pos);
+    nodeId = address.substr(1, pos - 1);
     remainingAddress = address.substr(pos);
   }
 }
