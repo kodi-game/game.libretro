@@ -21,7 +21,7 @@ Building this add-on requires Kodi's internal CMake-based build system for binar
 
 The Makefile will download, build and install the add-on and its dependencies. There is no need to manually clone the add-on if Kodi's source is available.
 
-The version fetched by Kodi's build system is defined by a text file included with Kodi at [project/cmake/addons/addons/game.libretro](https://github.com/garbear/xbmc/tree/retroplayer-15.2/project/cmake/addons/addons/game.libretro) or fetched from the [binary add-ons repo](https://github.com/xbmc/repo-binary-addons) specified in [cmake/addons/bootstrap/repositories/binary-addons.txt](https://github.com/xbmc/xbmc/blob/Matrix/cmake/addons/bootstrap/repositories/binary-addons.txt).
+The version fetched by Kodi's build system is defined by a text file included with Kodi at [project/cmake/addons/addons/game.libretro](https://github.com/garbear/xbmc/tree/retroplayer-15.2/project/cmake/addons/addons/game.libretro) or fetched from the [binary add-ons repo](https://github.com/xbmc/repo-binary-addons) specified in [cmake/addons/bootstrap/repositories/binary-addons.txt](https://github.com/xbmc/xbmc/blob/master/cmake/addons/bootstrap/repositories/binary-addons.txt).
 
 ### Building on Linux
 
