@@ -18,6 +18,7 @@
     <summary lang="da_DK">Libretro kompatibilitetslag til Kodi's Game API</summary>
     <summary lang="de_DE">Libretro-Kompatibilitätsschicht für Kodi's Spiele API</summary>
     <summary lang="en_GB">Libretro compatibility layer for Kodi's Game API</summary>
+    <summary lang="hu_HU">Libreto Kompatibilis réteg Kodi Játék API-jának</summary>
     <summary lang="zh_CN">用于 Kodi 游戏 API 的 Libretro 兼容层</summary>
     <description lang="da_DK">Dette add-on giver en wrapper til libretro-kerner, så de kan indlæses som spil-add-ons.</description>
     <description lang="de_DE">Dieses Addon bietet einen Umwandler für Libretro-Kerne, mit dem sie als Spielsystem Add-On's für Kodi geladen und genutzt werden können.</description>
