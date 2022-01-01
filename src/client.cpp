@@ -132,18 +132,13 @@ ADDON_STATUS CGameLibRetro::Create()
     return status;
   }
 
-  return GetStatus();
-}
-
-ADDON_STATUS CGameLibRetro::GetStatus()
-{
   if (!CSettings::Get().IsInitialized())
     return ADDON_STATUS_NEED_SETTINGS;
 
   return ADDON_STATUS_OK;
 }
 
-ADDON_STATUS CGameLibRetro::SetSetting(const std::string& settingName, const kodi::CSettingValue& settingValue)
+ADDON_STATUS CGameLibRetro::SetSetting(const std::string& settingName, const kodi::addon::CSettingValue& settingValue)
 {
   if (settingName == "" || settingValue.empty())
     return ADDON_STATUS_UNKNOWN;
