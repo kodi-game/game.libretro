@@ -26,7 +26,7 @@ namespace LIBRETRO
   class CClientBridge;
   class CLibretroDLL;
 
-  class ATTRIBUTE_HIDDEN CLibretroEnvironment
+  class ATTR_DLL_LOCAL CLibretroEnvironment
   {
   public:
     static CLibretroEnvironment& Get(void);

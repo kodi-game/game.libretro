@@ -16,7 +16,7 @@ using namespace LIBRETRO;
 
 // --- TranslateLogLevel() -----------------------------------------------------
 
-AddonLog TranslateLogLevel(SYS_LOG_LEVEL level)
+ADDON_LOG TranslateLogLevel(SYS_LOG_LEVEL level)
 {
   switch (level)
   {

@@ -22,7 +22,7 @@ namespace LIBRETRO
 
     bool IsInitialized(void) const { return m_bInitialized; }
 
-    void SetSetting(const std::string& strName, const kodi::CSettingValue& value);
+    void SetSetting(const std::string& strName, const kodi::addon::CSettingValue& value);
 
     /*!
      * \brief True if the libretro core should crop overscan

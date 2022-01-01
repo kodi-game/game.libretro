@@ -18,7 +18,7 @@ namespace LIBRETRO
   class CGameInfoLoader;
 }
 
-class ATTRIBUTE_HIDDEN CGameLibRetro
+class ATTR_DLL_LOCAL CGameLibRetro
   : public kodi::addon::CAddonBase,
     public kodi::addon::CInstanceGame
 {
@@ -27,8 +27,7 @@ public:
   ~CGameLibRetro() override;
 
   ADDON_STATUS Create() override;
-  ADDON_STATUS GetStatus() override;
-  ADDON_STATUS SetSetting(const std::string& settingName, const kodi::CSettingValue& settingValue) override;
+  ADDON_STATUS SetSetting(const std::string& settingName, const kodi::addon::CSettingValue& settingValue) override;
 
   // --- Game operations ---------------------------------------------------------
 

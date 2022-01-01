@@ -23,7 +23,7 @@ CSettings& CSettings::Get(void)
   return _instance;
 }
 
-void CSettings::SetSetting(const std::string& strName, const kodi::CSettingValue& value)
+void CSettings::SetSetting(const std::string& strName, const kodi::addon::CSettingValue& value)
 {
   if (strName == SETTING_CROP_OVERSCAN)
   {

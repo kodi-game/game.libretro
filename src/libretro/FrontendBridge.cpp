@@ -32,7 +32,7 @@ using namespace LIBRETRO;
 
 void CFrontendBridge::LogFrontend(retro_log_level level, const char *fmt, ...)
 {
-  AddonLog xbmcLevel;
+  ADDON_LOG xbmcLevel;
   switch (level)
   {
   case RETRO_LOG_DEBUG: xbmcLevel = ADDON_LOG_DEBUG; break;

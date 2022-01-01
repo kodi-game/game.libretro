@@ -73,7 +73,7 @@ void CLibretroSettings::SetAllSettings(const retro_variable* libretroVariables)
 
       // Query current value for setting from the frontend
       std::string valueBuf;
-      if (kodi::CheckSettingString(variable->key, valueBuf))
+      if (kodi::addon::CheckSettingString(variable->key, valueBuf))
       {
         if (std::find(setting.Values().begin(), setting.Values().end(), valueBuf) != setting.Values().end())
         {

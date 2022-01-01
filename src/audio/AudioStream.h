@@ -17,7 +17,7 @@ class CGameLibRetro;
 
 namespace LIBRETRO
 {
-  class ATTRIBUTE_HIDDEN CAudioStream
+  class ATTR_DLL_LOCAL CAudioStream
   {
   public:
     CAudioStream();
