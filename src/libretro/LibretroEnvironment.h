@@ -21,7 +21,6 @@
 class CGameLibRetro;
 
 struct retro_game_geometry;
-struct retro_memory_map_kodi;
 
 namespace LIBRETRO
 {

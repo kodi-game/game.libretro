@@ -11,7 +11,6 @@
 
 #include "libretro/LibretroEnvironment.h"
 #include "libretro/MemoryMap.h"
-#include "libretro/libretro.h"
 #include "rcheevos/rconsoles.h"
 #include "rcheevos/rhash.h"
 #include "rcheevos/rurl.h"

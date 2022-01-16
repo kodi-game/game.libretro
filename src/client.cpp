@@ -10,7 +10,7 @@
 #include "input/ButtonMapper.h"
 #include "input/ControllerTopology.h"
 #include "input/InputManager.h"
-#include "libretro/libretro.h"
+#include "libretro-common/libretro.h"
 #include "libretro/LibretroEnvironment.h"
 #include "log/Log.h"
 #include "log/LogAddon.h"

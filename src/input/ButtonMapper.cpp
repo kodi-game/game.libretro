@@ -13,7 +13,7 @@
 #include "libretro/LibretroDLL.h"
 #include "libretro/LibretroEnvironment.h"
 #include "libretro/LibretroTranslator.h"
-#include "libretro/libretro.h"
+#include "libretro-common/libretro.h"
 #include "log/Log.h"
 
 #include <tinyxml.h>

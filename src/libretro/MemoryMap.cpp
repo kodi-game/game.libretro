@@ -6,7 +6,6 @@
  */
 
 #include "MemoryMap.h"
-#include "libretro.h"
 
 using namespace LIBRETRO;
 

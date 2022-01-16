@@ -8,7 +8,7 @@
 #include "LibretroEnvironment.h"
 #include "ClientBridge.h"
 #include "FrontendBridge.h"
-#include "libretro.h"
+#include "libretro-common/libretro.h"
 #include "LibretroDLL.h"
 #include "LibretroTranslator.h"
 #include "input/InputManager.h"

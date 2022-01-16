@@ -10,7 +10,7 @@
 #include "LibretroDevice.h"
 #include "LibretroDeviceInput.h"
 #include "libretro/ClientBridge.h"
-#include "libretro/libretro.h"
+#include "libretro-common/libretro.h"
 #include "libretro/LibretroEnvironment.h"
 #include "libretro/LibretroTranslator.h"
 #include "log/Log.h"

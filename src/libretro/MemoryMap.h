@@ -8,9 +8,13 @@
 #pragma once
 
 #include <vector>
+#include "libretro-common/libretro.h"
 
-struct retro_memory_map;
-struct retro_memory_descriptor_kodi;
+struct retro_memory_descriptor_kodi
+{
+  retro_memory_descriptor descriptor;
+  size_t disconnectMask;
+};
 
 namespace LIBRETRO
 {

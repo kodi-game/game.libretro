@@ -6,7 +6,7 @@
  */
 
 #include "LibretroSetting.h"
-#include "libretro/libretro.h"
+#include "libretro-common/libretro.h"
 
 using namespace LIBRETRO;
 
