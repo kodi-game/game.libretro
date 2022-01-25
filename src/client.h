@@ -78,6 +78,7 @@ public:
                                const char* username,
                                const char* token,
                                unsigned gameID) override;
+  GAME_ERROR SetRetroAchievementsCredentials(const char* username, const char* token);
   GAME_ERROR RCPostRichPresenceUrl(char* url,
                                    size_t urlSize,
                                    char* postData,
@@ -88,7 +89,10 @@ public:
                                    const char* richPresence) override;
   GAME_ERROR EnableRichPresence(const char* script) override;
   GAME_ERROR GetRichPresenceEvaluation(char* evaluation, size_t size) override;
+  GAME_ERROR ActivateAchievement(unsigned cheevo_id, const char* memaddr) override;
   GAME_ERROR RCResetRuntime() override;
+  GAME_ERROR GetCheevo_URL_ID(void (*Callback)(const char* achievement_url,
+                                               unsigned cheevo_id)) override;
 
 private:
   GAME_ERROR AudioAvailable();
