@@ -34,16 +34,13 @@ jobs:
           sync-addon-metadata-translations
         working-directory: ./project
 
-      - name: Commit files
-        run: |
-          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git commit -m "Sync of addon metadata translations" -a
-        working-directory: ./project
-        continue-on-error: true
-
-      - name: Push changes
-        uses: ad-m/github-push-action@master
+      - name: Create PR for sync-addon-metadata-translations changes
+        uses: peter-evans/create-pull-request@v3.10.0
         with:
-          branch: ${{ github.ref }}
-          directory: ./project
+          commit-message: Sync of addon metadata translations
+          title: Sync of addon metadata translations
+          body: Sync of addon metadata translations triggered by ${{ github.sha }}
+          branch: amt-sync
+          delete-branch: true
+          path: ./project
+          reviewers: gade01
