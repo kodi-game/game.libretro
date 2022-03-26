@@ -8,7 +8,7 @@
 #include "LibretroSettings.h"
 #include "LanguageGenerator.h"
 #include "SettingsGenerator.h"
-#include "libretro/libretro.h"
+#include "libretro-common/libretro.h"
 #include "log/Log.h"
 #include "client.h"
 

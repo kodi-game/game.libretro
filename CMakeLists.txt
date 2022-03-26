@@ -1,16 +1,21 @@
 cmake_minimum_required(VERSION 3.5)
 project(game.libretro)
 
-list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR})
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 find_package(Kodi REQUIRED)
+find_package(LibretroCommon REQUIRED)
 find_package(TinyXML REQUIRED)
+find_package(Rcheevos REQUIRED)
 
 include_directories(${KODI_INCLUDE_DIR}
                     ${PROJECT_SOURCE_DIR}/src
-                    ${TINYXML_INCLUDE_DIRS})
+                    ${LIBRETRO_COMMON_INCLUDE_DIRS}
+                    ${TINYXML_INCLUDE_DIRS}
+                    ${RCHEEVOS_INCLUDE_DIRS})
 
 list(APPEND DEPLIBS ${TINYXML_LIBRARIES})
+list(APPEND DEPLIBS ${RCHEEVOS_LIBRARIES})
 
 if(WIN32)
   find_package(dlfcn-win32 REQUIRED)
@@ -21,6 +26,9 @@ endif()
 set(LIBRETRO_SOURCES src/client.cpp
                      src/audio/AudioStream.cpp
                      src/audio/SingleFrameAudio.cpp
+                     src/cheevos/Cheevos.cpp
+                     src/cheevos/CheevosEnvironment.cpp
+                     src/cheevos/CheevosFrontendBridge.cpp
                      src/GameInfoLoader.cpp
                      src/input/ButtonMapper.cpp
                      src/input/ControllerLayout.cpp
@@ -37,6 +45,7 @@ set(LIBRETRO_SOURCES src/client.cpp
                      src/libretro/LibretroEnvironment.cpp
                      src/libretro/LibretroResources.cpp
                      src/libretro/LibretroTranslator.cpp
+                     src/libretro/MemoryMap.cpp
                      src/log/Log.cpp
                      src/log/LogAddon.cpp
                      src/log/LogConsole.cpp
@@ -53,6 +62,7 @@ set(LIBRETRO_HEADERS src/GameInfoLoader.h
                      src/audio/AudioStream.h
                      src/audio/SingleFrameAudio.h
                      src/input/ButtonMapper.h
+                     src/cheevos/Cheevos.h
                      src/input/ControllerLayout.h
                      src/input/ControllerTopology.h
                      src/input/DefaultControllerDefines.h
@@ -70,9 +80,9 @@ set(LIBRETRO_HEADERS src/GameInfoLoader.h
                      src/libretro/LibretroDefines.h
                      src/libretro/LibretroDLL.h
                      src/libretro/LibretroEnvironment.h
-                     src/libretro/libretro.h
                      src/libretro/LibretroResources.h
                      src/libretro/LibretroTranslator.h
+                     src/libretro/MemoryMap.h
                      src/log/ILog.h
                      src/log/LogAddon.h
                      src/log/LogConsole.h

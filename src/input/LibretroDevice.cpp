@@ -10,7 +10,7 @@
 #include "InputDefinitions.h"
 #include "LibretroDeviceInput.h"
 #include "libretro/LibretroTranslator.h"
-#include "libretro/libretro.h"
+#include "libretro-common/libretro.h"
 #include "log/Log.h"
 
 #include <tinyxml.h>

@@ -7,7 +7,7 @@
 
 #include "DefaultKeyboardTranslator.h"
 #include "DefaultKeyboardDefines.h"
-#include "libretro/libretro.h"
+#include "libretro-common/libretro.h"
 
 using namespace LIBRETRO;
 

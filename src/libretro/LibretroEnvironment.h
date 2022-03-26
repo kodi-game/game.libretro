@@ -9,6 +9,7 @@
 
 #include "LibretroResources.h"
 #include "audio/AudioStream.h"
+#include "MemoryMap.h"
 #include "settings/LibretroSettings.h"
 #include "video/VideoStream.h"
 
@@ -71,6 +72,8 @@ namespace LIBRETRO
 
     bool EnvironmentCallback(unsigned cmd, void* data);
 
+    const CMemoryMap& GetMemoryMap();
+
   private:
     CLibretroEnvironment(void);
 
@@ -85,5 +88,7 @@ namespace LIBRETRO
 
     CLibretroSettings m_settings;
     CLibretroResources m_resources;
+
+    CMemoryMap m_mmap;
   };
 } // namespace LIBRETRO
