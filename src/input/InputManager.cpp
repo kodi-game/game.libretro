@@ -129,7 +129,7 @@ libretro_device_t CInputManager::ConnectController(const std::string &address, c
         else
           deviceType = device->Type();
 
-        if (port >= m_controllers.size())
+        if (port >= static_cast<int>(m_controllers.size()))
           m_controllers.resize(port + 1);
 
         m_controllers[port] = std::move(device);
@@ -153,7 +153,7 @@ bool CInputManager::DisconnectController(const std::string &address)
   {
     CControllerTopology::GetInstance().RemoveController(address);
 
-    if (port < m_controllers.size())
+    if (port < static_cast<int>(m_controllers.size()))
       m_controllers[port].reset();
 
     bSuccess = true;
@@ -182,7 +182,7 @@ libretro_device_t CInputManager::GetDeviceType(const std::string &address) const
   libretro_device_t deviceType = RETRO_DEVICE_NONE;
 
   int port = GetPortIndex(address);
-  if (0 <= port && port < m_controllers.size())
+  if (0 <= port && port < static_cast<int>(m_controllers.size()))
   {
     const DevicePtr &device = m_controllers[port];
 
@@ -244,7 +244,7 @@ bool CInputManager::InputEvent(const game_input_event& event)
     if (0 <= port && port < PORT_MAX_COUNT)
     {
       // Resize devices if necessary
-      if (port >= m_controllers.size())
+      if (port >= static_cast<int>(m_controllers.size()))
         m_controllers.resize(port + 1);
 
       if (m_controllers[port])
