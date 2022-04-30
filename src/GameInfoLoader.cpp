@@ -53,14 +53,14 @@ bool CGameInfoLoader::Load(void)
     return false;
   }
 
-  int64_t size = statStruct.GetSize();
+  uint64_t size = statStruct.GetSize();
   if (size > 0)
   {
     // Size is known, read entire file at once (unless it is too big)
     if (size <= MAX_READ_SIZE)
     {
-      m_dataBuffer.resize((size_t)size);
-      file.Read(m_dataBuffer.data(), size);
+      m_dataBuffer.resize(static_cast<size_t>(size));
+      file.Read(m_dataBuffer.data(), static_cast<size_t>(size));
     }
     else
     {
@@ -72,7 +72,7 @@ bool CGameInfoLoader::Load(void)
   else
   {
     // Read file in chunks
-    unsigned int bytesRead;
+    ssize_t bytesRead;
     uint8_t buffer[READ_SIZE];
     while ((bytesRead = file.Read(buffer, sizeof(buffer))) > 0)
     {
