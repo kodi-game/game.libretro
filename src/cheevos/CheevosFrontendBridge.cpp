@@ -54,7 +54,7 @@ size_t CCheevosFrontendBridge::GetPosition(void* file_handle)
     return 0;
 
   // Return the current read / write position for the file
-  return currentPosition;
+  return static_cast<size_t>(currentPosition);
 }
 
 void CCheevosFrontendBridge::Seek(void* file_handle, size_t offset, int origin)

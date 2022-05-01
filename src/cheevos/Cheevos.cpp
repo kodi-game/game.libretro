@@ -233,7 +233,7 @@ const uint8_t* CCheevos::PatchAddress(size_t address, CMemoryMap& mmap, int cons
         break;
     }
 
-    for (int i = 0; i < mmap.Size(); i++)
+    for (size_t i = 0; i < mmap.Size(); i++)
     {
       const retro_memory_descriptor_kodi& desc = mmap[i];
       if (((desc.descriptor.start ^ address) & desc.descriptor.select) == 0)
