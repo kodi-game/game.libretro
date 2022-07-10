@@ -15,13 +15,13 @@
     <assets>
       <icon>icon.png</icon>
     </assets>
-    <summary lang="da_DK">Libretro kompatibilitetslag til Kodi's Game API</summary>
-    <summary lang="de_DE">Libretro-Kompatibilitätsschicht für Kodi's Spiele API</summary>
-    <summary lang="en_GB">Libretro compatibility layer for Kodi's Game API</summary>
+    <summary lang="da_DK">Libretro kompatibilitetslag til Kodi&apos;s Game API</summary>
+    <summary lang="de_DE">Libretro-Kompatibilitätsschicht für Kodi&apos;s Spiele API</summary>
+    <summary lang="en_GB">Libretro compatibility layer for Kodi&apos;s Game API</summary>
     <summary lang="hu_HU">Libreto Kompatibilis réteg Kodi Játék API-jának</summary>
     <summary lang="zh_CN">用于 Kodi 游戏 API 的 Libretro 兼容层</summary>
     <description lang="da_DK">Dette add-on giver en wrapper til libretro-kerner, så de kan indlæses som spil-add-ons.</description>
-    <description lang="de_DE">Dieses Addon bietet einen Umwandler für Libretro-Kerne, mit dem sie als Spielsystem Add-On's für Kodi geladen und genutzt werden können.</description>
+    <description lang="de_DE">Dieses Addon bietet einen Umwandler für Libretro-Kerne, mit dem sie als Spielsystem Add-On&apos;s für Kodi geladen und genutzt werden können.</description>
     <description lang="en_GB">This add-on provides a wrapper for libretro cores, allowing them to be loaded as game add-ons.</description>
     <description lang="zh_CN">这个插件为 libretro 内核提供了一个包装器，允许它们作为游戏插件加载。</description>
   </extension>
