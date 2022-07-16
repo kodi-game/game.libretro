@@ -45,7 +45,7 @@ before_install:
 #
 before_script:
   - if [[ $DEBIAN_BUILD != true ]]; then cd $TRAVIS_BUILD_DIR/..; fi
-  - if [[ $DEBIAN_BUILD != true ]]; then git clone --branch Nexus --depth=1 https://github.com/xbmc/xbmc.git; fi
+  - if [[ $DEBIAN_BUILD != true ]]; then git clone --branch retroplayer-20.3 --depth=1 https://github.com/garbear/xbmc.git; fi
   - if [[ $DEBIAN_BUILD != true ]]; then cd ${app_id} && mkdir build && cd build; fi
   - if [[ $DEBIAN_BUILD != true ]]; then mkdir -p definition/${app_id}; fi
   - if [[ $DEBIAN_BUILD != true ]]; then echo ${app_id} $TRAVIS_BUILD_DIR $TRAVIS_COMMIT > definition/${app_id}/${app_id}.txt; fi
