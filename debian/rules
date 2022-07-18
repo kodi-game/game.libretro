@@ -13,7 +13,7 @@
 	dh $@
 
 override_dh_auto_configure:
-	dh_auto_configure -- -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_SHARED_LIBS=1 -DUSE_LTO=1
+	dh_auto_configure -- -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_SHARED_LIBS=1 -DUSE_LTO=1 -DENABLE_INTERNAL_LIBRETROCOMMON=ON -DLIBRETROCOMMON_URL=libretro-common.tar.gz
 
 override_dh_installdocs:
 	dh_installdocs --link-doc=kodi-game-libretro
