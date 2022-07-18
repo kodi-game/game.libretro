@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "libretro.h"
+#include "libretro-common/libretro.h"
 
 #include <memory>
 #include <string>

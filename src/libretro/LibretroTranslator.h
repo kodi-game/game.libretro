@@ -8,7 +8,8 @@
 #pragma once
 
 #include "input/LibretroDevice.h"
-#include "libretro.h"
+
+#include "libretro-common/libretro.h"
 
 #include <kodi/addon-instance/Game.h>
 
