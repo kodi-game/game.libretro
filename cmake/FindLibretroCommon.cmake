@@ -32,7 +32,7 @@ if(ENABLE_INTERNAL_LIBRETROCOMMON)
                       PREFIX ${CMAKE_BINARY_DIR}/build/libretro-common
                       CONFIGURE_COMMAND ""
                       BUILD_COMMAND ""
-                      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/libretro-common/src/libretro-common/include ${LIBRETRO_COMMON_INCLUDE_DIR}
+                      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/build/libretro-common/src/libretro-common/include ${LIBRETRO_COMMON_INCLUDE_DIR}
                       BUILD_BYPRODUCTS ${LIBRETRO_COMMON_INCLUDE_DIR}/libretro.h
                       BUILD_IN_SOURCE 1)
 else()
