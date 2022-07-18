@@ -33,7 +33,9 @@ if(ENABLE_INTERNAL_RCHEEVOS)
                       DOWNLOAD_DIR ${CMAKE_BINARY_DIR}/download
                       PREFIX ${CMAKE_BINARY_DIR}/build/rcheevos
                       PATCH_COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/depends/common/rcheevos/CMakeLists.txt ${CMAKE_BINARY_DIR}/build/rcheevos/src/rcheevos/
-                      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/build/depends
+                      CMAKE_ARGS
+                        -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/build/depends
+                        -DCMAKE_POSITION_INDEPENDENT_CODE=ON
                       BUILD_BYPRODUCTS ${RCHEEVOS_LIBRARY})
 else()
   find_path(RCHEEVOS_INCLUDE_DIR rcheevos.h
