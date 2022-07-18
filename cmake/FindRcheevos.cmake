@@ -25,7 +25,7 @@ if(ENABLE_INTERNAL_RCHEEVOS)
       message(STATUS "RCHEEVOS_URL: ${RCHEEVOS_URL}")
   endif()
 
-  set(RCHEEVOS_INCLUDE_DIR ${CMAKE_BINARY_DIR}/build/depends/include/rcheevos)
+  set(RCHEEVOS_INCLUDE_DIR ${CMAKE_BINARY_DIR}/build/depends/include)
   set(RCHEEVOS_LIBRARY ${CMAKE_BINARY_DIR}/build/depends/lib/librcheevoslib.a)
 
   externalproject_add(rcheevos
