@@ -6,7 +6,8 @@
  */
 
 #include "ClientBridge.h"
-#include "libretro.h"
+
+#include "libretro-common/libretro.h"
 
 // Causing errors with std::numeric_limits<int>::max()
 #ifdef max
