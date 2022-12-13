@@ -24,7 +24,7 @@
     <description lang="da_DK">Dette add-on giver en wrapper til libretro-kerner, så de kan indlæses som spil-add-ons.</description>
     <description lang="de_DE">Dieses Addon bietet einen Umwandler für Libretro-Kerne, mit dem sie als Spielsystem Add-On&apos;s für Kodi geladen und genutzt werden können.</description>
     <description lang="en_GB">This add-on provides a wrapper for libretro cores, allowing them to be loaded as game add-ons.</description>
-    <description lang="it_IT">Questo add-on fornisce un modulo sodtware per i core libretro, consentendo loro di essere caricati come add-on di gioco.</description>
+    <description lang="it_IT">Questo Add-on fornisce un modulo sodtware per i core libretro, consentendo loro di essere caricati come Add-on di gioco.</description>
     <description lang="zh_CN">这个插件为 libretro 内核提供了一个包装器，允许它们作为游戏插件加载。</description>
   </extension>
 </addon>
