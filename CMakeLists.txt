@@ -9,6 +9,7 @@ find_package(TinyXML REQUIRED)
 find_package(Rcheevos REQUIRED)
 
 include_directories(${KODI_INCLUDE_DIR}
+                    ${KODI_INCLUDE_DIR}/..
                     ${PROJECT_SOURCE_DIR}/src
                     ${LIBRETRO_COMMON_INCLUDE_DIRS}
                     ${TINYXML_INCLUDE_DIRS}
