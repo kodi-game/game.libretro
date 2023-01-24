@@ -99,4 +99,11 @@ set(LIBRETRO_HEADERS src/GameInfoLoader.h
 
 build_addon(${PROJECT_NAME} LIBRETRO DEPLIBS)
 
+if(ENABLE_INTERNAL_LIBRETROCOMMON)
+  add_dependencies(${PROJECT_NAME} libretro-common)
+endif()
+if(ENABLE_INTERNAL_RCHEEVOS)
+  add_dependencies(${PROJECT_NAME} rcheevos)
+endif()
+
 include(CPack)
