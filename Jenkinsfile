@@ -1,1 +1,1 @@
-buildPlugin(version: "Nexus", ppa_depends_tarballs: ['libretro-common','rcheevos'])
+buildPlugin(version: "Omega", ppa_depends_tarballs: ['libretro-common','rcheevos'])
