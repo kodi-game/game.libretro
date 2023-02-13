@@ -35,6 +35,9 @@ namespace LIBRETRO
     const FeatureMap& Features(void) const { return m_featureMap; }
     CLibretroDeviceInput& Input() { return *m_input; }
 
+    void SetType(libretro_device_t type) { m_type = type; }
+    void SetSubclass(libretro_subclass_t subclass) { m_subclass = subclass; }
+
     bool Deserialize(const TiXmlElement* pElement, unsigned int buttonMapVersion);
 
   private:

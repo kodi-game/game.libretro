@@ -123,6 +123,16 @@ libretro_device_t CInputManager::ConnectController(const std::string &address, c
       {
         DevicePtr device(new CLibretroDevice(controllerId));
 
+        // Check topology for type/subclass override
+        libretro_device_t typeOverride = CControllerTopology::GetInstance().TypeOverride(address, controllerId);
+        libretro_subclass_t subclassOverride = CControllerTopology::GetInstance().SubclassOverride(address, controllerId);
+
+        if (typeOverride != RETRO_DEVICE_NONE)
+          device->SetType(typeOverride);
+        if (subclassOverride != RETRO_SUBCLASS_NONE)
+          device->SetSubclass(typeOverride);
+
+        // Calculate type value to send to libretro
         if (device->Subclass() != RETRO_SUBCLASS_NONE)
           deviceType = RETRO_DEVICE_SUBCLASS(device->Type(), device->Subclass());
         else

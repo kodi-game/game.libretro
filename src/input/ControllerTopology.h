@@ -7,7 +7,10 @@
 
 #pragma once
 
+#include "input/InputTypes.h"
+
 #include <kodi/addon-instance/Game.h>
+#include <libretro-common/libretro.h>
 
 #include <memory>
 #include <string>
@@ -46,6 +49,9 @@ namespace LIBRETRO
     bool SetController(const std::string &portAddress, const std::string &controllerId, bool bProvidesInput);
     void RemoveController(const std::string &portAddress);
 
+    libretro_device_t TypeOverride(const std::string &portAddress, const std::string &controllerId) const;
+    libretro_subclass_t SubclassOverride(const std::string &portAddress, const std::string &controllerId) const;
+
     int PlayerLimit() const { return m_playerLimit; }
 
   private:
@@ -78,6 +84,8 @@ namespace LIBRETRO
       std::string controllerId;
       std::vector<PortPtr> ports;
       bool bProvidesInput;
+      libretro_device_t type = RETRO_DEVICE_NONE;
+      libretro_subclass_t subclass = RETRO_SUBCLASS_NONE;
     };
 
     static unsigned int GetPlayerCount(const PortPtr& port);
@@ -98,11 +106,18 @@ namespace LIBRETRO
     static bool SetController(const ControllerPtr &controller, const std::string &portAddress, const std::string &controllerId, bool bProvidesInput);
     static void RemoveController(const ControllerPtr &controller, const std::string &portAddress);
 
+    static libretro_device_t TypeOverride(const std::vector<PortPtr>& ports, const std::string& controllerAddress);
+    static libretro_subclass_t SubclassOverride(const std::vector<PortPtr>& ports, const std::string& controllerAddress);
+
+    static libretro_device_t TypeOverride(const std::vector<ControllerPtr>& controllers, const std::string& controllerAddress);
+    static libretro_subclass_t SubclassOverride(const std::vector<ControllerPtr>& controllers, const std::string &controllerAddress);
+
     static PortPtr CreateDefaultPort(const std::string &acceptedController);
 
     static const ControllerPtr& GetActiveController(const PortPtr& port);
 
     static void SplitAddress(const std::string &address, std::string &nodeId, std::string &remainingAddress);
+    static std::string JoinAddress(const std::string& address, const std::string& nodeId);
 
     std::vector<PortPtr> m_ports;
     int m_playerLimit = -1;
