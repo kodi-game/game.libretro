@@ -9,6 +9,7 @@
 #include "InputDefinitions.h"
 #include "InputTranslator.h"
 #include "libretro/LibretroEnvironment.h"
+#include "libretro/LibretroTranslator.h"
 #include "log/Log.h"
 
 #include <tinyxml.h>
@@ -520,6 +521,112 @@ void CControllerTopology::RemoveController(const ControllerPtr &controller, cons
   }
 }
 
+libretro_device_t CControllerTopology::TypeOverride(const std::string& portAddress, const std::string& controllerId) const
+{
+  return TypeOverride(m_ports, JoinAddress(portAddress, controllerId));
+}
+
+libretro_device_t CControllerTopology::TypeOverride(const std::vector<PortPtr>& ports, const std::string &controllerAddress)
+{
+  for (const auto &port : ports)
+  {
+    if (port->type == GAME_PORT_CONTROLLER)
+    {
+      std::string portId;
+      std::string remainingAddress;
+      SplitAddress(controllerAddress, portId, remainingAddress);
+
+      if (port->portId == portId)
+        return TypeOverride(port->accepts, remainingAddress);
+    }
+  }
+
+  return RETRO_DEVICE_NONE;
+}
+
+libretro_device_t CControllerTopology::TypeOverride(const std::vector<ControllerPtr>& controllers, const std::string &controllerAddress)
+{
+  std::string controllerId;
+  std::string remainingAddress;
+  SplitAddress(controllerAddress, controllerId, remainingAddress);
+
+  if (remainingAddress.empty())
+  {
+    // Base case
+    auto it = std::find_if(controllers.begin(), controllers.end(),
+      [&controllerId](const ControllerPtr &controller)
+      {
+        return controllerId == controller->controllerId;
+      });
+
+    if (it != controllers.end())
+      return (*it)->type;
+  }
+  else
+  {
+    for (const auto& controller : controllers)
+    {
+      if (controller->controllerId == controllerId)
+        return TypeOverride(controller->ports, remainingAddress);
+    }
+  }
+
+  return RETRO_DEVICE_NONE;
+}
+
+libretro_subclass_t CControllerTopology::SubclassOverride(const std::string& portAddress, const std::string& controllerId) const
+{
+  return SubclassOverride(m_ports, JoinAddress(portAddress, controllerId));
+}
+
+libretro_subclass_t CControllerTopology::SubclassOverride(const std::vector<PortPtr>& ports, const std::string &controllerAddress)
+{
+  for (const auto &port : ports)
+  {
+    if (port->type == GAME_PORT_CONTROLLER)
+    {
+      std::string portId;
+      std::string remainingAddress;
+      SplitAddress(controllerAddress, portId, remainingAddress);
+
+      if (port->portId == portId)
+        return SubclassOverride(port->accepts, remainingAddress);
+    }
+  }
+
+  return RETRO_SUBCLASS_NONE;
+}
+
+libretro_subclass_t CControllerTopology::SubclassOverride(const std::vector<ControllerPtr>& controllers, const std::string &controllerAddress)
+{
+  std::string controllerId;
+  std::string remainingAddress;
+  SplitAddress(controllerAddress, controllerId, remainingAddress);
+
+  if (remainingAddress.empty())
+  {
+    // Base case
+    auto it = std::find_if(controllers.begin(), controllers.end(),
+      [&controllerId](const ControllerPtr &controller)
+      {
+        return controllerId == controller->controllerId;
+      });
+
+    if (it != controllers.end())
+      return (*it)->subclass;
+  }
+  else
+  {
+    for (const auto& controller : controllers)
+    {
+      if (controller->controllerId == controllerId)
+        return SubclassOverride(controller->ports, remainingAddress);
+    }
+  }
+
+  return RETRO_SUBCLASS_NONE;
+}
+
 bool CControllerTopology::Deserialize(const TiXmlElement* pElement)
 {
   bool bSuccess = false;
@@ -654,7 +761,19 @@ CControllerTopology::ControllerPtr CControllerTopology::DeserializeController(co
   }
   else
   {
-    controller.reset(new Controller{ strControllerId });
+    // Device type and subclass overrides
+    libretro_device_t type = RETRO_DEVICE_NONE;
+    libretro_subclass_t subclass = RETRO_SUBCLASS_NONE;
+
+    const char* strType = pElement->Attribute(TOPOLOGY_XML_ATTR_DEVICE_TYPE);
+    if (strType != nullptr)
+      type = LibretroTranslator::GetDeviceType(strType);
+
+    const char* strSubclass = pElement->Attribute(TOPOLOGY_XML_ATTR_DEVICE_SUBCLASS);
+    if (strSubclass != nullptr)
+      std::istringstream(strSubclass) >> subclass;
+
+    controller.reset(new Controller{ strControllerId, {}, {}, type, subclass });
 
     const TiXmlElement* pChild = pElement->FirstChildElement(TOPOLOGY_XML_ELEM_PORT);
     for ( ; pChild != nullptr; pChild = pChild->NextSiblingElement(TOPOLOGY_XML_ELEM_PORT))
@@ -773,4 +892,9 @@ void CControllerTopology::SplitAddress(const std::string &address, std::string &
     nodeId = address.substr(1, pos - 1);
     remainingAddress = address.substr(pos);
   }
+}
+
+std::string CControllerTopology::JoinAddress(const std::string& address, const std::string& nodeId)
+{
+  return address + ADDRESS_SEPARATOR + nodeId;
 }
