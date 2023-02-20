@@ -16,15 +16,19 @@
       <icon>icon.png</icon>
     </assets>
     <summary lang="da_DK">Libretro kompatibilitetslag til Kodi&apos;s Game API</summary>
-    <summary lang="de_DE">Libretro-Kompatibilitätsschicht für Kodi&apos;s Spiele API</summary>
+    <summary lang="de_DE">Libretro-Kompatibilitätsschicht für Kodis Spiele-API</summary>
     <summary lang="en_GB">Libretro compatibility layer for Kodi&apos;s Game API</summary>
+    <summary lang="es_ES">Capa de compatibilidad de Libretro para la API de juegos de Kodi</summary>
+    <summary lang="fr_FR">Couche de compatibilité Libretro pour l&apos;API de jeu de Kodi</summary>
     <summary lang="hu_HU">Libreto Kompatibilis réteg Kodi Játék API-jának</summary>
     <summary lang="it_IT">Compatibilità libretro per l&apos;API di gioco di Kodi</summary>
     <summary lang="zh_CN">用于 Kodi 游戏 API 的 Libretro 兼容层</summary>
     <description lang="da_DK">Dette add-on giver en wrapper til libretro-kerner, så de kan indlæses som spil-add-ons.</description>
-    <description lang="de_DE">Dieses Addon bietet einen Umwandler für Libretro-Kerne, mit dem sie als Spielsystem Add-On&apos;s für Kodi geladen und genutzt werden können.</description>
+    <description lang="de_DE">Dieses Addon bietet einen Umwandler für Libretro-Cores, mit dem sie als Spielsystem Add-Ons für Kodi geladen und genutzt werden können.</description>
     <description lang="en_GB">This add-on provides a wrapper for libretro cores, allowing them to be loaded as game add-ons.</description>
-    <description lang="it_IT">Questo Add-on fornisce un modulo sodtware per i core libretro, consentendo loro di essere caricati come Add-on di gioco.</description>
+    <description lang="es_ES">Este add-on proporciona una capa para los núcleos libretro, lo que les permite ser cargados como add-ons del juego.</description>
+    <description lang="fr_FR">Cet add-on fournit un wrapper pour les cœurs libretro, leur permettant d&apos;être chargés en tant qu&apos;add-ons de jeu.</description>
+    <description lang="it_IT">Questo add-on fornisce un modulo sodtware per i core libretro, consentendo loro di essere caricati come add-on di gioco.</description>
     <description lang="zh_CN">这个插件为 libretro 内核提供了一个包装器，允许它们作为游戏插件加载。</description>
   </extension>
 </addon>
