@@ -69,6 +69,8 @@ ADDON_STATUS CGameLibRetro::Create()
     if (dllPath.empty())
       throw ADDON_STATUS_UNKNOWN;
 
+    CLog::Get().SetType(SYS_LOG_TYPE_ADDON);
+
     if (!m_client.Load(dllPath))
     {
       esyslog("Failed to load %s", dllPath.c_str());
