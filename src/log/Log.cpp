@@ -48,7 +48,9 @@ bool CLog::SetType(SYS_LOG_TYPE type)
   case SYS_LOG_TYPE_NULL:
     SetPipe(nullptr);
     break;
-  case SYS_LOG_TYPE_ADDON: // Must be set through SetPipe() because CLogAddon has no default constructor
+  case SYS_LOG_TYPE_ADDON:
+    SetPipe(new CLogAddon);
+    break;
   default:
     Log(SYS_LOG_ERROR, "Failed to set log type to %s", TypeToString(type));
     return false;
@@ -59,8 +61,6 @@ bool CLog::SetType(SYS_LOG_TYPE type)
 
 void CLog::SetPipe(ILog* pipe)
 {
-  std::unique_lock<std::mutex> lock(m_mutex);
-
   delete m_pipe;
   m_pipe = pipe;
 }
