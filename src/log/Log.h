@@ -44,7 +44,6 @@ namespace LIBRETRO
     ~CLog(void);
 
     bool SetType(SYS_LOG_TYPE type);
-    void SetPipe(ILog* pipe);
     void SetLevel(SYS_LOG_LEVEL level);
     void SetLogPrefix(const std::string& strLogPrefix);
 
@@ -53,6 +52,8 @@ namespace LIBRETRO
     static const char* TypeToString(SYS_LOG_TYPE type);
 
   private:
+    void SetPipe(ILog* pipe);
+
     static const char* GetLogPrefix(SYS_LOG_LEVEL level);
 
     ILog*            m_pipe;
