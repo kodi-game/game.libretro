@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addon id="game.libretro"
        name="Libretro Compatibility"
-       version="21.0.2"
+       version="21.0.3"
        provider-name="Team Kodi">
   <backwards-compatibility abi="1.0.0"/>
   <requires>@ADDON_DEPENDS@</requires>
