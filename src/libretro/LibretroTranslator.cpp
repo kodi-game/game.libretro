@@ -339,6 +339,7 @@ namespace LIBRETRO
         { "RETROK_POWER",          RETROK_POWER },
         { "RETROK_EURO",           RETROK_EURO },
         { "RETROK_UNDO",           RETROK_UNDO },
+        { "RETROK_OEM_102",        RETROK_OEM_102 },
       }
     },
   };
@@ -575,6 +576,7 @@ const char* LibretroTranslator::GetFeatureName(libretro_device_t type, unsigned 
     case RETROK_POWER:          return "RETROK_POWER";
     case RETROK_EURO:           return "RETROK_EURO";
     case RETROK_UNDO:           return "RETROK_UNDO";
+    case RETROK_OEM_102:        return "RETROK_OEM_102";
     default:
       break;
     }
