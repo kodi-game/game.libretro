@@ -38,7 +38,6 @@ libretro_device_caps_t CInputManager::GetDeviceCaps(void) const
          1 << RETRO_DEVICE_POINTER;
 }
 
-
 void CInputManager::SetControllerLayouts(const std::vector<kodi::addon::GameControllerLayout>& controllers)
 {
   m_controllerLayouts.clear();
