@@ -152,6 +152,7 @@ int CDefaultKeyboardTranslator::GetLibretroIndex(const std::string &strFeatureNa
   if (strFeatureName == DEFAULT_KEYBOARD_FEATURE_POWER)         return RETROK_POWER;
   if (strFeatureName == DEFAULT_KEYBOARD_FEATURE_EURO)          return RETROK_EURO;
   if (strFeatureName == DEFAULT_KEYBOARD_FEATURE_UNDO)          return RETROK_UNDO;
+  if (strFeatureName == DEFAULT_KEYBOARD_FEATURE_OEM_102)       return RETROK_OEM_102;
 
   return -1;
 }
