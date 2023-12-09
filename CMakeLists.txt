@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(game.libretro)
+project(game.libretro LANGUAGES CXX)
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
