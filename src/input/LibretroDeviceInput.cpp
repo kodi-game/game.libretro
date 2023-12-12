@@ -34,6 +34,8 @@ CLibretroDeviceInput::CLibretroDeviceInput(const std::string &controllerId)
   {
     case RETRO_DEVICE_JOYPAD:
       m_buttons.resize(LIBRETRO_JOYPAD_BUTTON_COUNT);
+      m_analogButtons.resize(LIBRETRO_JOYPAD_BUTTON_COUNT);
+      m_analogSticks.resize(LIBRETRO_ANALOG_STICK_COUNT);
       break;
 
     case RETRO_DEVICE_MOUSE:

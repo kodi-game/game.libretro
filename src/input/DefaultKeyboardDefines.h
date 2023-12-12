@@ -146,3 +146,4 @@
 #define DEFAULT_KEYBOARD_FEATURE_POWER           "power"
 #define DEFAULT_KEYBOARD_FEATURE_EURO            "euro"
 #define DEFAULT_KEYBOARD_FEATURE_UNDO            "undo"
+#define DEFAULT_KEYBOARD_FEATURE_OEM_102         "oem102"
