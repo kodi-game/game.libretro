@@ -44,9 +44,9 @@ CLibretroEnvironment& CLibretroEnvironment::Get(void)
   return _instance;
 }
 
-void CLibretroEnvironment::Initialize(CGameLibRetro* addon,
-                                      CLibretroDLL* client,
-                                      CClientBridge* clientBridge)
+void CLibretroEnvironment::InitializeEnvironment(CGameLibRetro* addon,
+                                                 CLibretroDLL* client,
+                                                 CClientBridge* clientBridge)
 {
   m_addon = addon;
   m_client = client;
@@ -60,7 +60,10 @@ void CLibretroEnvironment::Initialize(CGameLibRetro* addon,
 
   // Install environment callback
   m_client->retro_set_environment(EnvCallback);
+}
 
+void CLibretroEnvironment::InitializeCallbacks()
+{
   // Install remaining callbacks
   m_client->retro_set_video_refresh(CFrontendBridge::VideoRefresh);
   m_client->retro_set_audio_sample(CFrontendBridge::AudioFrame);

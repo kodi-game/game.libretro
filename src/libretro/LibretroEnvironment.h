@@ -32,9 +32,10 @@ namespace LIBRETRO
   public:
     static CLibretroEnvironment& Get(void);
 
-    void Initialize(CGameLibRetro* addon,
-                    CLibretroDLL* client,
-                    CClientBridge* clientBridge);
+    void InitializeEnvironment(CGameLibRetro* addon,
+                               CLibretroDLL* client,
+                               CClientBridge* clientBridge);
+    void InitializeCallbacks();
 
     void Deinitialize(void);
 
