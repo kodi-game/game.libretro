@@ -44,12 +44,12 @@ CLibretroEnvironment& CLibretroEnvironment::Get(void)
   return _instance;
 }
 
-void CLibretroEnvironment::Initialize(CGameLibRetro*                addon,
-                                      CLibretroDLL*                 client,
-                                      CClientBridge*                clientBridge)
+void CLibretroEnvironment::Initialize(CGameLibRetro* addon,
+                                      CLibretroDLL* client,
+                                      CClientBridge* clientBridge)
 {
-  m_addon        = addon;
-  m_client       = client;
+  m_addon = addon;
+  m_client = client;
   m_clientBridge = clientBridge;
 
   m_videoStream.Initialize(m_addon);
