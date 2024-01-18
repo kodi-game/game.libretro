@@ -32,15 +32,15 @@ namespace LIBRETRO
   public:
     static CLibretroEnvironment& Get(void);
 
-    void Initialize(CGameLibRetro*                addon,
-                    CLibretroDLL*                 client,
-                    CClientBridge*                clientBridge);
+    void Initialize(CGameLibRetro* addon,
+                    CLibretroDLL* client,
+                    CClientBridge* clientBridge);
 
     void Deinitialize(void);
 
-    CGameLibRetro*                GetAddon(void)        { return m_addon; }
-    CLibretroDLL*                 GetClient(void)       { return m_client; }
-    CClientBridge*                GetClientBridge(void) { return m_clientBridge; }
+    CGameLibRetro* GetAddon(void) { return m_addon; }
+    CLibretroDLL* GetClient(void) { return m_client; }
+    CClientBridge* GetClientBridge(void) { return m_clientBridge; }
 
     CVideoStream& Video(void) { return m_videoStream; }
     CAudioStream& Audio(void) { return m_audioStream; }
@@ -77,13 +77,13 @@ namespace LIBRETRO
   private:
     CLibretroEnvironment(void);
 
-    CGameLibRetro*                m_addon;
-    CLibretroDLL*                 m_client;
-    CClientBridge*                m_clientBridge;
-    CVideoStream                  m_videoStream;
-    CAudioStream                  m_audioStream;
+    CGameLibRetro* m_addon;
+    CLibretroDLL* m_client;
+    CClientBridge* m_clientBridge;
+    CVideoStream m_videoStream;
+    CAudioStream m_audioStream;
 
-    GAME_PIXEL_FORMAT   m_videoFormat;
+    GAME_PIXEL_FORMAT m_videoFormat;
     GAME_VIDEO_ROTATION m_videoRotation;
 
     CLibretroSettings m_settings;
