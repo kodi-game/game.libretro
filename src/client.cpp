@@ -85,7 +85,7 @@ ADDON_STATUS CGameLibRetro::Create()
     }
 
     // Environment must be initialized before calling retro_init()
-    CLibretroEnvironment::Get().Initialize(this, &m_client, &m_clientBridge);
+    CLibretroEnvironment::Get().InitializeEnvironment(this, &m_client, &m_clientBridge);
     CCheevosEnvironment::Get().Initialize();
 
     CButtonMapper::Get().LoadButtonMap();
@@ -94,6 +94,8 @@ ADDON_STATUS CGameLibRetro::Create()
     CCheevos::Get().Initialize();
 
     m_client.retro_init();
+
+    CLibretroEnvironment::Get().InitializeCallbacks();
 
     // Log core info
     retro_system_info systemInfo = { };
