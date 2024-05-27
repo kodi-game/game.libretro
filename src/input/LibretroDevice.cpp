@@ -75,7 +75,7 @@ bool CLibretroDevice::Deserialize(const TiXmlElement* pElement, unsigned int but
 
   // Features
   const TiXmlElement* pFeature = pElement->FirstChildElement(BUTTONMAP_XML_ELM_FEATURE);
-  while (pFeature)
+  for (; pFeature != nullptr; pFeature = pFeature->NextSiblingElement(BUTTONMAP_XML_ELM_FEATURE))
   {
     const char* name = pFeature->Attribute(BUTTONMAP_XML_ATTR_FEATURE_NAME);
     if (!name)
@@ -99,7 +99,7 @@ bool CLibretroDevice::Deserialize(const TiXmlElement* pElement, unsigned int but
     if (LibretroTranslator::GetFeatureIndex(libretroFeature.feature) < 0)
     {
       esyslog("<%s> tag has invalid \"%s\" attribute: \"%s\"", BUTTONMAP_XML_ELM_FEATURE, BUTTONMAP_XML_ATTR_FEATURE_MAPTO, mapto);
-      return false;
+      continue;
     }
 
     if (axis != nullptr)
@@ -110,13 +110,11 @@ bool CLibretroDevice::Deserialize(const TiXmlElement* pElement, unsigned int but
       if (LibretroTranslator::GetAxisID(libretroFeature.axis) < 0)
       {
         esyslog("<%s> tag has invalid \"%s\" attribute: \"%s\"", BUTTONMAP_XML_ELM_FEATURE, BUTTONMAP_XML_ATTR_FEATURE_AXIS, axis);
-        return false;
+        continue;
       }
     }
 
     m_featureMap[name] = std::move(libretroFeature);
-
-    pFeature = pFeature->NextSiblingElement(BUTTONMAP_XML_ELM_FEATURE);
   }
 
   return true;
