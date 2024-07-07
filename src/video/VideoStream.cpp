@@ -106,13 +106,15 @@ bool CVideoStream::GetSwFramebuffer(unsigned int width, unsigned int height, GAM
   if (!m_stream.IsOpen() || m_streamType != GAME_STREAM_SW_FRAMEBUFFER)
     return false;
 
-  if (!m_framebuffer)
+  if (m_framebuffer != nullptr)
   {
-    m_framebuffer.reset(new game_stream_buffer{});
-
-    if (!m_stream.GetBuffer(width, height, *m_framebuffer))
-      return false;
+    m_stream.ReleaseBuffer(*m_framebuffer);
   }
+
+  m_framebuffer.reset(new game_stream_buffer{});
+
+  if (!m_stream.GetBuffer(width, height, *m_framebuffer))
+    return false;
 
   framebuffer = m_framebuffer->sw_framebuffer;
 
