@@ -201,6 +201,9 @@ int CControllerTopology::GetPortIndex(const ControllerPtr &controller, const std
 {
   int portIndex = -1;
 
+  if (controller->bProvidesInput)
+    playerCount++;
+
   std::string portControllerId;
   std::string remainingAddress;
   SplitAddress(portAddress, portControllerId, remainingAddress);
@@ -216,9 +219,6 @@ int CControllerTopology::GetPortIndex(const ControllerPtr &controller, const std
         break;
     }
   }
-
-  if (controller->bProvidesInput)
-    playerCount++;
 
   return portIndex;
 }
