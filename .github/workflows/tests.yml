@@ -14,8 +14,8 @@ concurrency:
 
 env:
   # Temporary until the paired RetroPlayer/Game API work lands upstream.
-  KODI_REPOSITORY: https://github.com/xbmc/xbmc.git
-  KODI_BRANCH: master
+  KODI_REPOSITORY: https://github.com/garbear/xbmc.git
+  KODI_BRANCH: retroplayer-22rc1
 
 jobs:
   tests:
