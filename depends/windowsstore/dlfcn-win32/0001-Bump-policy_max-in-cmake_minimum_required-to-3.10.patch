@@ -1,0 +1,22 @@
+From 07618bd719d09e6759312606851bd68793007c6c Mon Sep 17 00:00:00 2001
+From: Silvio Traversaro <silvio@traversaro.it>
+Date: Tue, 4 Mar 2025 15:26:22 +0100
+Subject: [PATCH] Bump policy_max in cmake_minimum_required to 3.10
+
+---
+ CMakeLists.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index e44343d..5ad0bb2 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1,4 +1,4 @@
+-cmake_minimum_required(VERSION 2.8)
++cmake_minimum_required(VERSION 2.8.11...3.10)
+ 
+ if (NOT DEFINED CMAKE_BUILD_TYPE)
+   set (CMAKE_BUILD_TYPE Release CACHE STRING "Build type")
+-- 
+2.49.0
+
