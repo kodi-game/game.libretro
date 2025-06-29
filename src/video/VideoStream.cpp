@@ -85,9 +85,9 @@ bool CVideoStream::GetSwFramebuffer(unsigned int width, unsigned int height, GAM
     properties.sw_framebuffer.format = requestedFormat;
     properties.sw_framebuffer.nominal_width = m_geometry->NominalWidth();
     properties.sw_framebuffer.nominal_height = m_geometry->NominalHeight();
+    properties.sw_framebuffer.nominal_display_aspect_ratio = m_geometry->DisplayAspectRatio();
     properties.sw_framebuffer.max_width = m_geometry->MaxWidth();
     properties.sw_framebuffer.max_height = m_geometry->MaxHeight();
-    properties.sw_framebuffer.aspect_ratio = m_geometry->AspectRatio();
 
     m_stream.Open(properties);
     m_streamType = GAME_STREAM_SW_FRAMEBUFFER;
@@ -134,9 +134,9 @@ void CVideoStream::AddFrame(const uint8_t* data, unsigned int size, unsigned int
     properties.video.format = format;
     properties.video.nominal_width = m_geometry->NominalWidth();
     properties.video.nominal_height = m_geometry->NominalHeight();
+    properties.video.nominal_display_aspect_ratio = m_geometry->DisplayAspectRatio();
     properties.video.max_width = m_geometry->MaxWidth();
     properties.video.max_height = m_geometry->MaxHeight();
-    properties.video.aspect_ratio = m_geometry->AspectRatio();
 
     m_stream.Open(properties);
     m_streamType = GAME_STREAM_VIDEO;
@@ -157,6 +157,7 @@ void CVideoStream::AddFrame(const uint8_t* data, unsigned int size, unsigned int
     packet.type = GAME_STREAM_VIDEO;
     packet.video.width = width;
     packet.video.height = height;
+    packet.video.display_aspect_ratio = m_geometry->DisplayAspectRatio();
     packet.video.rotation = rotation;
     packet.video.data = data;
     packet.video.size = size;
@@ -167,6 +168,7 @@ void CVideoStream::AddFrame(const uint8_t* data, unsigned int size, unsigned int
     packet.type = GAME_STREAM_SW_FRAMEBUFFER;
     packet.sw_framebuffer.width = width;
     packet.sw_framebuffer.height = height;
+    packet.sw_framebuffer.display_aspect_ratio = m_geometry->DisplayAspectRatio();
     packet.sw_framebuffer.rotation = rotation;
     packet.sw_framebuffer.data = data;
     packet.sw_framebuffer.size = size;

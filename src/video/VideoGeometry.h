@@ -24,13 +24,13 @@ namespace LIBRETRO
     unsigned int NominalHeight() const { return m_nominalHeight; }
     unsigned int MaxWidth() const { return m_maxWidth; }
     unsigned int MaxHeight() const { return m_maxHeight; }
-    float AspectRatio() const { return m_aspectRatio; }
+    float DisplayAspectRatio() const { return m_displayAspectRatio; }
 
   private:
     unsigned int m_nominalWidth = 0;
     unsigned int m_nominalHeight = 0;
     unsigned int m_maxWidth = 0;
     unsigned int m_maxHeight = 0;
-    float m_aspectRatio = 0.0f;
+    float m_displayAspectRatio = 0.0f; // A value of 0.0f indicates square pixels
   };
 }
