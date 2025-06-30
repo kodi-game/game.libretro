@@ -1,1 +1,1 @@
-libretro-common https://github.com/libretro/libretro-common/archive/50c15a88eb741cbe675743a282d8cc4c89421e3f.tar.gz
+libretro-common https://github.com/libretro/libretro-common/archive/ad9124f1ecc5d0092fd285cbf9c4ffac317b1a65.tar.gz
