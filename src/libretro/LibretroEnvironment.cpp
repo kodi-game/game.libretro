@@ -621,6 +621,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     break;
   }
   default:
+    // Documentation says that unrecognized commands should always return false
     return false;
   }
 
