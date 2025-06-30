@@ -400,7 +400,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       }
       break;
     }
-  case RETRO_ENVIRONMENT_GET_CONTENT_DIRECTORY:
+  case RETRO_ENVIRONMENT_GET_CORE_ASSETS_DIRECTORY:
     {
       const char** typedData = reinterpret_cast<const char**>(data);
       if (typedData)
