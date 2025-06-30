@@ -299,17 +299,6 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       }
       break;
     }
-  case RETRO_ENVIRONMENT_SET_AUDIO_CALLBACK:
-    {
-      const retro_audio_callback *typedData = reinterpret_cast<const retro_audio_callback*>(data);
-      if (typedData)
-      {
-        // Store callbacks from libretro client
-        m_clientBridge->SetAudioAvailable(typedData->callback);
-        m_clientBridge->SetAudioEnable(typedData->set_state);
-      }
-      break;
-    }
   case RETRO_ENVIRONMENT_SET_FRAME_TIME_CALLBACK:
     {
       const retro_frame_time_callback *typedData = reinterpret_cast<const retro_frame_time_callback*>(data);
@@ -318,6 +307,17 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
         // Store callbacks from libretro client.
         m_clientBridge->SetFrameTime(typedData->callback);
         return false;
+      }
+      break;
+    }
+  case RETRO_ENVIRONMENT_SET_AUDIO_CALLBACK:
+    {
+      const retro_audio_callback *typedData = reinterpret_cast<const retro_audio_callback*>(data);
+      if (typedData)
+      {
+        // Store callbacks from libretro client
+        m_clientBridge->SetAudioAvailable(typedData->callback);
+        m_clientBridge->SetAudioEnable(typedData->set_state);
       }
       break;
     }
@@ -523,6 +523,46 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     }
     break;
   }
+  case RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE:
+  {
+    const retro_hw_render_interface* typedData = reinterpret_cast<const retro_hw_render_interface*>(data);
+    if (typedData)
+    {
+      // Not implemented
+      return false;
+    }
+    break;
+  }
+  case RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS:
+  {
+    const bool* typedData = reinterpret_cast<const bool*>(data);
+    if (typedData)
+    {
+      // Not implemented
+      return false;
+    }
+    break;
+  }
+  case RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE:
+  {
+    const retro_hw_render_context_negotiation_interface* typedData = reinterpret_cast<const retro_hw_render_context_negotiation_interface*>(data);
+    if (typedData)
+    {
+      // Not implemented
+      return false;
+    }
+    break;
+  }
+  case RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS:
+  {
+    uint64_t* typedData = reinterpret_cast<uint64_t*>(data);
+    if (typedData)
+    {
+      // Not implemented
+      return false;
+    }
+    break;
+  }
   case RETRO_ENVIRONMENT_SET_HW_SHARED_CONTEXT:
   {
     // Not implemented
@@ -572,46 +612,6 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     {
       // Expose callback to libretro core
       typedData->set_led_state = CFrontendBridge::LedSetState;
-    }
-    break;
-  }
-  case RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE:
-  {
-    const retro_hw_render_interface* typedData = reinterpret_cast<const retro_hw_render_interface*>(data);
-    if (typedData)
-    {
-      // Not implemented
-      return false;
-    }
-    break;
-  }
-  case RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS:
-  {
-    const bool* typedData = reinterpret_cast<const bool*>(data);
-    if (typedData)
-    {
-      // Not implemented
-      return false;
-    }
-    break;
-  }
-  case RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE:
-  {
-    const retro_hw_render_context_negotiation_interface* typedData = reinterpret_cast<const retro_hw_render_context_negotiation_interface*>(data);
-    if (typedData)
-    {
-      // Not implemented
-      return false;
-    }
-    break;
-  }
-  case RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS:
-  {
-    uint64_t* typedData = reinterpret_cast<uint64_t*>(data);
-    if (typedData)
-    {
-      // Not implemented
-      return false;
     }
     break;
   }
