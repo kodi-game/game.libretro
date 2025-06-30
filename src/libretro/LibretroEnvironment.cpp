@@ -607,7 +607,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   }
   case RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS:
   {
-    const retro_hw_render_context_negotiation_interface* typedData = reinterpret_cast<const retro_hw_render_context_negotiation_interface*>(data);
+    uint64_t* typedData = reinterpret_cast<uint64_t*>(data);
     if (typedData)
     {
       // Not implemented
