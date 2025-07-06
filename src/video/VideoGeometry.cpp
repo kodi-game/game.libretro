@@ -21,5 +21,11 @@ void CVideoGeometry::UpdateVideoGeometry(const retro_game_geometry &geometry)
   m_nominalHeight = geometry.base_height;
   m_maxWidth = geometry.max_width;
   m_maxHeight = geometry.max_height;
-  m_aspectRatio = geometry.aspect_ratio;
+
+  // If aspect_ratio is <= 0.0, libretro assumes an aspect ratio of
+  // base_width / base_height, i.e. square pixels
+  if (geometry.aspect_ratio <= 0.0f)
+    m_displayAspectRatio = 0.0f;
+  else
+    m_displayAspectRatio = geometry.aspect_ratio;
 }
