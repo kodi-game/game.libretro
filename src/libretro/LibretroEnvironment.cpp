@@ -121,21 +121,21 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   {
   case RETRO_ENVIRONMENT_SET_ROTATION:
     {
-      unsigned* typedData = reinterpret_cast<unsigned*>(data);
+      unsigned* typedData = static_cast<unsigned*>(data);
       if (typedData)
         m_videoRotation = LibretroTranslator::GetVideoRotation(*typedData);
       break;
     }
   case RETRO_ENVIRONMENT_GET_OVERSCAN:
     {
-      bool* typedData = reinterpret_cast<bool*>(data);
+      bool* typedData = static_cast<bool*>(data);
       if (typedData)
         *typedData = !CSettings::Get().CropOverscan();
       break;
     }
   case RETRO_ENVIRONMENT_GET_CAN_DUPE:
     {
-      bool* typedData = reinterpret_cast<bool*>(data);
+      bool* typedData = static_cast<bool*>(data);
       if (typedData)
         *typedData = true;
       break;
@@ -143,7 +143,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   case RETRO_ENVIRONMENT_SET_MESSAGE:
     {
       // Sets a message to be displayed. Generally not for trivial messages.
-      const retro_message* typedData = reinterpret_cast<const retro_message*>(data);
+      const retro_message* typedData = static_cast<const retro_message*>(data);
       if (typedData)
       {
         const char* msg = typedData->msg;
@@ -158,14 +158,14 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     }
   case RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL:
     {
-      const unsigned* typedData = reinterpret_cast<const unsigned*>(data);
+      const unsigned* typedData = static_cast<const unsigned*>(data);
       // Removed from Game API
       (void)typedData;
       break;
     }
   case RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY:
     {
-      const char** typedData = reinterpret_cast<const char**>(data);
+      const char** typedData = static_cast<const char**>(data);
       if (typedData)
       {
         *typedData = m_resources.GetSystemDir();
@@ -174,7 +174,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     }
   case RETRO_ENVIRONMENT_SET_PIXEL_FORMAT:
     {
-      const retro_pixel_format* typedData = reinterpret_cast<const retro_pixel_format*>(data);
+      const retro_pixel_format* typedData = static_cast<const retro_pixel_format*>(data);
       if (!typedData)
         return false;
 
@@ -186,14 +186,14 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     }
   case RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS:
     {
-      const retro_input_descriptor* typedData = reinterpret_cast<const retro_input_descriptor*>(data);
+      const retro_input_descriptor* typedData = static_cast<const retro_input_descriptor*>(data);
       if (typedData)
         CInputManager::Get().LogInputDescriptors(typedData);
       break;
     }
   case RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK:
     {
-      const retro_keyboard_callback* typedData = reinterpret_cast<const retro_keyboard_callback*>(data);
+      const retro_keyboard_callback* typedData = static_cast<const retro_keyboard_callback*>(data);
       if (typedData)
       {
         // Store callback from libretro client
@@ -203,7 +203,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     }
   case RETRO_ENVIRONMENT_SET_DISK_CONTROL_INTERFACE:
     {
-      const retro_disk_control_callback *typedData = reinterpret_cast<const retro_disk_control_callback*>(data);
+      const retro_disk_control_callback *typedData = static_cast<const retro_disk_control_callback*>(data);
       if (typedData)
       {
         // Disk control interface not implemented
@@ -213,7 +213,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     }
   case RETRO_ENVIRONMENT_SET_HW_RENDER:
     {
-      retro_hw_render_callback* typedData = reinterpret_cast<retro_hw_render_callback*>(data);
+      retro_hw_render_callback* typedData = static_cast<retro_hw_render_callback*>(data);
       if (typedData)
       {
         // Translate struct and report hw info to frontend
@@ -247,7 +247,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     }
   case RETRO_ENVIRONMENT_GET_VARIABLE:
     {
-      retro_variable* typedData = reinterpret_cast<retro_variable*>(data);
+      retro_variable* typedData = static_cast<retro_variable*>(data);
       if (typedData)
       {
         const char* strKey = typedData->key;
@@ -263,7 +263,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     }
   case RETRO_ENVIRONMENT_SET_VARIABLES:
     {
-      const retro_variable* typedData = reinterpret_cast<const retro_variable*>(data);
+      const retro_variable* typedData = static_cast<const retro_variable*>(data);
       if (typedData)
       {
         m_settings.SetAllSettings(typedData);
@@ -272,7 +272,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     }
   case RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE:
     {
-      bool* typedData = reinterpret_cast<bool*>(data);
+      bool* typedData = static_cast<bool*>(data);
       if (typedData)
       {
         *typedData = m_settings.Changed();
@@ -281,7 +281,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     }
   case RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME:
     {
-      const bool* typedData = reinterpret_cast<const bool*>(data);
+      const bool* typedData = static_cast<const bool*>(data);
       if (typedData)
       {
         const bool bSupportsNoGame = *typedData;
@@ -292,27 +292,16 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     }
   case RETRO_ENVIRONMENT_GET_LIBRETRO_PATH:
     {
-      const char** typedData = reinterpret_cast<const char**>(data);
+      const char** typedData = static_cast<const char**>(data);
       if (typedData)
       {
         *typedData = m_resources.GetContentDirectory();
       }
       break;
     }
-  case RETRO_ENVIRONMENT_SET_AUDIO_CALLBACK:
-    {
-      const retro_audio_callback *typedData = reinterpret_cast<const retro_audio_callback*>(data);
-      if (typedData)
-      {
-        // Store callbacks from libretro client
-        m_clientBridge->SetAudioAvailable(typedData->callback);
-        m_clientBridge->SetAudioEnable(typedData->set_state);
-      }
-      break;
-    }
   case RETRO_ENVIRONMENT_SET_FRAME_TIME_CALLBACK:
     {
-      const retro_frame_time_callback *typedData = reinterpret_cast<const retro_frame_time_callback*>(data);
+      const retro_frame_time_callback *typedData = static_cast<const retro_frame_time_callback*>(data);
       if (typedData)
       {
         // Store callbacks from libretro client.
@@ -321,9 +310,20 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       }
       break;
     }
+  case RETRO_ENVIRONMENT_SET_AUDIO_CALLBACK:
+    {
+      const retro_audio_callback *typedData = static_cast<const retro_audio_callback*>(data);
+      if (typedData)
+      {
+        // Store callbacks from libretro client
+        m_clientBridge->SetAudioAvailable(typedData->callback);
+        m_clientBridge->SetAudioEnable(typedData->set_state);
+      }
+      break;
+    }
   case RETRO_ENVIRONMENT_GET_RUMBLE_INTERFACE:
     {
-      retro_rumble_interface* typedData = reinterpret_cast<retro_rumble_interface*>(data);
+      retro_rumble_interface* typedData = static_cast<retro_rumble_interface*>(data);
       if (typedData)
       {
         // Expose callback to libretro core
@@ -333,14 +333,14 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     }
   case RETRO_ENVIRONMENT_GET_INPUT_DEVICE_CAPABILITIES:
     {
-      uint64_t* typedData = reinterpret_cast<uint64_t*>(data);
+      uint64_t* typedData = static_cast<uint64_t*>(data);
       if (typedData)
         *typedData = CInputManager::Get().GetDeviceCaps();
       break;
     }
   case RETRO_ENVIRONMENT_GET_SENSOR_INTERFACE:
     {
-      retro_sensor_interface* typedData = reinterpret_cast<retro_sensor_interface*>(data);
+      retro_sensor_interface* typedData = static_cast<retro_sensor_interface*>(data);
       if (typedData)
       {
         // Expose callbacks to libretro core
@@ -351,7 +351,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     }
   case RETRO_ENVIRONMENT_GET_CAMERA_INTERFACE:
     {
-      retro_camera_callback* typedData = reinterpret_cast<retro_camera_callback*>(data);
+      retro_camera_callback* typedData = static_cast<retro_camera_callback*>(data);
       if (typedData)
       {
         // Camera interface not implemented
@@ -361,7 +361,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     }
   case RETRO_ENVIRONMENT_GET_LOG_INTERFACE:
     {
-      retro_log_callback* typedData = reinterpret_cast<retro_log_callback*>(data);
+      retro_log_callback* typedData = static_cast<retro_log_callback*>(data);
       if (typedData)
       {
         // Expose callback to libretro core
@@ -371,7 +371,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     }
   case RETRO_ENVIRONMENT_GET_PERF_INTERFACE:
     {
-      retro_perf_callback* typedData = reinterpret_cast<retro_perf_callback*>(data);
+      retro_perf_callback* typedData = static_cast<retro_perf_callback*>(data);
       if (typedData)
       {
         // Expose callbacks to libretro core
@@ -387,7 +387,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     }
   case RETRO_ENVIRONMENT_GET_LOCATION_INTERFACE:
     {
-      retro_location_callback* typedData = reinterpret_cast<retro_location_callback*>(data);
+      retro_location_callback* typedData = static_cast<retro_location_callback*>(data);
       if (typedData)
       {
         // Expose callbacks to libretro core
@@ -400,9 +400,9 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       }
       break;
     }
-  case RETRO_ENVIRONMENT_GET_CONTENT_DIRECTORY:
+  case RETRO_ENVIRONMENT_GET_CORE_ASSETS_DIRECTORY:
     {
-      const char** typedData = reinterpret_cast<const char**>(data);
+      const char** typedData = static_cast<const char**>(data);
       if (typedData)
       {
         *typedData = m_resources.GetContentDirectory();
@@ -411,7 +411,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     }
   case RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY:
     {
-      const char** typedData = reinterpret_cast<const char**>(data);
+      const char** typedData = static_cast<const char**>(data);
       if (typedData)
       {
         *typedData = m_resources.GetSaveDirectory();
@@ -420,7 +420,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     }
   case RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO:
     {
-      const retro_system_av_info* typedData = reinterpret_cast<const retro_system_av_info*>(data);
+      const retro_system_av_info* typedData = static_cast<const retro_system_av_info*>(data);
       if (typedData)
       {
         UpdateVideoGeometry(typedData->geometry);
@@ -433,7 +433,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     }
   case RETRO_ENVIRONMENT_SET_PROC_ADDRESS_CALLBACK:
   {
-    const retro_get_proc_address_interface* typedData = reinterpret_cast<const retro_get_proc_address_interface*>(data);
+    const retro_get_proc_address_interface* typedData = static_cast<const retro_get_proc_address_interface*>(data);
     if (typedData)
     {
       // get_proc_address() interface not implemented
@@ -443,7 +443,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   }
   case RETRO_ENVIRONMENT_SET_SUBSYSTEM_INFO:
   {
-    const retro_subsystem_info* typedData = reinterpret_cast<const retro_subsystem_info*>(data);
+    const retro_subsystem_info* typedData = static_cast<const retro_subsystem_info*>(data);
     if (typedData)
     {
       // Not implemented
@@ -453,7 +453,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   }
   case RETRO_ENVIRONMENT_SET_CONTROLLER_INFO:
     {
-      const retro_controller_info* typedData = reinterpret_cast<const retro_controller_info*>(data);
+      const retro_controller_info* typedData = static_cast<const retro_controller_info*>(data);
       if (typedData)
       {
         CInputManager::Get().SetControllerInfo(typedData);
@@ -462,7 +462,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     }
   case RETRO_ENVIRONMENT_SET_MEMORY_MAPS:
   {
-    const retro_memory_map* typedData = reinterpret_cast<const retro_memory_map*>(data);
+    const retro_memory_map* typedData = static_cast<const retro_memory_map*>(data);
     if (typedData)
       m_mmap.Initialize(*typedData);
 
@@ -470,7 +470,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   }
   case RETRO_ENVIRONMENT_SET_GEOMETRY:
   {
-    const retro_game_geometry* typedData = reinterpret_cast<const retro_game_geometry*>(data);
+    const retro_game_geometry* typedData = static_cast<const retro_game_geometry*>(data);
     if (typedData)
     {
       UpdateVideoGeometry(*typedData);
@@ -479,7 +479,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   }
   case RETRO_ENVIRONMENT_GET_USERNAME:
   {
-    const char** typedData = reinterpret_cast<const char**>(data);
+    const char** typedData = static_cast<const char**>(data);
     if (typedData)
     {
       // Not implemented
@@ -489,7 +489,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   }
   case RETRO_ENVIRONMENT_GET_LANGUAGE:
   {
-    unsigned int* typedData = reinterpret_cast<unsigned int*>(data);
+    unsigned int* typedData = static_cast<unsigned int*>(data);
     if (typedData)
     {
       // Not implemented
@@ -499,7 +499,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   }
   case RETRO_ENVIRONMENT_GET_CURRENT_SOFTWARE_FRAMEBUFFER:
   {
-    retro_framebuffer* typedData = reinterpret_cast<retro_framebuffer*>(data);
+    retro_framebuffer* typedData = static_cast<retro_framebuffer*>(data);
     if (typedData)
     {
       // Get framebuffer params from core
@@ -523,6 +523,46 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     }
     break;
   }
+  case RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE:
+  {
+    const retro_hw_render_interface* typedData = static_cast<const retro_hw_render_interface*>(data);
+    if (typedData)
+    {
+      // Not implemented
+      return false;
+    }
+    break;
+  }
+  case RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS:
+  {
+    const bool* typedData = static_cast<const bool*>(data);
+    if (typedData)
+    {
+      // Not implemented
+      return false;
+    }
+    break;
+  }
+  case RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE:
+  {
+    const retro_hw_render_context_negotiation_interface* typedData = static_cast<const retro_hw_render_context_negotiation_interface*>(data);
+    if (typedData)
+    {
+      // Not implemented
+      return false;
+    }
+    break;
+  }
+  case RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS:
+  {
+    uint64_t* typedData = static_cast<uint64_t*>(data);
+    if (typedData)
+    {
+      // Not implemented
+      return false;
+    }
+    break;
+  }
   case RETRO_ENVIRONMENT_SET_HW_SHARED_CONTEXT:
   {
     // Not implemented
@@ -532,7 +572,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   {
     const uint32_t supported_vfs_version = 3;
 
-    retro_vfs_interface_info* typedData = reinterpret_cast<retro_vfs_interface_info*>(data);
+    retro_vfs_interface_info* typedData = static_cast<retro_vfs_interface_info*>(data);
     if (typedData)
     {
       if (typedData->required_interface_version <= supported_vfs_version)
@@ -567,7 +607,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   }
   case RETRO_ENVIRONMENT_GET_LED_INTERFACE:
   {
-    retro_led_interface* typedData = reinterpret_cast<retro_led_interface*>(data);
+    retro_led_interface* typedData = static_cast<retro_led_interface*>(data);
     if (typedData)
     {
       // Expose callback to libretro core
@@ -575,45 +615,258 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     }
     break;
   }
-  case RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE:
+  case RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE:
   {
-    const retro_hw_render_interface* typedData = reinterpret_cast<const retro_hw_render_interface*>(data);
-    if (typedData)
-    {
-      // Not implemented
-      return false;
-    }
-    break;
+    retro_av_enable_flags* typedData = static_cast<retro_av_enable_flags*>(data);
+
+    // Not implemented
+    (void)typedData;
+    return false;
   }
-  case RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS:
+  case RETRO_ENVIRONMENT_GET_MIDI_INTERFACE:
   {
-    const bool* typedData = reinterpret_cast<const bool*>(data);
-    if (typedData)
-    {
-      // Not implemented
-      return false;
-    }
-    break;
+    retro_midi_interface* typedData = static_cast<retro_midi_interface*>(data);
+
+    // Not implemented
+    (void)typedData;
+    return false;
   }
-  case RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE:
+  case RETRO_ENVIRONMENT_GET_FASTFORWARDING:
   {
-    const retro_hw_render_context_negotiation_interface* typedData = reinterpret_cast<const retro_hw_render_context_negotiation_interface*>(data);
-    if (typedData)
-    {
-      // Not implemented
-      return false;
-    }
-    break;
+    bool* typedData = static_cast<bool*>(data);
+
+    // Not implemented
+    (void)typedData;
+    return false;
   }
-  case RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS:
+  case RETRO_ENVIRONMENT_GET_TARGET_REFRESH_RATE:
   {
-    const retro_hw_render_context_negotiation_interface* typedData = reinterpret_cast<const retro_hw_render_context_negotiation_interface*>(data);
-    if (typedData)
-    {
-      // Not implemented
-      return false;
-    }
-    break;
+    float* typedData = static_cast<float*>(data);
+
+    // Not implemented
+    (void)typedData;
+    return false;
+  }
+  case RETRO_ENVIRONMENT_GET_INPUT_BITMASKS:
+  {
+    // Not implemented
+    return false;
+  }
+  case RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION:
+  {
+    unsigned int* typedData = static_cast<unsigned int*>(data);
+
+    // Not implemented
+    (void)typedData;
+    return false;
+  }
+  case RETRO_ENVIRONMENT_SET_CORE_OPTIONS:
+  {
+    const retro_core_option_definition* typedData = static_cast<const retro_core_option_definition*>(data);
+
+    // Not implemented
+    (void)typedData;
+    return false;
+  }
+  case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_INTL:
+  {
+    const retro_core_options_intl* typedData = static_cast<const retro_core_options_intl*>(data);
+
+    // Not implemented
+    (void)typedData;
+    return false;
+  }
+  case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY:
+  {
+    const retro_core_option_display* typedData = static_cast<const retro_core_option_display*>(data);
+
+    // Not implemented
+    (void)typedData;
+    return false;
+  }
+  case RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER:
+  {
+    retro_hw_context_type* typedData = static_cast<retro_hw_context_type*>(data);
+
+    // Not implemented
+    (void)typedData;
+    return false;
+  }
+  case RETRO_ENVIRONMENT_GET_DISK_CONTROL_INTERFACE_VERSION:
+  {
+    unsigned int* typedData = static_cast<unsigned int*>(data);
+
+    // Not implemented
+    (void)typedData;
+    return false;
+  }
+  case RETRO_ENVIRONMENT_SET_DISK_CONTROL_EXT_INTERFACE:
+  {
+    const retro_disk_control_ext_callback* typedData = static_cast<const retro_disk_control_ext_callback*>(data);
+
+    // Not implemented
+    (void)typedData;
+    return false;
+  }
+  case RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION:
+  {
+    unsigned int* typedData = static_cast<unsigned int*>(data);
+
+    // Not implemented
+    (void)typedData;
+    return false;
+  }
+  case RETRO_ENVIRONMENT_SET_MESSAGE_EXT:
+  {
+    const retro_message_ext* typedData = static_cast<const retro_message_ext*>(data);
+
+    // Not implemented
+    (void)typedData;
+    return false;
+  }
+  case RETRO_ENVIRONMENT_GET_INPUT_MAX_USERS:
+  {
+    unsigned int* typedData = static_cast<unsigned int*>(data);
+
+    // Not implemented
+    (void)typedData;
+    return false;
+  }
+  case RETRO_ENVIRONMENT_SET_AUDIO_BUFFER_STATUS_CALLBACK:
+  {
+    const retro_audio_buffer_status_callback* typedData = static_cast<const retro_audio_buffer_status_callback*>(data);
+
+    // Not implemented
+    (void)typedData;
+    return false;
+  }
+  case RETRO_ENVIRONMENT_SET_MINIMUM_AUDIO_LATENCY:
+  {
+    const unsigned int* typedData = static_cast<const unsigned int*>(data);
+
+    // Not implemented
+    (void)typedData;
+    return false;
+  }
+  case RETRO_ENVIRONMENT_SET_FASTFORWARDING_OVERRIDE:
+  {
+    const retro_fastforwarding_override* typedData = static_cast<const retro_fastforwarding_override*>(data);
+
+    // Not implemented
+    (void)typedData;
+    return false;
+  }
+  case RETRO_ENVIRONMENT_SET_CONTENT_INFO_OVERRIDE:
+  {
+    const retro_system_content_info_override* typedData = static_cast<const retro_system_content_info_override*>(data);
+
+    // Not implemented
+    (void)typedData;
+    return false;
+  }
+  case RETRO_ENVIRONMENT_GET_GAME_INFO_EXT:
+  {
+    const retro_game_info_ext** typedData = static_cast<const retro_game_info_ext**>(data);
+
+    // Not implemented
+    (void)typedData;
+    return false;
+  }
+  case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2:
+  {
+    const retro_core_options_v2_intl* typedData = static_cast<const retro_core_options_v2_intl*>(data);
+
+    // Not implemented
+    (void)typedData;
+    return false;
+  }
+  case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK:
+  {
+    const retro_core_options_update_display_callback* typedData = static_cast<const retro_core_options_update_display_callback*>(data);
+
+    // Not implemented
+    (void)typedData;
+    return false;
+  }
+  case RETRO_ENVIRONMENT_SET_VARIABLE:
+  {
+    const retro_variable* typedData = static_cast<const retro_variable*>(data);
+
+    // Not implemented
+    (void)typedData;
+    return false;
+  }
+  case RETRO_ENVIRONMENT_GET_THROTTLE_STATE:
+  {
+    retro_throttle_state* typedData = static_cast<retro_throttle_state*>(data);
+
+    // Not implemented
+    (void)typedData;
+    return false;
+  }
+  case RETRO_ENVIRONMENT_GET_SAVESTATE_CONTEXT:
+  {
+    retro_savestate_context* typedData = static_cast<retro_savestate_context*>(data);
+
+    // Not implemented
+    (void)typedData;
+    return false;
+  }
+  case RETRO_ENVIRONMENT_GET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_SUPPORT:
+  {
+    retro_hw_render_context_negotiation_interface* typedData = static_cast<retro_hw_render_context_negotiation_interface*>(data);
+
+    // Not implemented
+    (void)typedData;
+    return false;
+  }
+  case RETRO_ENVIRONMENT_GET_JIT_CAPABLE:
+  {
+    bool* typedData = static_cast<bool*>(data);
+
+    // Not implemented
+    (void)typedData;
+    return false;
+  }
+  case RETRO_ENVIRONMENT_GET_MICROPHONE_INTERFACE:
+  {
+    retro_microphone_interface* typedData = static_cast<retro_microphone_interface*>(data);
+
+    // Not implemented
+    (void)typedData;
+    return false;
+  }
+  case RETRO_ENVIRONMENT_GET_DEVICE_POWER:
+  {
+    retro_device_power* typedData = static_cast<retro_device_power*>(data);
+
+    // Not implemented
+    (void)typedData;
+    return false;
+  }
+  case RETRO_ENVIRONMENT_SET_NETPACKET_INTERFACE:
+  {
+    const retro_netpacket_callback* typedData = static_cast<const retro_netpacket_callback*>(data);
+
+    // Not implemented
+    (void)typedData;
+    return false;
+  }
+  case RETRO_ENVIRONMENT_GET_PLAYLIST_DIRECTORY:
+  {
+    const char** typedData = static_cast<const char**>(data);
+
+    // Not implemented
+    (void)typedData;
+    return false;
+  }
+  case RETRO_ENVIRONMENT_GET_FILE_BROWSER_START_DIRECTORY:
+  {
+    const char** typedData = static_cast<const char**>(data);
+
+    // Not implemented
+    (void)typedData;
+    return false;
   }
   default:
     // Documentation says that unrecognized commands should always return false
