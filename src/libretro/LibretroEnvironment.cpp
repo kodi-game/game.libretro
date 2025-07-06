@@ -421,18 +421,14 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   case RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO:
     {
       const retro_system_av_info* typedData = reinterpret_cast<const retro_system_av_info*>(data);
-      if (!typedData)
-        return false;
+      if (typedData)
+      {
+        UpdateVideoGeometry(typedData->geometry);
 
-      CVideoGeometry videoGeometry(typedData->geometry);
-      m_videoStream.SetGeometry(videoGeometry);
-
-      //! @todo Reopen streams if geometry changes
-
-      //! @todo Report updating timing info to frontend
-      const double fps = typedData->timing.fps;
-      const double sampleRate = typedData->timing.sample_rate;
-
+        //! @todo Report updated timing info to frontend
+        const double fps = typedData->timing.fps;
+        const double sampleRate = typedData->timing.sample_rate;
+      }
       break;
     }
   case RETRO_ENVIRONMENT_SET_PROC_ADDRESS_CALLBACK:
@@ -477,8 +473,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     const retro_game_geometry* typedData = reinterpret_cast<const retro_game_geometry*>(data);
     if (typedData)
     {
-      // Not implemented
-      return false;
+      UpdateVideoGeometry(*typedData);
     }
     break;
   }
