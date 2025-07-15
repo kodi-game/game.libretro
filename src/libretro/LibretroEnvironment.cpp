@@ -421,14 +421,14 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   case RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO:
     {
       const retro_system_av_info* typedData = static_cast<const retro_system_av_info*>(data);
-      if (typedData)
-      {
-        UpdateVideoGeometry(typedData->geometry);
+      if (!typedData)
+        return false;
 
-        //! @todo Report updated timing info to frontend
-        const double fps = typedData->timing.fps;
-        const double sampleRate = typedData->timing.sample_rate;
-      }
+      UpdateVideoGeometry(typedData->geometry);
+
+      //! @todo Report updated timing info to frontend
+      const double fps = typedData->timing.fps;
+      const double sampleRate = typedData->timing.sample_rate;
       break;
     }
   case RETRO_ENVIRONMENT_SET_PROC_ADDRESS_CALLBACK:
