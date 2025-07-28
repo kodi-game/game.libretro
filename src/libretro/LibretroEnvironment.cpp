@@ -860,6 +860,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     (void)typedData;
     return false;
   }
+#ifdef RETRO_ENVIRONMENT_GET_FILE_BROWSER_START_DIRECTORY
   case RETRO_ENVIRONMENT_GET_FILE_BROWSER_START_DIRECTORY:
   {
     const char** typedData = static_cast<const char**>(data);
@@ -868,6 +869,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     (void)typedData;
     return false;
   }
+#endif
   default:
     // Documentation says that unrecognized commands should always return false
     return false;
