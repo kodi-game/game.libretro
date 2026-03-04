@@ -37,18 +37,42 @@ void CFrontendBridge::LogFrontend(retro_log_level level, const char *fmt, ...)
   {
   case RETRO_LOG_DEBUG: xbmcLevel = ADDON_LOG_DEBUG; break;
   case RETRO_LOG_INFO:  xbmcLevel = ADDON_LOG_INFO;  break;
-  case RETRO_LOG_WARN:  xbmcLevel = ADDON_LOG_ERROR; break;
+  case RETRO_LOG_WARN:  xbmcLevel = ADDON_LOG_WARNING; break;
   case RETRO_LOG_ERROR: xbmcLevel = ADDON_LOG_ERROR; break;
   default:              xbmcLevel = ADDON_LOG_ERROR; break;
   }
 
+  if (fmt == nullptr)
+  {
+    kodi::Log(xbmcLevel, "LogFrontend: (null format)");
+    return;
+  }
+
   char buffer[16384];
+
   va_list args;
   va_start(args, fmt);
-  vsprintf(buffer, fmt, args);
+  const int written = vsnprintf(buffer, sizeof(buffer), fmt, args);
   va_end(args);
 
-  kodi::Log(xbmcLevel, buffer);
+  // vsnprintf returns:
+  //   <0 : encoding/other error
+  //   >=sizeof(buffer) : truncated
+  if (written < 0)
+  {
+    kodi::Log(xbmcLevel, "LogFrontend: formatting error");
+    return;
+  }
+
+  if (static_cast<size_t>(written) >= sizeof(buffer))
+  {
+    // Ensure terminator (vsnprintf already does, but be defensive)
+    buffer[sizeof(buffer) - 1] = '\0';
+    kodi::Log(xbmcLevel, "%s (truncated)", buffer);
+    return;
+  }
+
+  kodi::Log(xbmcLevel, "%s", buffer);
 }
 
 void CFrontendBridge::VideoRefresh(const void* data, unsigned int width, unsigned int height, size_t pitch)
