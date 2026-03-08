@@ -88,6 +88,20 @@ public:
   GAME_ERROR RCGetRichPresenceEvaluation(std::string& evaluation, unsigned int consoleID) override;
   GAME_ERROR RCResetRuntime() override;
 
+  // --- Disc control interface
+
+  bool GetEjectState() override;
+  GAME_ERROR SetEjectState(bool ejected) override;
+  unsigned int GetImageIndex() override;
+  GAME_ERROR SetImageIndex(unsigned int imageIndex) override;
+  unsigned int GetImageCount() override;
+  GAME_ERROR AddImageIndex() override;
+  GAME_ERROR ReplaceImageIndex(unsigned int imageIndex, const std::string& filePath) override;
+  GAME_ERROR RemoveImageIndex(unsigned int imageIndex) override;
+  GAME_ERROR SetInitialImage(unsigned int imageIndex, const std::string& filePath) override;
+  std::string GetImagePath(unsigned int imageIndex) override;
+  std::string GetImageLabel(unsigned int imageIndex) override;
+
 private:
   GAME_ERROR AudioAvailable();
 

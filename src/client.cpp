@@ -543,4 +543,59 @@ GAME_ERROR CGameLibRetro::RCResetRuntime()
   return GAME_ERROR_NO_ERROR;
 }
 
+bool CGameLibRetro::GetEjectState()
+{
+  return m_clientBridge.GetEjectState();
+}
+
+GAME_ERROR CGameLibRetro::SetEjectState(bool ejected)
+{
+  return m_clientBridge.SetEjectState(ejected);
+}
+
+unsigned int CGameLibRetro::GetImageIndex()
+{
+  return m_clientBridge.GetImageIndex();
+}
+
+GAME_ERROR CGameLibRetro::SetImageIndex(unsigned int imageIndex)
+{
+  return m_clientBridge.SetImageIndex(imageIndex);
+}
+
+unsigned int CGameLibRetro::GetImageCount()
+{
+  return m_clientBridge.GetImageCount();
+}
+
+GAME_ERROR CGameLibRetro::AddImageIndex()
+{
+  return m_clientBridge.AddImageIndex();
+}
+
+GAME_ERROR CGameLibRetro::ReplaceImageIndex(unsigned int imageIndex, const std::string& filePath)
+{
+  return m_clientBridge.ReplaceImageIndex(imageIndex, filePath);
+}
+
+GAME_ERROR CGameLibRetro::RemoveImageIndex(unsigned int imageIndex)
+{
+  return m_clientBridge.RemoveImageIndex(imageIndex);
+}
+
+GAME_ERROR CGameLibRetro::SetInitialImage(unsigned int imageIndex, const std::string& filePath)
+{
+  return m_clientBridge.SetInitialImage(imageIndex, filePath);
+}
+
+std::string CGameLibRetro::GetImagePath(unsigned int imageIndex)
+{
+  return m_clientBridge.GetImagePath(imageIndex);
+}
+
+std::string CGameLibRetro::GetImageLabel(unsigned int imageIndex)
+{
+  return m_clientBridge.GetImageLabel(imageIndex);
+}
+
 ADDONCREATOR(CGameLibRetro)

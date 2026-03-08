@@ -206,8 +206,14 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       const retro_disk_control_callback *typedData = static_cast<const retro_disk_control_callback*>(data);
       if (typedData)
       {
-        // Disk control interface not implemented
-        return false;
+        // Store callbacks from libretro client
+        m_clientBridge->SetSetEjectState(typedData->set_eject_state);
+        m_clientBridge->SetGetEjectState(typedData->get_eject_state);
+        m_clientBridge->SetGetImageIndex(typedData->get_image_index);
+        m_clientBridge->SetSetImageIndex(typedData->set_image_index);
+        m_clientBridge->SetGetImageCount(typedData->get_num_images);
+        m_clientBridge->SetReplaceImageIndex(typedData->replace_image_index);
+        m_clientBridge->SetAddImageIndex(typedData->add_image_index);
       }
       break;
     }
@@ -732,18 +738,31 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   case RETRO_ENVIRONMENT_GET_DISK_CONTROL_INTERFACE_VERSION:
   {
     unsigned int* typedData = static_cast<unsigned int*>(data);
-
-    // Not implemented
-    (void)typedData;
-    return false;
+    if (typedData != nullptr)
+    {
+      // Extended interface is supported
+      *typedData = 1;
+    }
+    break;
   }
   case RETRO_ENVIRONMENT_SET_DISK_CONTROL_EXT_INTERFACE:
   {
     const retro_disk_control_ext_callback* typedData = static_cast<const retro_disk_control_ext_callback*>(data);
-
-    // Not implemented
-    (void)typedData;
-    return false;
+    if (typedData)
+    {
+      // Store callbacks from libretro client
+      m_clientBridge->SetSetEjectState(typedData->set_eject_state);
+      m_clientBridge->SetGetEjectState(typedData->get_eject_state);
+      m_clientBridge->SetGetImageIndex(typedData->get_image_index);
+      m_clientBridge->SetSetImageIndex(typedData->set_image_index);
+      m_clientBridge->SetGetImageCount(typedData->get_num_images);
+      m_clientBridge->SetReplaceImageIndex(typedData->replace_image_index);
+      m_clientBridge->SetAddImageIndex(typedData->add_image_index);
+      m_clientBridge->SetSetInitialImage(typedData->set_initial_image);
+      m_clientBridge->SetGetImagePath(typedData->get_image_path);
+      m_clientBridge->SetGetImageLabel(typedData->get_image_label);
+    }
+    break;
   }
   case RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION:
   {
