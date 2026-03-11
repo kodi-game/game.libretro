@@ -38,6 +38,7 @@ jobs:
           ARCHITECTURE: x64
           CONFIGURATION: Release
           WINSTORE: -DCMAKE_SYSTEM_NAME=WindowsStore -DCMAKE_SYSTEM_VERSION="10.0.22621.0"
+          USE_PATCH_WRAPPER: 'true'
 
     workspace:
       clean: all
@@ -54,12 +55,68 @@ jobs:
         echo $(app_id) . . > definition/$(app_id)/$(app_id).txt
         mklink /J "$(Pipeline.Workspace)/$(app_id)" "$(Build.SourcesDirectory)"
 
+    - powershell: |
+        $patchDir = 'C:\Strawberry\c\bin'
+        $patchExe = Join-Path $patchDir 'patch.exe'
+        $realExe = Join-Path $patchDir 'patch-real.exe'
+        $src = Join-Path $env:TEMP 'patch-wrapper.cs'
+        $out = Join-Path $patchDir 'patch.exe'
+
+        if (-not (Test-Path $realExe)) {
+          Rename-Item $patchExe 'patch-real.exe'
+        }
+
+        @'
+        using System;
+        using System.Diagnostics;
+
+        class PatchWrapper
+        {
+          static int Main(string[] args)
+          {
+            var psi = new ProcessStartInfo();
+            psi.FileName = @"C:\Strawberry\c\bin\patch-real.exe";
+            psi.UseShellExecute = false;
+
+            var quoted = new string[args.Length];
+            for (int i = 0; i < args.Length; i++)
+              quoted[i] = "\"" + args[i].Replace("\"", "\\\"") + "\"";
+
+            bool useBinary = false;
+            for (int i = 0; i < args.Length; i++)
+            {
+              if (args[i].IndexOf("dlfcn-win32", StringComparison.OrdinalIgnoreCase) >= 0)
+              {
+                useBinary = true;
+                break;
+              }
+            }
+
+            psi.Arguments =
+              (useBinary ? "--binary " : "") + string.Join(" ", quoted);
+
+            var p = Process.Start(psi);
+            p.WaitForExit();
+            return p.ExitCode;
+          }
+        }
+        '@ | Set-Content $src -Encoding Ascii
+
+        & "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe" `
+          /nologo /target:exe /out:$out $src
+      displayName: "Replace Strawberry patch.exe with --binary wrapper"
+      condition: and(succeeded(), eq(variables['USE_PATCH_WRAPPER'], 'true'))
+
     - task: CMake@1
+      env:
+        PATHEXT: $(PATHEXT)
       inputs:
         workingDirectory: 'build'
         cmakeArgs: '-T host=x64 -G "$(GENERATOR)" -A $(ARCHITECTURE) $(WINSTORE) -DADDONS_TO_BUILD=$(app_id) -DCMAKE_BUILD_TYPE=$(CONFIGURATION) -DADDONS_DEFINITION_DIR=$(Pipeline.Workspace)/$(app_id)/build/definition -DADDON_SRC_PREFIX=../.. -DCMAKE_INSTALL_PREFIX=../../kodi/addons -DPACKAGE_ZIP=1 ../../kodi/cmake/addons'
 
     - task: CMake@1
+      env:
+        PATHEXT: $(PATHEXT)
       inputs:
         workingDirectory: 'build'
         cmakeArgs: '--build . --config $(CONFIGURATION) --target $(app_id)'

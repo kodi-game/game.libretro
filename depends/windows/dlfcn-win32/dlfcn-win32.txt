@@ -1,1 +1,1 @@
-dlfcn-win32 https://github.com/dlfcn-win32/dlfcn-win32/archive/v1.2.0.tar.gz
+dlfcn-win32 https://github.com/dlfcn-win32/dlfcn-win32/archive/v1.4.2.tar.gz

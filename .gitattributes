@@ -1,0 +1,3 @@
+# dlfcn-win32 patches: keep exact bytes (prevents LF/CRLF munging)
+depends/windows/dlfcn-win32/*.patch -text
+depends/windowsstore/dlfcn-win32/*.patch -text
