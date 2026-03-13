@@ -565,6 +565,9 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   }
   case RETRO_ENVIRONMENT_SET_HW_SHARED_CONTEXT:
   {
+    // Parameter is ignored
+    (void)data;
+
     // Not implemented
     return false;
   }
@@ -649,6 +652,9 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   }
   case RETRO_ENVIRONMENT_GET_INPUT_BITMASKS:
   {
+    // Parameter is ignored
+    (void)data;
+
     // Not implemented
     return false;
   }
@@ -712,9 +718,13 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   {
     unsigned int* typedData = static_cast<unsigned int*>(data);
 
-    // Not implemented
-    (void)typedData;
-    return false;
+    if (typedData != nullptr)
+    {
+      // Only legacy message interface is currently supported
+      *typedData = 0;
+    }
+
+    break;
   }
   case RETRO_ENVIRONMENT_SET_MESSAGE_EXT:
   {
@@ -808,9 +818,13 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   {
     retro_savestate_context* typedData = static_cast<retro_savestate_context*>(data);
 
-    // Not implemented
-    (void)typedData;
-    return false;
+    if (typedData != nullptr)
+    {
+      // Least restrictive, and fits Kodi's current context
+      *typedData = RETRO_SAVESTATE_CONTEXT_NORMAL;
+    }
+
+    break;
   }
   case RETRO_ENVIRONMENT_GET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_SUPPORT:
   {
@@ -824,9 +838,13 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   {
     bool* typedData = static_cast<bool*>(data);
 
-    // Not implemented
-    (void)typedData;
-    return false;
+    if (typedData != nullptr)
+    {
+      // No reason to not allow JIT
+      *typedData = true;
+    }
+
+    break;
   }
   case RETRO_ENVIRONMENT_GET_MICROPHONE_INTERFACE:
   {
@@ -860,10 +878,30 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     (void)typedData;
     return false;
   }
-#ifdef RETRO_ENVIRONMENT_GET_FILE_BROWSER_START_DIRECTORY
+#if defined(RETRO_ENVIRONMENT_GET_FILE_BROWSER_START_DIRECTORY)
   case RETRO_ENVIRONMENT_GET_FILE_BROWSER_START_DIRECTORY:
   {
     const char** typedData = static_cast<const char**>(data);
+
+    // Not implemented
+    (void)typedData;
+    return false;
+  }
+#endif
+#if defined(RETRO_ENVIRONMENT_GET_TARGET_SAMPLE_RATE)
+  case RETRO_ENVIRONMENT_GET_TARGET_SAMPLE_RATE:
+  {
+    unsigned int* typedData = static_cast<unsigned int*>(data);
+
+    // Not implemented
+    (void)typedData;
+    return false;
+  }
+#endif
+#if defined(RETRO_ENVIRONMENT_GET_NETPLAY_CLIENT_INDEX)
+  case RETRO_ENVIRONMENT_GET_NETPLAY_CLIENT_INDEX:
+  {
+    unsigned int* typedData = static_cast<unsigned int*>(data);
 
     // Not implemented
     (void)typedData;
