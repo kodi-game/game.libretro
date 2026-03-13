@@ -538,8 +538,12 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     const bool* typedData = static_cast<const bool*>(data);
     if (typedData)
     {
-      // Not implemented
-      return false;
+      const bool supportsAchievements = *typedData;
+
+      if (supportsAchievements)
+        kodi::Log(ADDON_LOG_INFO, "This core supports achievements");
+      else
+        kodi::Log(ADDON_LOG_INFO, "This core doesn't support achievements");
     }
     break;
   }
