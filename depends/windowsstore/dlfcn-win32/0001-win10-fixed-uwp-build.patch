@@ -1,14 +1,12 @@
-From 6944869021af1f4f5585d7e54aaf0e8d971d0afd Mon Sep 17 00:00:00 2001
+From f85366b1044fff7b4ea9162c3edcd8278c3e06ff Mon Sep 17 00:00:00 2001
 From: Alwin Esch <alwin.esch@web.de>
 Date: Thu, 22 Aug 2019 19:30:12 +0100
 Subject: [PATCH] [win10] fixed uwp build
 
 ---
- src/dlfcn.c | 47 +++++++++++++++++++++++++++++++++++++++++------
- 1 file changed, 41 insertions(+), 6 deletions(-)
 
 diff --git a/src/dlfcn.c b/src/dlfcn.c
-index cb9f9bb..ce43ae7 100644
+index cb9f9bb..b26b404 100644
 --- a/src/dlfcn.c
 +++ b/src/dlfcn.c
 @@ -24,6 +24,7 @@
@@ -65,11 +63,10 @@ index cb9f9bb..ce43ae7 100644
      }
      else
      {
-@@ -415,16 +424,35 @@ void *dlopen( const char *file, int mode )
+@@ -415,6 +424,23 @@ void *dlopen( const char *file, int mode )
               * to UNIX's search paths (start with system folders instead of current
               * folder).
               */
--            hModule = LoadLibraryExA( lpFileName, NULL, LOAD_WITH_ALTERED_SEARCH_PATH );
 +#if defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_APP)
 +            int result = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, lpFileName, strlen(lpFileName), NULL, 0);
 +            if (result == 0)
@@ -82,27 +79,20 @@ index cb9f9bb..ce43ae7 100644
 +                free( newStr );
 +                return NULL;
 +            }
- 
++
 +            hModule = LoadPackagedLibrary( newStr, 0 );
 +            free( newStr );
 +            dwProcModsAfter = 0;
 +#else // WINAPI_PARTITION_DESKTOP
-+            hModule = LoadLibraryExA( lpFileName, NULL, LOAD_WITH_ALTERED_SEARCH_PATH );
-+#endif
-             if( !hModule )
-             {
-                 save_err_str( lpFileName, GetLastError( ) );
-             }
-             else
-             {
-+#if !defined(WINAPI_FAMILY) || (WINAPI_FAMILY != WINAPI_FAMILY_APP)
-                 if( MyEnumProcessModules( hCurrentProc, NULL, 0, &dwProcModsAfter ) == 0 )
-                     dwProcModsAfter = 0;
-+#endif
+             hModule = LoadLibraryExA( lpFileName, NULL, LOAD_WITH_ALTERED_SEARCH_PATH );
  
-                 /* If the object was loaded with RTLD_LOCAL, add it to list of local
-                  * objects, so that its symbols cannot be retrieved even if the handle for
-@@ -453,7 +481,9 @@ void *dlopen( const char *file, int mode )
+             if( !hModule )
+@@ -449,11 +475,14 @@ void *dlopen( const char *file, int mode )
+                     local_rem( hModule );
+                 }
+             }
++#endif
+         }
      }
  
      /* Return to previous state of the error-mode bit flags. */
@@ -112,25 +102,26 @@ index cb9f9bb..ce43ae7 100644
  
      return (void *) hModule;
  }
-@@ -488,13 +518,15 @@ void *dlsym( void *handle, const char *name )
+@@ -488,15 +517,16 @@ void *dlsym( void *handle, const char *name )
  {
      FARPROC symbol;
      HMODULE hCaller;
 -    HMODULE hModule;
--    DWORD dwMessageId;
 +    HMODULE hModule = 0;
-+    DWORD dwMessageId = 0;
+     DWORD dwMessageId;
  
      error_occurred = FALSE;
  
      symbol = NULL;
++    dwMessageId = 0;
      hCaller = NULL;
-+
 +#if !defined(WINAPI_FAMILY) || (WINAPI_FAMILY != WINAPI_FAMILY_APP) // what is replacement of GMH on UWP?
      hModule = GetModuleHandle( NULL );
-     dwMessageId = 0;
+-    dwMessageId = 0;
  
-@@ -525,6 +557,7 @@ void *dlsym( void *handle, const char *name )
+     if( handle == RTLD_DEFAULT )
+     {
+@@ -525,6 +555,7 @@ void *dlsym( void *handle, const char *name )
              goto end;
          }
      }
@@ -138,19 +129,16 @@ index cb9f9bb..ce43ae7 100644
  
      if( handle != RTLD_NEXT )
      {
-@@ -538,9 +571,10 @@ void *dlsym( void *handle, const char *name )
+@@ -537,7 +568,7 @@ void *dlsym( void *handle, const char *name )
+     /* If the handle for the original program file is passed, also search
       * in all globally loaded objects.
       */
- 
+-
 +#if !defined(WINAPI_FAMILY) || (WINAPI_FAMILY != WINAPI_FAMILY_APP)
      if( hModule == handle || handle == RTLD_NEXT )
      {
--        HANDLE hCurrentProc;
-+        HANDLE hCurrentProc = 0;
-         HMODULE *modules;
-         DWORD cbNeeded;
-         DWORD dwSize;
-@@ -588,6 +622,7 @@ void *dlsym( void *handle, const char *name )
+         HANDLE hCurrentProc;
+@@ -588,6 +619,7 @@ void *dlsym( void *handle, const char *name )
              }
          }
      }
@@ -158,6 +146,3 @@ index cb9f9bb..ce43ae7 100644
  
  end:
      if( symbol == NULL )
--- 
-2.53.0
-

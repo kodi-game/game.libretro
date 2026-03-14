@@ -1,17 +1,8 @@
-From 262365e15599077a3a69da43078f1f5193aa3061 Mon Sep 17 00:00:00 2001
-From: Garrett Brown <themagnificentmrb@gmail.com>
-Date: Sun, 1 Mar 2026 00:15:29 -0800
-Subject: [PATCH] dlopen with widechar
-
----
- src/dlfcn.c | 14 +++++++++++++-
- 1 file changed, 13 insertions(+), 1 deletion(-)
-
 diff --git a/src/dlfcn.c b/src/dlfcn.c
-index cb9f9bb..82e0c1e 100644
+index cb9f9bb..1b8808c 100644
 --- a/src/dlfcn.c
 +++ b/src/dlfcn.c
-@@ -415,7 +415,19 @@ void *dlopen( const char *file, int mode )
+@@ -415,7 +415,17 @@ void *dlopen( const char *file, int mode )
               * to UNIX's search paths (start with system folders instead of current
               * folder).
               */
@@ -19,19 +10,14 @@ index cb9f9bb..82e0c1e 100644
 +            int wide_len = MultiByteToWideChar(CP_UTF8, 0, lpFileName, -1, 0, 0);
 +            if (wide_len > 0)
 +            {
-+              wchar_t* lpFileNameW = (wchar_t*)malloc(wide_len * sizeof(wchar_t));
-+              MultiByteToWideChar(CP_UTF8, 0, lpFileName, -1, lpFileNameW, wide_len);
++                wchar_t* lpFileNameW = (wchar_t*)malloc(wide_len * sizeof(wchar_t));
++                MultiByteToWideChar(CP_UTF8, 0, lpFileName, -1, lpFileNameW, wide_len);
 +
-+              hModule = LoadLibraryExW(lpFileNameW, NULL, 
-+                                      LOAD_WITH_ALTERED_SEARCH_PATH );
-+
-+              free(lpFileNameW);
++                hModule = LoadLibraryExW(lpFileNameW, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
++                free(lpFileNameW);
 +            }
 +            else
-+              hModule = 0;
++                hModule = 0;
  
              if( !hModule )
              {
--- 
-2.52.0
-
