@@ -538,8 +538,12 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     const bool* typedData = static_cast<const bool*>(data);
     if (typedData)
     {
-      // Not implemented
-      return false;
+      const bool supportsAchievements = *typedData;
+
+      if (supportsAchievements)
+        kodi::Log(ADDON_LOG_INFO, "This core supports achievements");
+      else
+        kodi::Log(ADDON_LOG_INFO, "This core doesn't support achievements");
     }
     break;
   }
@@ -558,13 +562,43 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     uint64_t* typedData = static_cast<uint64_t*>(data);
     if (typedData)
     {
-      // Not implemented
-      return false;
+      uint64_t quirks = *typedData;
+
+      kodi::Log(ADDON_LOG_INFO, "------------------------------------------------------------");
+      kodi::Log(ADDON_LOG_INFO, "Libretro serialization quirks:");
+
+      if (quirks & RETRO_SERIALIZATION_QUIRK_INCOMPLETE)
+        kodi::Log(ADDON_LOG_INFO, "  INCOMPLETE - Serialized state is incomplete in some way");
+
+      if (quirks & RETRO_SERIALIZATION_QUIRK_MUST_INITIALIZE)
+        kodi::Log(ADDON_LOG_INFO, "  MUST_INITIALIZE - Some initialization time is required");
+
+      if (quirks & RETRO_SERIALIZATION_QUIRK_CORE_VARIABLE_SIZE)
+        kodi::Log(ADDON_LOG_INFO, "  VARIABLE_SIZE - Serialization size may change within a session");
+
+      // TODO: We don't support variable serialization size
+      quirks &= ~RETRO_SERIALIZATION_QUIRK_FRONT_VARIABLE_SIZE;
+
+      if (quirks & RETRO_SERIALIZATION_QUIRK_SINGLE_SESSION)
+        kodi::Log(ADDON_LOG_INFO, "  SINGLE_SESSION - State can only be loaded during the same session");
+
+      if (quirks & RETRO_SERIALIZATION_QUIRK_ENDIAN_DEPENDENT)
+        kodi::Log(ADDON_LOG_INFO, "  ENDIAN_DEPENDENT - State cannot be loaded with a different system endianness");
+
+      if (quirks & RETRO_SERIALIZATION_QUIRK_PLATFORM_DEPENDENT)
+        kodi::Log(ADDON_LOG_INFO, "  PLATFORM_DEPENDENT - State needs the same platform, such as for word size dependence");
+
+      kodi::Log(ADDON_LOG_INFO, "------------------------------------------------------------");
+
+      *typedData = quirks;
     }
     break;
   }
   case RETRO_ENVIRONMENT_SET_HW_SHARED_CONTEXT:
   {
+    // Parameter is ignored
+    (void)data;
+
     // Not implemented
     return false;
   }
@@ -649,6 +683,9 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   }
   case RETRO_ENVIRONMENT_GET_INPUT_BITMASKS:
   {
+    // Parameter is ignored
+    (void)data;
+
     // Not implemented
     return false;
   }
@@ -712,9 +749,13 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   {
     unsigned int* typedData = static_cast<unsigned int*>(data);
 
-    // Not implemented
-    (void)typedData;
-    return false;
+    if (typedData != nullptr)
+    {
+      // Only legacy message interface is currently supported
+      *typedData = 0;
+    }
+
+    break;
   }
   case RETRO_ENVIRONMENT_SET_MESSAGE_EXT:
   {
@@ -808,9 +849,13 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   {
     retro_savestate_context* typedData = static_cast<retro_savestate_context*>(data);
 
-    // Not implemented
-    (void)typedData;
-    return false;
+    if (typedData != nullptr)
+    {
+      // Least restrictive, and fits Kodi's current context
+      *typedData = RETRO_SAVESTATE_CONTEXT_NORMAL;
+    }
+
+    break;
   }
   case RETRO_ENVIRONMENT_GET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_SUPPORT:
   {
@@ -824,9 +869,13 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   {
     bool* typedData = static_cast<bool*>(data);
 
-    // Not implemented
-    (void)typedData;
-    return false;
+    if (typedData != nullptr)
+    {
+      // No reason to not allow JIT
+      *typedData = true;
+    }
+
+    break;
   }
   case RETRO_ENVIRONMENT_GET_MICROPHONE_INTERFACE:
   {
@@ -860,10 +909,30 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     (void)typedData;
     return false;
   }
-#ifdef RETRO_ENVIRONMENT_GET_FILE_BROWSER_START_DIRECTORY
+#if defined(RETRO_ENVIRONMENT_GET_FILE_BROWSER_START_DIRECTORY)
   case RETRO_ENVIRONMENT_GET_FILE_BROWSER_START_DIRECTORY:
   {
     const char** typedData = static_cast<const char**>(data);
+
+    // Not implemented
+    (void)typedData;
+    return false;
+  }
+#endif
+#if defined(RETRO_ENVIRONMENT_GET_TARGET_SAMPLE_RATE)
+  case RETRO_ENVIRONMENT_GET_TARGET_SAMPLE_RATE:
+  {
+    unsigned int* typedData = static_cast<unsigned int*>(data);
+
+    // Not implemented
+    (void)typedData;
+    return false;
+  }
+#endif
+#if defined(RETRO_ENVIRONMENT_GET_NETPLAY_CLIENT_INDEX)
+  case RETRO_ENVIRONMENT_GET_NETPLAY_CLIENT_INDEX:
+  {
+    unsigned int* typedData = static_cast<unsigned int*>(data);
 
     // Not implemented
     (void)typedData;
