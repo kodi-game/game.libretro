@@ -452,27 +452,38 @@ bool CInputManager::AccelerometerState(unsigned int port, float& x, float& y, fl
 
 void CInputManager::SetControllerInfo(const retro_controller_info* info)
 {
+  if (info == nullptr)
+    return;
+
   dsyslog("Libretro controller info:");
   dsyslog("------------------------------------------------------------");
 
-  for (unsigned int i = 0; i < info->num_types; i++)
+  for (unsigned int port = 0; info[port].types != nullptr || info[port].num_types != 0; port++)
   {
-    const retro_controller_description& type = info->types[i];
+    if (info[port].types == nullptr || info[port].num_types == 0)
+      continue;
 
-    libretro_device_t baseType = type.id & RETRO_DEVICE_MASK;
+    dsyslog("Port: %u", port);
 
-    std::string description = type.desc ? type.desc : "";
-
-    if (type.id & ~RETRO_DEVICE_MASK)
+    for (unsigned int i = 0; i < info[port].num_types; i++)
     {
-      libretro_subclass_t subclass = (type.id >> RETRO_DEVICE_TYPE_SHIFT) - 1;
-      dsyslog("Device: %s, Subclass: %u, Description: \"%s\"",
-          LibretroTranslator::GetDeviceName(baseType), subclass, description.c_str());
-    }
-    else
-    {
-      dsyslog("Device: %s, Description: \"%s\"",
-          LibretroTranslator::GetDeviceName(baseType), description.c_str());
+      const retro_controller_description& type = info[port].types[i];
+
+      libretro_device_t baseType = type.id & RETRO_DEVICE_MASK;
+
+      std::string description = type.desc ? type.desc : "";
+
+      if (type.id & ~RETRO_DEVICE_MASK)
+      {
+        libretro_subclass_t subclass = (type.id >> RETRO_DEVICE_TYPE_SHIFT) - 1;
+        dsyslog("  Device: %s, Subclass: %u, Description: \"%s\"",
+            LibretroTranslator::GetDeviceName(baseType), subclass, description.c_str());
+      }
+      else
+      {
+        dsyslog("  Device: %s, Description: \"%s\"",
+            LibretroTranslator::GetDeviceName(baseType), description.c_str());
+      }
     }
   }
 
