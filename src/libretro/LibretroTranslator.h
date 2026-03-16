@@ -82,7 +82,7 @@ namespace LIBRETRO
      * \param type The device type to stringify.
      * \return String representation of device type.
      */
-    static const char* GetDeviceName(libretro_device_t type);
+    static std::string GetDeviceName(libretro_device_t type);
 
     /*!
      * \brief Translate button/feature name (libretro buttonmap "mapto" field) to libretro index value.

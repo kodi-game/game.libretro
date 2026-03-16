@@ -109,7 +109,7 @@ libretro_device_t LibretroTranslator::GetDeviceType(const std::string& strLibret
   return RETRO_DEVICE_NONE;
 }
 
-const char* LibretroTranslator::GetDeviceName(libretro_device_t type)
+std::string LibretroTranslator::GetDeviceName(libretro_device_t type)
 {
   switch (type)
   {
@@ -123,7 +123,7 @@ const char* LibretroTranslator::GetDeviceName(libretro_device_t type)
     break;
   }
 
-  return "";
+  return std::to_string(type);
 }
 
 namespace LIBRETRO

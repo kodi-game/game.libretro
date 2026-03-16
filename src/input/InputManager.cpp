@@ -287,7 +287,7 @@ void CInputManager::LogInputDescriptors(const retro_input_descriptor* descriptor
     {
       dsyslog("Port: %u, Device: %s, Feature: %s, Description: %s",
           descriptor->port,
-          LibretroTranslator::GetDeviceName(descriptor->device),
+          LibretroTranslator::GetDeviceName(descriptor->device).c_str(),
           LibretroTranslator::GetFeatureName(descriptor->device, descriptor->index, descriptor->id),
           descriptor->description ? descriptor->description : "");
     }
@@ -295,7 +295,7 @@ void CInputManager::LogInputDescriptors(const retro_input_descriptor* descriptor
     {
       dsyslog("Port: %u, Device: %s, Feature: %s, Component: %s, Description: %s",
           descriptor->port,
-          LibretroTranslator::GetDeviceName(descriptor->device),
+          LibretroTranslator::GetDeviceName(descriptor->device).c_str(),
           LibretroTranslator::GetFeatureName(descriptor->device, descriptor->index, descriptor->id),
           component.c_str(),
           descriptor->description ? descriptor->description : "");
@@ -477,12 +477,12 @@ void CInputManager::SetControllerInfo(const retro_controller_info* info)
       {
         libretro_subclass_t subclass = (type.id >> RETRO_DEVICE_TYPE_SHIFT) - 1;
         dsyslog("  Device: %s, Subclass: %u, Description: \"%s\"",
-            LibretroTranslator::GetDeviceName(baseType), subclass, description.c_str());
+            LibretroTranslator::GetDeviceName(baseType).c_str(), subclass, description.c_str());
       }
       else
       {
         dsyslog("  Device: %s, Description: \"%s\"",
-            LibretroTranslator::GetDeviceName(baseType), description.c_str());
+            LibretroTranslator::GetDeviceName(baseType).c_str(), description.c_str());
       }
     }
   }
