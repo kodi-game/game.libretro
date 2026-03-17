@@ -388,7 +388,8 @@ bool CGameLibRetro::ConnectController(bool connect, const std::string& port_addr
   int port = CInputManager::Get().GetPortIndex(strPortAddress);
   if (port < 0)
   {
-    esyslog("Failed to connect controller, invalid port address: %s", strPortAddress.c_str());
+    if (!CInputManager::Get().IsKeyboard(strPortAddress) && !CInputManager::Get().IsMouse(strPortAddress))
+      esyslog("Failed to connect controller, invalid port address: %s", strPortAddress.c_str());
   }
   else
   {
