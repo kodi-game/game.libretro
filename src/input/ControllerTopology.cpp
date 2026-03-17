@@ -23,14 +23,6 @@ using namespace LIBRETRO;
 
 #define ADDRESS_SEPARATOR  '/'
 
-//! @todo Remove me when these are added to the Game API
-#if !defined(KEYBOARD_PORT_ID)
-#define KEYBOARD_PORT_ID "keyboard"
-#endif
-#if !defined(MOUSE_PORT_ID)
-#define MOUSE_PORT_ID "mouse"
-#endif
-
 CControllerTopology& CControllerTopology::GetInstance()
 {
   static CControllerTopology instance;
