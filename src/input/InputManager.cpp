@@ -130,7 +130,7 @@ libretro_device_t CInputManager::ConnectController(const std::string &address, c
         if (typeOverride != RETRO_DEVICE_NONE)
           device->SetType(typeOverride);
         if (subclassOverride != RETRO_SUBCLASS_NONE)
-          device->SetSubclass(typeOverride);
+          device->SetSubclass(subclassOverride);
 
         // Calculate type value to send to libretro
         if (device->Subclass() != RETRO_SUBCLASS_NONE)
