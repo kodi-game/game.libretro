@@ -40,7 +40,8 @@ Ports have the following properties:
 
 1. Port type
 2. Port ID (optional for keyboard and mouse)
-3. List of accepted controllers
+3. Optional autoconnect flag (`autoconnect="false"` starts disconnected)
+4. List of accepted controllers
 
 The port type is one of the following:
 

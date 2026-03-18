@@ -30,6 +30,7 @@
 #define TOPOLOGY_XML_ATTR_PORT_ID           "id"
 #define TOPOLOGY_XML_ATTR_CONNECTION_PORT   "connectionPort"
 #define TOPOLOGY_XML_ATTR_FORCE_CONNECTED   "forceConnected"
+#define TOPOLOGY_XML_ATTR_AUTOCONNECT       "autoconnect"
 #define TOPOLOGY_XML_ATTR_CONTROLLER_ID     "controller"
 #define TOPOLOGY_XML_ATTR_DEVICE_TYPE       "type"
 #define TOPOLOGY_XML_ATTR_DEVICE_SUBCLASS   "subclass"
