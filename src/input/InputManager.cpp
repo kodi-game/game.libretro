@@ -7,6 +7,7 @@
 
 #include "InputManager.h"
 #include "ControllerTopology.h"
+#include "InputDefinitions.h"
 #include "LibretroDevice.h"
 #include "LibretroDeviceInput.h"
 #include "libretro/ClientBridge.h"
@@ -130,7 +131,7 @@ libretro_device_t CInputManager::ConnectController(const std::string &address, c
         if (typeOverride != RETRO_DEVICE_NONE)
           device->SetType(typeOverride);
         if (subclassOverride != RETRO_SUBCLASS_NONE)
-          device->SetSubclass(typeOverride);
+          device->SetSubclass(subclassOverride);
 
         // Calculate type value to send to libretro
         if (device->Subclass() != RETRO_SUBCLASS_NONE)
@@ -184,6 +185,16 @@ bool CInputManager::GetConnectionPortIndex(const std::string &address, int& conn
 std::string CInputManager::GetAddress(unsigned int port) const
 {
   return CControllerTopology::GetInstance().GetAddress(port);
+}
+
+bool CInputManager::IsKeyboard(const std::string& portAddress) const
+{
+  return portAddress == KEYBOARD_PORT_ADDRESS;
+}
+
+bool CInputManager::IsMouse(const std::string& portAddress) const
+{
+  return portAddress == MOUSE_PORT_ADDRESS;
 }
 
 libretro_device_t CInputManager::GetDeviceType(const std::string &address) const

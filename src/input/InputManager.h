@@ -106,6 +106,9 @@ namespace LIBRETRO
 
     std::string GetAddress(unsigned int port) const;
 
+    bool IsKeyboard(const std::string& portAddress) const;
+    bool IsMouse(const std::string& portAddress) const;
+
     /*!
      * \brief Get the libretro device abstraction for the device connected to
      *        the specified address

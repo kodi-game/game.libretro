@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <kodi/addon-instance/Game.h>
+
 // Buttonmap XML
 #define BUTTONMAP_XML_ROOT                  "buttonmap"
 #define BUTTONMAP_XML_ELM_CONTROLLER        "controller"
@@ -32,7 +34,6 @@
 #define TOPOLOGY_XML_ATTR_DEVICE_TYPE       "type"
 #define TOPOLOGY_XML_ATTR_DEVICE_SUBCLASS   "subclass"
 
-// Game API strings
-#define PORT_TYPE_KEYBOARD    "keyboard"
-#define PORT_TYPE_MOUSE       "mouse"
+// Game API strings (KEYBOARD_PORT_ID, MOUSE_PORT_ID, KEYBOARD_PORT_ADDRESS,
+// MOUSE_PORT_ADDRESS are defined in <kodi/addon-instance/Game.h>)
 #define PORT_TYPE_CONTROLLER  "controller"
