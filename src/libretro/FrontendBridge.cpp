@@ -394,10 +394,10 @@ retro_vfs_file_handle *CFrontendBridge::OpenFile(const char *path, unsigned mode
     unsigned int flags = 0;
 
     // TODO
-    //flags &= ADDDON_READ_TRUNCATED;
+    //flags |= ADDON_READ_TRUNCATED;
 
     if (hints & RETRO_VFS_FILE_ACCESS_HINT_FREQUENT_ACCESS)
-      flags &= ADDON_READ_CACHED;
+      flags |= ADDON_READ_CACHED;
 
     if (!fileHandle->file->OpenFile(fileHandle->path, flags))
       return nullptr;
@@ -614,13 +614,13 @@ int CFrontendBridge::Stat(const char *path, int32_t *size)
     return returnBitmask;
 
   // Set bitmask flags
-  returnBitmask &= RETRO_VFS_STAT_IS_VALID;
+  returnBitmask |= RETRO_VFS_STAT_IS_VALID;
 
   if (statFile.GetIsDirectory())
-    returnBitmask &= RETRO_VFS_STAT_IS_DIRECTORY;
+    returnBitmask |= RETRO_VFS_STAT_IS_DIRECTORY;
 
   if (statFile.GetIsCharacter())
-    returnBitmask &= RETRO_VFS_STAT_IS_CHARACTER_SPECIAL;
+    returnBitmask |= RETRO_VFS_STAT_IS_CHARACTER_SPECIAL;
 
   // Set file size
   if (size != nullptr)
