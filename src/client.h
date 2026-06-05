@@ -13,6 +13,11 @@
 
 #include <kodi/addon-instance/Game.h>
 
+#include <cstdint>
+#include <functional>
+#include <string>
+#include <vector>
+
 namespace LIBRETRO
 {
   class CGameInfoLoader;
@@ -78,6 +83,7 @@ public:
                                const std::string& username,
                                const std::string& token,
                                unsigned int gameID) override;
+  GAME_ERROR SetRetroAchievementsCredentials(const std::string& username, const std::string& token) override;
   GAME_ERROR RCPostRichPresenceUrl(std::string& url,
                                    std::string& postData,
                                    const std::string& username,
@@ -86,7 +92,10 @@ public:
                                    const std::string& richPresence) override;
   GAME_ERROR RCEnableRichPresence(const std::string& script) override;
   GAME_ERROR RCGetRichPresenceEvaluation(std::string& evaluation, unsigned int consoleID) override;
+  GAME_ERROR ActivateAchievement(unsigned cheevo_id, const std::string& memAddrExpression) override;
   GAME_ERROR RCResetRuntime() override;
+  GAME_ERROR GetCheevoUrlId(const std::function<void(const std::string& achievementUrl,
+                                                     unsigned int cheevoId)>& callback) override;
 
   // --- Disc control interface
 
