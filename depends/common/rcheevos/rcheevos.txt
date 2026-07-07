@@ -1,1 +1,1 @@
-rcheevos https://github.com/RetroAchievements/rcheevos/archive/v9.2.0.tar.gz
+rcheevos https://github.com/RetroAchievements/rcheevos/archive/v12.3.0.tar.gz

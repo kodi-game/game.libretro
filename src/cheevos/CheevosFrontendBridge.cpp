@@ -40,24 +40,23 @@ void CCheevosFrontendBridge::CloseFile(void* file_handle)
   delete fileHandle;
 }
 
-size_t CCheevosFrontendBridge::GetPosition(void* file_handle)
+int64_t CCheevosFrontendBridge::GetPosition(void* file_handle)
 {
-  // Return 0 for error
   if (file_handle == nullptr)
-    return 0;
+    return -1;
 
   FileHandle *fileHandle = static_cast<FileHandle*>(file_handle);
 
   const int64_t currentPosition = fileHandle->file->GetPosition();
 
   if (currentPosition < 0)
-    return 0;
+    return -1;
 
   // Return the current read / write position for the file
-  return static_cast<size_t>(currentPosition);
+  return currentPosition;
 }
 
-void CCheevosFrontendBridge::Seek(void* file_handle, size_t offset, int origin)
+void CCheevosFrontendBridge::Seek(void* file_handle, int64_t offset, int origin)
 {
   if (file_handle == nullptr)
     return;

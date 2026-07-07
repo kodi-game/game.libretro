@@ -8,7 +8,7 @@
 #pragma once
 
 #include <memory>
-#include <rcheevos/rhash.h>
+#include <rcheevos/rc_hash.h>
 #include <string>
 
 namespace kodi
@@ -33,8 +33,8 @@ namespace LIBRETRO
     // Forward to Kodi VFS API
     static void *OpenFile(const char* path_utf8);
     static void CloseFile(void* file_handle);
-    static size_t GetPosition(void* file_handle);
-    static void Seek(void* file_handle, size_t offset, int origin);
+    static int64_t GetPosition(void* file_handle);
+    static void Seek(void* file_handle, int64_t offset, int origin);
     static size_t ReadFile(void* file_handle, void* buffer, size_t requested_bytes);
 
   private:

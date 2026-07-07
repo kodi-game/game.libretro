@@ -11,10 +11,12 @@
 
 #include "libretro/LibretroEnvironment.h"
 #include "libretro/MemoryMap.h"
-#include "rcheevos/rconsoles.h"
-#include "rcheevos/rhash.h"
-#include "rcheevos/rurl.h"
+#include "rcheevos/rc_api_request.h"
+#include "rcheevos/rc_api_runtime.h"
+#include "rcheevos/rc_consoles.h"
+#include "rcheevos/rc_hash.h"
 
+#include <cstring>
 #include <limits>
 
 using namespace LIBRETRO;
@@ -22,9 +24,8 @@ using namespace LIBRETRO;
 namespace
 {
 constexpr unsigned int HASH_SIZE = 33;
-constexpr unsigned int URL_SIZE = 512;
 constexpr unsigned int RICH_PRESENCE_EVAL_SIZE = 512;
-constexpr unsigned int POST_DATA_SIZE = 1024;
+constexpr unsigned int URL_SIZE = 512;
 } // namespace
 
 CCheevos::CCheevos()
@@ -90,12 +91,27 @@ bool CCheevos::GenerateHashFromFile(std::string& hash,
 
 bool CCheevos::GetGameIDUrl(std::string& url, const std::string& hash)
 {
-  char _url[URL_SIZE] = {};
+  url.clear();
 
-  int res = rc_url_get_gameid(_url, URL_SIZE, hash.c_str());
-  url = _url;
+  rc_api_resolve_hash_request_t params{};
+  params.game_hash = hash.c_str();
 
-  return res == 0;
+  rc_api_request_t request{};
+  const int res = rc_api_init_resolve_hash_request(&request, &params);
+  if (res == RC_OK && request.url != nullptr)
+  {
+    url = request.url;
+    if (request.post_data != nullptr)
+    {
+      if (url.find('?') != std::string::npos)
+        url += std::string("&") + request.post_data;
+      else
+        url += std::string("?") + request.post_data;
+    }
+  }
+  rc_api_destroy_request(&request);
+
+  return res == RC_OK && !url.empty();
 }
 
 bool CCheevos::GetPatchFileUrl(std::string& url,
@@ -103,12 +119,29 @@ bool CCheevos::GetPatchFileUrl(std::string& url,
                                const std::string& token,
                                unsigned int gameID)
 {
-  char _url[URL_SIZE] = {};
+  url.clear();
 
-  int res = rc_url_get_patch(_url, URL_SIZE, username.c_str(), token.c_str(), gameID);
-  url = _url;
+  rc_api_fetch_game_data_request_t params{};
+  params.username = username.c_str();
+  params.api_token = token.c_str();
+  params.game_id = gameID;
 
-  return res == 0;
+  rc_api_request_t request{};
+  const int res = rc_api_init_fetch_game_data_request(&request, &params);
+  if (res == RC_OK && request.url != nullptr)
+  {
+    url = request.url;
+    if (request.post_data != nullptr)
+    {
+      if (url.find('?') != std::string::npos)
+        url += std::string("&") + request.post_data;
+      else
+        url += std::string("?") + request.post_data;
+    }
+  }
+  rc_api_destroy_request(&request);
+
+  return res == RC_OK && !url.empty();
 }
 
 void CCheevos::SetRetroAchievementsCredentials(const std::string& username, const std::string& token)
@@ -124,15 +157,25 @@ bool CCheevos::PostRichPresenceUrl(std::string& url,
                                    unsigned int gameID,
                                    const std::string& richPresence)
 {
-  char _url[URL_SIZE] = {};
-  char _postData[POST_DATA_SIZE] = {};
+  url.clear();
+  postData.clear();
 
-  int res = rc_url_ping(_url, URL_SIZE, _postData, POST_DATA_SIZE, username.c_str(), token.c_str(),
-                        gameID, richPresence.c_str());
-  url = _url;
-  postData = _postData;
+  rc_api_ping_request_t params{};
+  params.username = username.c_str();
+  params.api_token = token.c_str();
+  params.game_id = gameID;
+  params.rich_presence = richPresence.c_str();
 
-  return res >= 0;
+  rc_api_request_t request{};
+  const int res = rc_api_init_ping_request(&request, &params);
+  if (res == RC_OK && request.url != nullptr)
+  {
+    url = request.url;
+    postData = request.post_data != nullptr ? request.post_data : "";
+  }
+  rc_api_destroy_request(&request);
+
+  return res == RC_OK && !url.empty();
 }
 
 void CCheevos::EnableRichPresence(const std::string& script)
@@ -168,8 +211,36 @@ bool CCheevos::ActivateAchievement(unsigned cheevo_id, const std::string& memAdd
 bool CCheevos::AwardAchievement(
     char* url, size_t size, unsigned cheevo_id, int hardcore, const std::string& game_hash)
 {
-  return rc_url_award_cheevo(url, size, m_username.c_str(), m_token.c_str(), cheevo_id, hardcore,
-                             game_hash.c_str()) >= 0;
+  if (url == nullptr || size == 0)
+    return false;
+
+  url[0] = '\0';
+
+  rc_api_award_achievement_request_t params{};
+  params.username = m_username.c_str();
+  params.api_token = m_token.c_str();
+  params.achievement_id = cheevo_id;
+  params.hardcore = hardcore;
+  params.game_hash = game_hash.c_str();
+
+  rc_api_request_t request{};
+  const int res = rc_api_init_award_achievement_request(&request, &params);
+  if (res == RC_OK && request.url != nullptr)
+  {
+    std::string fullUrl = request.url;
+    if (request.post_data != nullptr)
+    {
+      if (fullUrl.find('?') != std::string::npos)
+        fullUrl += std::string("&") + request.post_data;
+      else
+        fullUrl += std::string("?") + request.post_data;
+    }
+    std::strncpy(url, fullUrl.c_str(), size - 1);
+    url[size - 1] = '\0';
+  }
+  rc_api_destroy_request(&request);
+
+  return res == RC_OK && url[0] != '\0';
 }
 
 void CCheevos::GetCheevoUrlId(const std::function<void(const std::string& achievementUrl,
