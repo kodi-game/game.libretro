@@ -8,7 +8,7 @@
 #include "CheevosEnvironment.h"
 #include "CheevosFrontendBridge.h"
 
-#include <rcheevos/rhash.h>
+#include <rcheevos/rc_hash.h>
 
 using namespace LIBRETRO;
 
