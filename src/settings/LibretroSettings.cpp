@@ -102,6 +102,105 @@ void CLibretroSettings::SetAllSettings(const retro_variable* libretroVariables)
     GenerateSettings();
 }
 
+namespace
+{
+/*!
+ * \brief Collect the values a core options entry offers
+ *
+ * The array is terminated by an entry with a null value, and the label is for
+ * display only -- what a core reads back is the value.
+ */
+std::vector<std::string> GetOptionValues(const retro_core_option_value* values)
+{
+  std::vector<std::string> result;
+
+  for (const retro_core_option_value* value = values; value != nullptr && value->value != nullptr;
+       value++)
+    result.emplace_back(value->value);
+
+  return result;
+}
+} // namespace
+
+void CLibretroSettings::AddSetting(CLibretroSetting setting, bool& bValid)
+{
+  if (setting.Values().empty())
+  {
+    esyslog("Setting \"%s\": no values", setting.Key().c_str());
+    return;
+  }
+
+  std::string valueBuf;
+  if (kodi::addon::CheckSettingString(setting.Key(), valueBuf))
+  {
+    if (std::find(setting.Values().begin(), setting.Values().end(), valueBuf) !=
+        setting.Values().end())
+    {
+      dsyslog("Setting %s has value \"%s\" in Kodi", setting.Key().c_str(), valueBuf.c_str());
+      setting.SetCurrentValue(valueBuf);
+    }
+    else
+    {
+      esyslog("Setting %s: invalid value \"%s\" (values are: %s)", setting.Key().c_str(),
+              valueBuf.c_str(), setting.ValuesStr().c_str());
+      bValid = false;
+    }
+  }
+  else
+  {
+    esyslog("Setting %s not found by Kodi", setting.Key().c_str());
+    bValid = false;
+  }
+
+  m_settings.insert(std::make_pair(setting.Key(), std::move(setting)));
+}
+
+void CLibretroSettings::SetAllSettings(const retro_core_option_definition* definitions)
+{
+  bool bValid = true;
+
+  std::unique_lock<std::mutex> lock(m_mutex);
+
+  if (m_settings.empty())
+  {
+    for (const retro_core_option_definition* definition = definitions;
+         definition != nullptr && definition->key != nullptr; definition++)
+    {
+      AddSetting(CLibretroSetting(definition->key, definition->desc,
+                                  GetOptionValues(definition->values), definition->default_value),
+                 bValid);
+    }
+
+    m_bChanged = true;
+  }
+
+  if (!bValid)
+    GenerateSettings();
+}
+
+void CLibretroSettings::SetAllSettings(const retro_core_option_v2_definition* definitions)
+{
+  bool bValid = true;
+
+  std::unique_lock<std::mutex> lock(m_mutex);
+
+  if (m_settings.empty())
+  {
+    for (const retro_core_option_v2_definition* definition = definitions;
+         definition != nullptr && definition->key != nullptr; definition++)
+    {
+      AddSetting(CLibretroSetting(definition->key, definition->desc,
+                                  GetOptionValues(definition->values), definition->default_value),
+                 bValid);
+    }
+
+    m_bChanged = true;
+  }
+
+  if (!bValid)
+    GenerateSettings();
+}
+
 const char* CLibretroSettings::GetCurrentValue(const std::string& settingName)
 {
   std::unique_lock<std::mutex> lock(m_mutex);
