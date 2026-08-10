@@ -59,6 +59,12 @@ void CLibretroResources::Initialize(CGameLibRetro* addon)
     dsyslog("Creating save directory: %s", m_saveDirectory.c_str());
     kodi::vfs::CreateDirectory(m_saveDirectory);
   }
+
+  // A core finds its BIOS, fonts and other data files under this, and one
+  // pointed somewhere else fails in whatever way that core fails when its data
+  // is missing -- which is rarely a message saying so. Worth a line each time a
+  // core starts, given this used to be whichever core loaded first.
+  kodi::Log(ADDON_LOG_INFO, "System directory: %s", m_systemDirectory.c_str());
 }
 
 void CLibretroResources::Deinitialize()
