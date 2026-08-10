@@ -63,7 +63,17 @@ void CLibretroResources::Initialize(CGameLibRetro* addon)
 
 void CLibretroResources::Deinitialize()
 {
+  // All of this belongs to the add-on that is going away, and this object is
+  // reached through a process-wide singleton. Anything left behind is picked
+  // up by the next core loaded in the same session: the system directory is
+  // only set while empty, so the first core to load owned it for every core
+  // after it, and a Saturn core went looking for its BIOS in the N64 add-on's
+  // directory. The cached paths and resource directories carry the same way.
   m_addon = nullptr;
+  m_systemDirectory.clear();
+  m_saveDirectory.clear();
+  m_resourceDirectories.clear();
+  m_pathMap.clear();
 }
 
 const char* CLibretroResources::GetBasePath(const std::string& relPath)
