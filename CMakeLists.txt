@@ -57,7 +57,9 @@ set(LIBRETRO_SOURCES src/client.cpp
                      src/settings/SettingsGenerator.cpp
                      src/utils/Timer.cpp
                      src/video/VideoGeometry.cpp
-                     src/video/VideoStream.cpp)
+                     src/video/VideoStream.cpp
+                     src/video/VideoTiming.cpp
+)
 
 set(LIBRETRO_HEADERS src/GameInfoLoader.h
                      src/audio/AudioStream.h
@@ -96,7 +98,9 @@ set(LIBRETRO_HEADERS src/GameInfoLoader.h
                      src/settings/SettingsTypes.h
                      src/utils/Timer.h
                      src/video/VideoGeometry.h
-                     src/video/VideoStream.h)
+                     src/video/VideoStream.h
+                     src/video/VideoTiming.h
+)
 
 build_addon(${PROJECT_NAME} LIBRETRO DEPLIBS)
 

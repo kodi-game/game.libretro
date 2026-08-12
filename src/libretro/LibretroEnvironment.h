@@ -12,6 +12,7 @@
 #include "MemoryMap.h"
 #include "settings/LibretroSettings.h"
 #include "video/VideoStream.h"
+#include "video/VideoTiming.h"
 
 #include <kodi/addon-instance/Game.h>
 
@@ -44,6 +45,7 @@ namespace LIBRETRO
     CClientBridge* GetClientBridge(void) { return m_clientBridge; }
 
     CVideoStream& Video(void) { return m_videoStream; }
+    CVideoTiming& VideoTiming(void) { return m_videoTiming; }
     CAudioStream& Audio(void) { return m_audioStream; }
 
     void CloseStreams();
@@ -87,6 +89,7 @@ namespace LIBRETRO
     CLibretroDLL* m_client;
     CClientBridge* m_clientBridge;
     CVideoStream m_videoStream;
+    CVideoTiming m_videoTiming;
     CAudioStream m_audioStream;
 
     GAME_PIXEL_FORMAT m_videoFormat;

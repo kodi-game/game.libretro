@@ -435,6 +435,10 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       //! @todo Report updated timing info to frontend
       const double fps = typedData->timing.fps;
       const double sampleRate = typedData->timing.sample_rate;
+
+      // Kept for GET_THROTTLE_STATE, which is asked how often the core is run
+      m_videoTiming.SetFrameRate(fps);
+
       break;
     }
   case RETRO_ENVIRONMENT_SET_PROC_ADDRESS_CALLBACK:
@@ -674,10 +678,11 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   case RETRO_ENVIRONMENT_GET_FASTFORWARDING:
   {
     bool* typedData = static_cast<bool*>(data);
-
-    // Not implemented
-    (void)typedData;
-    return false;
+    if (typedData != nullptr)
+    {
+      *typedData = CVideoTiming::IsFastForwarding(m_addon->GetPlaybackSpeed());
+    }
+    break;
   }
   case RETRO_ENVIRONMENT_GET_TARGET_REFRESH_RATE:
   {
@@ -882,10 +887,11 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   case RETRO_ENVIRONMENT_GET_THROTTLE_STATE:
   {
     retro_throttle_state* typedData = static_cast<retro_throttle_state*>(data);
-
-    // Not implemented
-    (void)typedData;
-    return false;
+    if (typedData != nullptr)
+    {
+      m_videoTiming.GetThrottleState(m_addon->GetPlaybackSpeed(), *typedData);
+    }
+    break;
   }
   case RETRO_ENVIRONMENT_GET_SAVESTATE_CONTEXT:
   {
