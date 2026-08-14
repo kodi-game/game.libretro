@@ -157,6 +157,21 @@ namespace LIBRETRO
     void SetControllerInfo(const retro_controller_info* info);
 
   private:
+    /*!
+     * \brief Guards the connected devices
+     *
+     * A controller is connected and disconnected on the frontend's thread while
+     * the core reads the same slots from the thread it emulates on. Without
+     * this, disconnecting a controller mid-game frees a device the core is
+     * about to dereference -- Flycast took a genuine SIGSEGV that way, which it
+     * reports as a fastmem fault and turns into a DEBUGBREAK.
+     *
+     * Recursive because these calls are entered from several paths and this
+     * guards against a nested one deadlocking rather than asserting the
+     * absence of nesting.
+     */
+    mutable std::recursive_mutex m_mutex;
+
     DevicePtr m_keyboard;
     DevicePtr m_mouse;
     DeviceVector m_controllers;
