@@ -51,6 +51,8 @@ void CInputManager::SetControllerLayouts(const std::vector<kodi::addon::GameCont
 
 bool CInputManager::EnableKeyboard(const std::string &controllerId)
 {
+  std::unique_lock<std::recursive_mutex> lock(m_mutex);
+
   bool bSuccess = false;
 
   if (!CControllerTopology::GetInstance().SetDevice(GAME_PORT_KEYBOARD, controllerId))
@@ -69,12 +71,16 @@ bool CInputManager::EnableKeyboard(const std::string &controllerId)
 
 void CInputManager::DisableKeyboard()
 {
+  std::unique_lock<std::recursive_mutex> lock(m_mutex);
+
   CControllerTopology::GetInstance().RemoveDevice(GAME_PORT_KEYBOARD);
   m_keyboard.reset();
 }
 
 bool CInputManager::EnableMouse(const std::string &controllerId)
 {
+  std::unique_lock<std::recursive_mutex> lock(m_mutex);
+
   bool bSuccess = false;
 
   if (!CControllerTopology::GetInstance().SetDevice(GAME_PORT_MOUSE, controllerId))
@@ -93,12 +99,16 @@ bool CInputManager::EnableMouse(const std::string &controllerId)
 
 void CInputManager::DisableMouse()
 {
+  std::unique_lock<std::recursive_mutex> lock(m_mutex);
+
   CControllerTopology::GetInstance().RemoveDevice(GAME_PORT_MOUSE);
   m_mouse.reset();
 }
 
 libretro_device_t CInputManager::ConnectController(const std::string &address, const std::string &controllerId)
 {
+  std::unique_lock<std::recursive_mutex> lock(m_mutex);
+
   unsigned int deviceType = RETRO_DEVICE_NONE; // Unmasked device type
 
   const int port = GetPortIndex(address);
@@ -152,6 +162,8 @@ libretro_device_t CInputManager::ConnectController(const std::string &address, c
 
 bool CInputManager::DisconnectController(const std::string &address)
 {
+  std::unique_lock<std::recursive_mutex> lock(m_mutex);
+
   bool bSuccess = false;
 
   const int port = GetPortIndex(address);
@@ -199,6 +211,8 @@ bool CInputManager::IsMouse(const std::string& portAddress) const
 
 libretro_device_t CInputManager::GetDeviceType(const std::string &address) const
 {
+  std::unique_lock<std::recursive_mutex> lock(m_mutex);
+
   libretro_device_t deviceType = RETRO_DEVICE_NONE;
 
   int port = GetPortIndex(address);
@@ -222,6 +236,8 @@ libretro_device_t CInputManager::GetDeviceType(const std::string &address) const
 
 void CInputManager::ClosePorts(void)
 {
+  std::unique_lock<std::recursive_mutex> lock(m_mutex);
+
   m_controllers.clear();
 }
 
@@ -232,6 +248,8 @@ void CInputManager::EnableAnalogSensors(unsigned int port, bool bEnabled)
 
 bool CInputManager::InputEvent(const game_input_event& event)
 {
+  std::unique_lock<std::recursive_mutex> lock(m_mutex);
+
   std::string controllerId = event.controller_id != nullptr ? event.controller_id : "";
   std::string feature = event.feature_name != nullptr ? event.feature_name : "";
 
@@ -318,6 +336,8 @@ void CInputManager::LogInputDescriptors(const retro_input_descriptor* descriptor
 
 std::string CInputManager::ControllerID(unsigned int port) const
 {
+  std::unique_lock<std::recursive_mutex> lock(m_mutex);
+
   std::string controllerId;
 
   if (port < m_controllers.size())
@@ -332,6 +352,8 @@ std::string CInputManager::ControllerID(unsigned int port) const
 
 bool CInputManager::ButtonState(libretro_device_t device, unsigned int port, unsigned int buttonIndex) const
 {
+  std::unique_lock<std::recursive_mutex> lock(m_mutex);
+
   bool bState = false;
 
   switch (device)
@@ -371,6 +393,8 @@ bool CInputManager::ButtonState(libretro_device_t device, unsigned int port, uns
 
 float CInputManager::AnalogButtonState(unsigned int port, unsigned int buttonIndex) const
 {
+  std::unique_lock<std::recursive_mutex> lock(m_mutex);
+
   float state = 0.0f;
 
   if (port < m_controllers.size())
@@ -385,6 +409,8 @@ float CInputManager::AnalogButtonState(unsigned int port, unsigned int buttonInd
 
 int CInputManager::DeltaX(libretro_device_t device, unsigned int port)
 {
+  std::unique_lock<std::recursive_mutex> lock(m_mutex);
+
   int deltaX = 0;
 
   if (device == RETRO_DEVICE_MOUSE && m_mouse)
@@ -403,6 +429,8 @@ int CInputManager::DeltaX(libretro_device_t device, unsigned int port)
 
 int CInputManager::DeltaY(libretro_device_t device, unsigned int port)
 {
+  std::unique_lock<std::recursive_mutex> lock(m_mutex);
+
   int deltaY = 0;
 
   if (device == RETRO_DEVICE_MOUSE && m_mouse)
@@ -421,6 +449,8 @@ int CInputManager::DeltaY(libretro_device_t device, unsigned int port)
 
 bool CInputManager::AnalogStickState(unsigned int port, unsigned int analogStickIndex, float& x, float& y) const
 {
+  std::unique_lock<std::recursive_mutex> lock(m_mutex);
+
   bool bSuccess = false;
 
   if (port < m_controllers.size())
@@ -435,6 +465,8 @@ bool CInputManager::AnalogStickState(unsigned int port, unsigned int analogStick
 
 bool CInputManager::AbsolutePointerState(unsigned int port, unsigned int pointerIndex, float& x, float& y) const
 {
+  std::unique_lock<std::recursive_mutex> lock(m_mutex);
+
   bool bSuccess = false;
 
   if (port < m_controllers.size())
@@ -449,6 +481,8 @@ bool CInputManager::AbsolutePointerState(unsigned int port, unsigned int pointer
 
 bool CInputManager::AccelerometerState(unsigned int port, float& x, float& y, float& z) const
 {
+  std::unique_lock<std::recursive_mutex> lock(m_mutex);
+
   bool bSuccess = false;
 
   if (port < m_controllers.size())
