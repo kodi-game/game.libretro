@@ -8,6 +8,8 @@
 #include "LibretroSetting.h"
 #include "libretro-common/libretro.h"
 
+#include <algorithm>
+
 using namespace LIBRETRO;
 
 CLibretroSetting::CLibretroSetting(const retro_variable* libretroVariable) :
@@ -16,6 +18,33 @@ CLibretroSetting::CLibretroSetting(const retro_variable* libretroVariable) :
   Parse(libretroVariable->value);
 
   SetCurrentValue(DefaultValue());
+}
+
+CLibretroSetting::CLibretroSetting(const char* key,
+                                   const char* description,
+                                   std::vector<std::string> values,
+                                   const char* defaultValue)
+  : m_key(key != nullptr ? key : ""),
+    m_description(description != nullptr ? description : ""),
+    m_values(std::move(values))
+{
+  // Kept for the add-on's generated settings, which are written in the older
+  // pipe-delimited form whichever API the core used to declare them
+  for (const std::string& value : m_values)
+  {
+    if (!m_valuesStr.empty())
+      m_valuesStr += "|";
+    m_valuesStr += value;
+  }
+
+  // Unlike a retro_variable, this API names its default rather than leaving it
+  // implied by ordering. Fall back to the first value if the named one is not
+  // among them.
+  if (defaultValue != nullptr &&
+      std::find(m_values.begin(), m_values.end(), defaultValue) != m_values.end())
+    SetCurrentValue(defaultValue);
+  else
+    SetCurrentValue(DefaultValue());
 }
 
 const std::string& CLibretroSetting::DefaultValue() const

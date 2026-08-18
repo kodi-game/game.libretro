@@ -698,26 +698,35 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   case RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION:
   {
     unsigned int* typedData = static_cast<unsigned int*>(data);
+    if (typedData == nullptr)
+      return false;
 
-    // Not implemented
-    (void)typedData;
-    return false;
+    // Version 2. A core told 0 here falls back to SET_VARIABLES, which most do
+    // through libretro's own boilerplate -- but not all, and one that does not
+    // ends up with none of its settings registered at all.
+    *typedData = 2;
+    break;
   }
   case RETRO_ENVIRONMENT_SET_CORE_OPTIONS:
   {
-    const retro_core_option_definition* typedData = static_cast<const retro_core_option_definition*>(data);
+    const retro_core_option_definition* typedData =
+        static_cast<const retro_core_option_definition*>(data);
+    if (typedData == nullptr)
+      return false;
 
-    // Not implemented
-    (void)typedData;
-    return false;
+    m_settings.SetAllSettings(typedData);
+    break;
   }
   case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_INTL:
   {
     const retro_core_options_intl* typedData = static_cast<const retro_core_options_intl*>(data);
+    if (typedData == nullptr || typedData->us == nullptr)
+      return false;
 
-    // Not implemented
-    (void)typedData;
-    return false;
+    // Only the American English set is taken. The translated one carries the
+    // same keys and values, differing in text this add-on does not display.
+    m_settings.SetAllSettings(typedData->us);
+    break;
   }
   case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY:
   {
@@ -834,11 +843,25 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   }
   case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2:
   {
-    const retro_core_options_v2_intl* typedData = static_cast<const retro_core_options_v2_intl*>(data);
+    const retro_core_options_v2* typedData = static_cast<const retro_core_options_v2*>(data);
+    if (typedData == nullptr || typedData->definitions == nullptr)
+      return false;
 
-    // Not implemented
-    (void)typedData;
-    return false;
+    // Categories are for grouping in a frontend's own settings UI, which this
+    // add-on does not build -- the settings are Kodi's
+    m_settings.SetAllSettings(typedData->definitions);
+    break;
+  }
+  case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2_INTL:
+  {
+    const retro_core_options_v2_intl* typedData =
+        static_cast<const retro_core_options_v2_intl*>(data);
+    if (typedData == nullptr || typedData->us == nullptr ||
+        typedData->us->definitions == nullptr)
+      return false;
+
+    m_settings.SetAllSettings(typedData->us->definitions);
+    break;
   }
   case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK:
   {

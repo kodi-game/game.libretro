@@ -19,6 +19,18 @@ namespace LIBRETRO
   public:
     CLibretroSetting(const retro_variable* libretroVariable);
 
+    /*!
+     * \brief Build a setting from the core options API
+     *
+     * The newer API hands the pieces over separately rather than in one
+     * semicolon-and-pipe string, and names its own default rather than relying
+     * on the first value being it.
+     */
+    CLibretroSetting(const char* key,
+                     const char* description,
+                     std::vector<std::string> values,
+                     const char* defaultValue);
+
     const std::string&              Key() const          { return m_key; }
     const std::string&              Description() const  { return m_description; }
     const std::vector<std::string>& Values() const       { return m_values; }
