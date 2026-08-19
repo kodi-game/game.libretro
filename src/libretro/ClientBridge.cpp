@@ -85,8 +85,11 @@ GAME_ERROR CClientBridge::AudioEnable(bool enabled)
 
 GAME_ERROR CClientBridge::AudioAvailable(void)
 {
+  // Most cores deliver audio as they run and never register this callback, so
+  // having none is the ordinary case rather than a failure. Saying otherwise
+  // reports an error once a frame for the whole session.
   if (!m_retro_audio_callback)
-    return GAME_ERROR_FAILED;
+    return GAME_ERROR_NOT_IMPLEMENTED;
 
   m_retro_audio_callback();
 

@@ -34,5 +34,8 @@ namespace LIBRETRO
     CSingleFrameAudio     m_singleFrameAudio;
 
     kodi::addon::CInstanceGame::CStream m_stream;
+
+    //! \brief Set once a failed stream open has been reported
+    bool m_bLoggedOpenFailure{false};
   };
 }
