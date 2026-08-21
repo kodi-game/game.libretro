@@ -174,9 +174,8 @@ int16_t CFrontendBridge::InputState(unsigned int port, unsigned int device, unsi
       }
     }
 
-    const float normalized = (value + 1.0f) / 2.0f;
-    const int clamped = std::max(0, std::min(0xffff, static_cast<int>(normalized * 0xffff)));
-    inputState = clamped - 0x8000;
+    const float clamped = std::max(-1.0f, std::min(1.0f, value));
+    inputState = static_cast<int16_t>(clamped * 0x7fff);
     break;
   }
 
