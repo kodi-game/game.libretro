@@ -432,12 +432,16 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
 
       UpdateVideoGeometry(typedData->geometry);
 
-      //! @todo Report updated timing info to frontend
       const double fps = typedData->timing.fps;
       const double sampleRate = typedData->timing.sample_rate;
 
-      // Kept for GET_THROTTLE_STATE, which is asked how often the core is run
       m_videoTiming.SetFrameRate(fps);
+      m_audioTiming.SetSampleRate(sampleRate);
+
+      game_system_timing timingInfo{};
+      timingInfo.fps = fps;
+      timingInfo.sample_rate = sampleRate;
+      m_addon->SetGameTiming(timingInfo);
 
       break;
     }

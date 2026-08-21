@@ -26,6 +26,7 @@ endif()
 
 set(LIBRETRO_SOURCES src/client.cpp
                      src/audio/AudioStream.cpp
+                     src/audio/AudioTiming.cpp
                      src/audio/SingleFrameAudio.cpp
                      src/cheevos/Cheevos.cpp
                      src/cheevos/CheevosEnvironment.cpp
@@ -63,6 +64,7 @@ set(LIBRETRO_SOURCES src/client.cpp
 
 set(LIBRETRO_HEADERS src/GameInfoLoader.h
                      src/audio/AudioStream.h
+                     src/audio/AudioTiming.h
                      src/audio/SingleFrameAudio.h
                      src/input/ButtonMapper.h
                      src/cheevos/Cheevos.h

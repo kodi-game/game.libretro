@@ -256,6 +256,7 @@ GAME_ERROR CGameLibRetro::GetGameTiming(game_system_timing& timing_info)
   // Report info to CLibretroEnvironment
   CLibretroEnvironment::Get().UpdateVideoGeometry(retro_info.geometry);
   CLibretroEnvironment::Get().VideoTiming().SetFrameRate(retro_info.timing.fps);
+  CLibretroEnvironment::Get().AudioTiming().SetSampleRate(retro_info.timing.sample_rate);
 
   return GAME_ERROR_NO_ERROR;
 }

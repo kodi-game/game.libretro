@@ -24,6 +24,7 @@ namespace LIBRETRO
 
     void Initialize(CGameLibRetro* addon);
     void Deinitialize();
+    void CloseStream();
 
     void AddFrame_S16NE(int16_t left, int16_t right) { m_singleFrameAudio.AddFrame(left, right); }
 

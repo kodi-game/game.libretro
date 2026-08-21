@@ -20,6 +20,7 @@ namespace LIBRETRO
     CSingleFrameAudio(CAudioStream* audioStream);
 
     void AddFrame(int16_t left, int16_t right);
+    void Clear() { m_data.clear(); }
 
   private:
     CAudioStream* const  m_audioStream;
