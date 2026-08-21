@@ -10,6 +10,7 @@
 #include <kodi/addon-instance/Game.h>
 #include <mutex>
 
+#include <set>
 #include <string>
 #include <vector>
 
@@ -40,6 +41,10 @@ namespace LIBRETRO
                       const std::string &feature,
                       unsigned int keyIndex,
                       const game_key_event &keyEvent);
+
+    //! \brief Features already reported, so each is logged once not per press
+    std::set<std::string> m_reportedFeatures;
+    std::set<std::string> m_unmappedFeatures;
 
     std::vector<game_digital_button_event> m_buttons;
     std::vector<game_analog_button_event>  m_analogButtons;
