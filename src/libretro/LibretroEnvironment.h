@@ -9,6 +9,7 @@
 
 #include "LibretroResources.h"
 #include "audio/AudioStream.h"
+#include "audio/AudioTiming.h"
 #include "MemoryMap.h"
 #include "settings/LibretroSettings.h"
 #include "video/VideoStream.h"
@@ -47,6 +48,7 @@ namespace LIBRETRO
     CVideoStream& Video(void) { return m_videoStream; }
     CVideoTiming& VideoTiming(void) { return m_videoTiming; }
     CAudioStream& Audio(void) { return m_audioStream; }
+    CAudioTiming& AudioTiming(void) { return m_audioTiming; }
 
     void CloseStreams();
 
@@ -91,6 +93,7 @@ namespace LIBRETRO
     CVideoStream m_videoStream;
     CVideoTiming m_videoTiming;
     CAudioStream m_audioStream;
+    CAudioTiming m_audioTiming;
 
     GAME_PIXEL_FORMAT m_videoFormat;
     GAME_VIDEO_ROTATION m_videoRotation;
