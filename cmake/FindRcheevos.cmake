@@ -28,6 +28,11 @@ if(ENABLE_INTERNAL_RCHEEVOS)
   set(RCHEEVOS_INCLUDE_DIR ${CMAKE_BINARY_DIR}/build/depends/include)
   set(RCHEEVOS_LIBRARY ${CMAKE_BINARY_DIR}/build/depends/lib/librcheevoslib.a)
 
+  set(rcheevos_dependencies)
+  if(TARGET libretro-common)
+    list(APPEND rcheevos_dependencies libretro-common)
+  endif()
+
   externalproject_add(rcheevos
                       URL ${RCHEEVOS_URL}
                       DOWNLOAD_DIR ${CMAKE_BINARY_DIR}/download
@@ -36,6 +41,7 @@ if(ENABLE_INTERNAL_RCHEEVOS)
                       CMAKE_ARGS
                         -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/build/depends
                         -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+                      DEPENDS ${rcheevos_dependencies}
                       BUILD_BYPRODUCTS ${RCHEEVOS_LIBRARY})
 else()
   find_path(RCHEEVOS_INCLUDE_DIR rcheevos.h
@@ -50,6 +56,7 @@ include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(Rcheevos REQUIRED_VARS RCHEEVOS_LIBRARY RCHEEVOS_INCLUDE_DIR)
 
 if(RCHEEVOS_FOUND)
+  set(RCHEEVOS_DEFINITIONS -DRC_STATIC)
   set(RCHEEVOS_INCLUDE_DIRS ${RCHEEVOS_INCLUDE_DIR})
   set(RCHEEVOS_LIBRARIES ${RCHEEVOS_LIBRARY})
 endif()
