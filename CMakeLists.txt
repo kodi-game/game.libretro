@@ -1,12 +1,14 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.5...4.0)
 project(game.libretro)
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 find_package(Kodi REQUIRED)
 find_package(LibretroCommon REQUIRED)
-find_package(TinyXML REQUIRED)
 find_package(Rcheevos REQUIRED)
+find_package(TinyXML REQUIRED)
+
+add_definitions(${RCHEEVOS_DEFINITIONS})
 
 include_directories(${KODI_INCLUDE_DIR}
                     ${KODI_INCLUDE_DIR}/..
