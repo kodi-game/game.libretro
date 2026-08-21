@@ -126,7 +126,23 @@ int16_t CFrontendBridge::InputState(unsigned int port, unsigned int device, unsi
   {
   case RETRO_DEVICE_JOYPAD:
   case RETRO_DEVICE_KEYBOARD:
-    inputState = CInputManager::Get().ButtonState(device, port, id) ? 1 : 0;
+    // A core may ask for every joypad button at once instead of one at a time.
+    // Without this the id falls through as an ordinary button index, runs off
+    // the end of the button array and reads as zero -- which a core that
+    // inverts the mask, as LRPS2 does for the active-low PS2 pad, reads as
+    // every button held. The pad is then dead with nothing logged anywhere.
+    if (device == RETRO_DEVICE_JOYPAD && id == RETRO_DEVICE_ID_JOYPAD_MASK)
+    {
+      for (unsigned int buttonId = 0; buttonId <= RETRO_DEVICE_ID_JOYPAD_R3; ++buttonId)
+      {
+        if (CInputManager::Get().ButtonState(device, port, buttonId))
+          inputState |= (1 << buttonId);
+      }
+    }
+    else
+    {
+      inputState = CInputManager::Get().ButtonState(device, port, id) ? 1 : 0;
+    }
     break;
 
   case RETRO_DEVICE_MOUSE:
