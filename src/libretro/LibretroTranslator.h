@@ -92,6 +92,20 @@ namespace LIBRETRO
     static int GetFeatureIndex(const std::string& strLibretroFeature);
 
     /*!
+     * \brief The libretro constant a feature index belongs to
+     *
+     * The inverse of GetFeatureIndex(), for logging: an index on its own says
+     * nothing to a reader, where RETRO_DEVICE_ID_JOYPAD_A does. Indices repeat
+     * between device types, so the type is needed to pick the right one.
+     *
+     * \param device The libretro device the index belongs to
+     * \param featureIndex The index to name
+     *
+     * \return The constant's name, or an empty string if the pair is unknown
+     */
+    static std::string GetFeatureId(libretro_device_t device, int featureIndex);
+
+    /*!
      * \brief Translate button/feature name (libretro buttonmap "mapto" field) to libretro index value.
      * \param strFeatureName The feature name to translate.
      * \return Translated button/feature id.

@@ -364,6 +364,26 @@ int LibretroTranslator::GetFeatureIndex(const std::string& strLibretroFeature)
   return -1;
 }
 
+std::string LibretroTranslator::GetFeatureId(libretro_device_t device, int featureIndex)
+{
+  const auto it = featureMap.find(device);
+  if (it == featureMap.end())
+    return "";
+
+  const auto& features = it->second;
+
+  const auto it2 = std::find_if(features.begin(), features.end(),
+    [featureIndex](const LibretroFeature& feature)
+    {
+      return featureIndex == feature.featureIndex;
+    });
+
+  if (it2 != features.end())
+    return it2->libretroId;
+
+  return "";
+}
+
 libretro_device_t LibretroTranslator::GetLibretroDevice(const std::string& strLibretroFeature)
 {
   for (const auto &it : featureMap)

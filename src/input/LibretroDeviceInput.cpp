@@ -168,6 +168,25 @@ bool CLibretroDeviceInput::InputEvent(const game_input_event& event)
   const std::string strFeatureName = event.feature_name ? event.feature_name : "";
 
   int index = CButtonMapper::Get().GetLibretroIndex(strControllerId, strFeatureName);
+
+  // Say where a feature ended up, once, the first time it is actually pressed.
+  // Naming the libretro constant rather than the index, which on its own says
+  // nothing to a reader.
+  if (index >= 0 &&
+      m_reportedFeatures.insert(strControllerId + "/" + strFeatureName).second)
+  {
+    const libretro_device_t device =
+        CButtonMapper::Get().GetLibretroDevice(strControllerId, strFeatureName);
+    const std::string featureId = LibretroTranslator::GetFeatureId(device, index);
+
+    if (!featureId.empty())
+      dsyslog("Buttonmap: %s feature \"%s\" -> %s", strControllerId.c_str(),
+              strFeatureName.c_str(), featureId.c_str());
+    else
+      dsyslog("Buttonmap: %s feature \"%s\" -> libretro index %d", strControllerId.c_str(),
+              strFeatureName.c_str(), index);
+  }
+
   if (index >= 0)
   {
     switch (event.type)
@@ -291,6 +310,13 @@ bool CLibretroDeviceInput::InputEvent(const game_input_event& event)
 
     return true;
   }
+
+  // The press arrived and resolved to nothing, so the core will never see it.
+  // Reported once per feature: buttons repeat, and this is a property of the
+  // mapping rather than of the press.
+  if (m_unmappedFeatures.insert(strControllerId + "/" + strFeatureName).second)
+    esyslog("Buttonmap: %s feature \"%s\" does not resolve, the core will never see it",
+            strControllerId.c_str(), strFeatureName.c_str());
 
   return false;
 }
