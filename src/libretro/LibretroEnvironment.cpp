@@ -701,8 +701,10 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     // Parameter is ignored
     (void)data;
 
-    // Not implemented
-    return false;
+    // Served in CFrontendBridge::InputState, which assembles the mask from the
+    // individual button states. Saying yes only tells a core it may ask; a core
+    // that asks anyway without checking -- LRPS2 does -- is answered either way.
+    return true;
   }
   case RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION:
   {
