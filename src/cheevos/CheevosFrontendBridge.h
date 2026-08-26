@@ -42,6 +42,9 @@ namespace LIBRETRO
     {
       std::string path;
       std::unique_ptr<kodi::vfs::CFile> file;
+
+      //! \brief The read position as reported to rcheevos, which is never negative
+      int64_t position{0};
     };
   };
 } // namespace LIBRETRO

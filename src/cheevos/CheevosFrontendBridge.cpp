@@ -47,13 +47,9 @@ int64_t CCheevosFrontendBridge::GetPosition(void* file_handle)
 
   FileHandle *fileHandle = static_cast<FileHandle*>(file_handle);
 
-  const int64_t currentPosition = fileHandle->file->GetPosition();
-
-  if (currentPosition < 0)
-    return -1;
-
-  // Return the current read / write position for the file
-  return currentPosition;
+  // Report the position we have tracked rather than asking the VFS, which
+  // cannot always answer. See Seek() for why that distinction matters.
+  return fileHandle->position;
 }
 
 void CCheevosFrontendBridge::Seek(void* file_handle, int64_t offset, int origin)
@@ -63,27 +59,49 @@ void CCheevosFrontendBridge::Seek(void* file_handle, int64_t offset, int origin)
 
   FileHandle *fileHandle = static_cast<FileHandle*>(file_handle);
 
-  int whence = -1;
+  // Resolve the destination to an absolute offset here rather than handing the
+  // origin to the VFS.
+  //
+  // rcheevos has no call for a file's size: it seeks to the end and asks where
+  // it landed. Not every VFS backend can seek, though. vfs.libarchive fails
+  // inside a compressed entry and, worse, stores the failure as its position,
+  // so the answer that comes back is negative. rc_hash_whole_file() takes that
+  // as the size, and `remaining = (size_t)-1` has it hash sixteen exabytes of
+  // stale buffer -- an unbreakable loop that hangs the add-on for good, since
+  // the read return value it would need to notice is discarded.
+  //
+  // GetLength() those backends do answer, so ask that for SEEK_END, and track
+  // the position ourselves so nothing negative can reach rcheevos.
+  int64_t position = offset;
 
   switch (origin)
   {
-  case 0:
-    whence = SEEK_SET;
+  case 0: // SEEK_SET
     break;
-  case 1:
-    whence = SEEK_CUR;
+  case 1: // SEEK_CUR
+    position += fileHandle->position;
     break;
-  case 2:
-    whence = SEEK_END;
-    break;
-  default:
+  case 2: // SEEK_END
+  {
+    const int64_t length = fileHandle->file->GetLength();
+    if (length < 0)
+      return;
+    position += length;
     break;
   }
+  default:
+    return;
+  }
 
-  if (whence == -1)
+  if (position < 0)
     return;
 
-  fileHandle->file->Seek(offset, whence);
+  // Keep the requested position when the backend can't seek. rcheevos measures
+  // the file this way and then reads it from the start, which a stream sitting
+  // at its start still serves correctly.
+  const int64_t reached = fileHandle->file->Seek(position, SEEK_SET);
+
+  fileHandle->position = (reached < 0) ? position : reached;
 }
 
 size_t CCheevosFrontendBridge::ReadFile(void* file_handle, void* buffer, size_t requested_bytes)
@@ -103,6 +121,8 @@ size_t CCheevosFrontendBridge::ReadFile(void* file_handle, void* buffer, size_t 
   // undetectable error occurred
   if (bytesRead == 0)
     return 0;
+
+  fileHandle->position += bytesRead;
 
   // Return the number of bytes read
   return static_cast<size_t>(bytesRead);

@@ -91,7 +91,6 @@ ADDON_STATUS CGameLibRetro::Create()
     CButtonMapper::Get().LoadButtonMap();
     CControllerTopology::GetInstance().LoadTopology();
 
-    CCheevos::Get().Initialize();
 
     m_client.retro_init();
 
@@ -184,7 +183,20 @@ GAME_ERROR CGameLibRetro::LoadGame(const std::string& url)
     bResult = m_client.retro_load_game(&gameInfo);
   }
 
-  return bResult ? GAME_ERROR_NO_ERROR : GAME_ERROR_FAILED;
+  if (bResult)
+  {
+    CCheevos::Get().Initialize(this, url,
+                               [this](unsigned int type, uint8_t*& data, size_t& size) -> bool
+                               {
+                                 data = static_cast<uint8_t*>(
+                                     m_client.retro_get_memory_data(type));
+                                 size = m_client.retro_get_memory_size(type);
+                                 return data != nullptr && size > 0;
+                               });
+    return GAME_ERROR_NO_ERROR;
+  }
+
+  return GAME_ERROR_FAILED;
 }
 
 GAME_ERROR CGameLibRetro::LoadGameSpecial(SPECIAL_GAME_TYPE type, const std::vector<std::string>& urls)
@@ -234,6 +246,7 @@ GAME_ERROR CGameLibRetro::UnloadGame()
 {
   GAME_ERROR error = GAME_ERROR_FAILED;
 
+  CCheevos::Get().Deinitialize();
   m_client.retro_unload_game();
 
   CLibretroEnvironment::Get().CloseStreams();
@@ -282,7 +295,7 @@ GAME_ERROR CGameLibRetro::RunFrame()
 
   m_client.retro_run();
 
-  CCheevos::Get().TestCheevoStatusPerFrame();
+  CCheevos::Get().DoFrame();
 
   CLibretroEnvironment::Get().OnFrameEnd();
 
@@ -462,6 +475,39 @@ GAME_ERROR CGameLibRetro::Deserialize(const uint8_t* data, size_t size)
   return result ? GAME_ERROR_NO_ERROR : GAME_ERROR_FAILED;
 }
 
+size_t CGameLibRetro::AchievementStateSize()
+{
+  return CCheevos::Get().ProgressSize();
+}
+
+GAME_ERROR CGameLibRetro::SerializeAchievements(uint8_t* data, size_t size)
+{
+  if (data == nullptr || size == 0)
+    return GAME_ERROR_INVALID_PARAMETERS;
+
+  // The frontend asked how much was needed and sized the buffer from the
+  // answer, so a short write here means the runtime grew in between rather
+  // than anything being wrong
+  if (CCheevos::Get().SerializeProgress(data, size) == 0)
+    return GAME_ERROR_FAILED;
+
+  return GAME_ERROR_NO_ERROR;
+}
+
+GAME_ERROR CGameLibRetro::DeserializeAchievements(const uint8_t* data, size_t size)
+{
+  // An empty payload is passed on rather than refused. A savestate written
+  // before this existed, or while signed out, carries no progress -- but the
+  // runtime still has to be told the machine state jumped, or the hit counts
+  // it holds for the abandoned timeline would survive the restore and could
+  // fire a trigger the player never earned. DeserializeProgress() resets on
+  // an empty buffer for exactly that reason.
+  if (!CCheevos::Get().DeserializeProgress(data, size))
+    return GAME_ERROR_FAILED;
+
+  return GAME_ERROR_NO_ERROR;
+}
+
 GAME_ERROR CGameLibRetro::CheatReset()
 {
   m_client.retro_cheat_reset();
@@ -484,89 +530,20 @@ GAME_ERROR CGameLibRetro::SetCheat(unsigned int index, bool enabled, const std::
   return GAME_ERROR_NO_ERROR;
 }
 
-GAME_ERROR CGameLibRetro::RCGenerateHashFromFile(std::string& hash,
-                                                 unsigned int consoleID,
-                                                 const std::string& filePath)
-{
-  if (!CCheevos::Get().GenerateHashFromFile(hash, consoleID, filePath))
-    return GAME_ERROR_FAILED;
-
-  return GAME_ERROR_NO_ERROR;
-}
-
-GAME_ERROR CGameLibRetro::RCGetGameIDUrl(std::string& url, const std::string& hash)
-{
-  if (!CCheevos::Get().GetGameIDUrl(url, hash))
-    return GAME_ERROR_FAILED;
-
-  return GAME_ERROR_NO_ERROR;
-}
-
-GAME_ERROR CGameLibRetro::RCGetPatchFileUrl(std::string& url,
-                                            const std::string& username,
-                                            const std::string& token,
-                                            unsigned int gameID)
-{
-  if (!CCheevos::Get().GetPatchFileUrl(url, username, token, gameID))
-    return GAME_ERROR_FAILED;
-
-  return GAME_ERROR_NO_ERROR;
-}
-
 GAME_ERROR CGameLibRetro::SetRetroAchievementsCredentials(const std::string& username, const std::string& token)
 {
-  CCheevos::Get().SetRetroAchievementsCredentials(username, token);
-  return GAME_ERROR_NO_ERROR;
-}
-
-GAME_ERROR CGameLibRetro::RCPostRichPresenceUrl(std::string& url,
-                                                std::string& postData,
-                                                const std::string& username,
-                                                const std::string& token,
-                                                unsigned int gameID,
-                                                const std::string& richPresence)
-{
-  if (!CCheevos::Get().PostRichPresenceUrl(url, postData, username, token, gameID, richPresence))
-    return GAME_ERROR_FAILED;
-
-  return GAME_ERROR_NO_ERROR;
-}
-
-GAME_ERROR CGameLibRetro::RCEnableRichPresence(const std::string& script)
-{
-  CCheevos::Get().EnableRichPresence(script);
-
-  return GAME_ERROR_NO_ERROR;
-}
-
-GAME_ERROR CGameLibRetro::RCGetRichPresenceEvaluation(std::string& evaluation,
-                                                      unsigned int consoleID)
-{
-  CCheevos::Get().EvaluateRichPresence(evaluation, consoleID);
-
+  CCheevos::Get().SetCredentials(username, token);
   return GAME_ERROR_NO_ERROR;
 }
 
 GAME_ERROR CGameLibRetro::ActivateAchievement(unsigned cheevo_id, const std::string& memAddrExpression)
 {
-  if (!CCheevos::Get().ActivateAchievement(cheevo_id, memAddrExpression))
-    return GAME_ERROR_FAILED;
-
-  return GAME_ERROR_NO_ERROR;
+  return GAME_ERROR_NOT_IMPLEMENTED;
 }
-
 
 GAME_ERROR CGameLibRetro::GetCheevoUrlId(const std::function<void(const std::string& achievementUrl, unsigned int cheevoId)>& callback)
 {
-  CCheevos::Get().GetCheevoUrlId(callback);
-  return GAME_ERROR_NO_ERROR;
-}
-
-GAME_ERROR CGameLibRetro::RCResetRuntime()
-{
-  CCheevos::Get().ResetRuntime();
-
-  return GAME_ERROR_NO_ERROR;
+  return GAME_ERROR_NOT_IMPLEMENTED;
 }
 
 bool CGameLibRetro::GetEjectState()
