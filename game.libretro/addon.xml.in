@@ -34,7 +34,7 @@
     <description lang="en_GB">This add-on provides a wrapper for libretro cores, allowing them to be loaded as game add-ons.</description>
     <description lang="es_ES">Este add-on proporciona una capa para los núcleos libretro, lo que les permite ser cargados como add-ons del juego.</description>
     <description lang="fr_FR">Cet add-on fournit un wrapper pour les cœurs libretro, leur permettant d&apos;être chargés en tant qu&apos;add-ons de jeu.</description>
-    <description lang="it_IT">Questo add-on fornisce un modulo sodtware per i core libretro, consentendo loro di essere caricati come add-on di gioco.</description>
+    <description lang="it_IT">Questo add-on fornisce un modulo software per i core libretro, consentendo loro di essere caricati come add-on di gioco.</description>
     <description lang="ru_RU">Это дополнение представляет собой оболочку для ядер libretro, позволяющую загружать их как игровые дополнения.</description>
     <description lang="sv_SE">Detta tillägg tillhandahåller en wrapper för libretro-kärnor, vilket gör att de kan läsas in som speltillägg.</description>
     <description lang="zh_CN">这个插件为 libretro 内核提供了一个包装器，允许它们作为游戏插件加载。</description>
