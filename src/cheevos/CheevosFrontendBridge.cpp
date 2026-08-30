@@ -96,12 +96,41 @@ void CCheevosFrontendBridge::Seek(void* file_handle, int64_t offset, int origin)
   if (position < 0)
     return;
 
-  // Keep the requested position when the backend can't seek. rcheevos measures
-  // the file this way and then reads it from the start, which a stream sitting
-  // at its start still serves correctly.
   const int64_t reached = fileHandle->file->Seek(position, SEEK_SET);
+  if (reached >= 0)
+  {
+    fileHandle->position = reached;
+    return;
+  }
 
-  fileHandle->position = (reached < 0) ? position : reached;
+  // rcheevos uses SEEK_END only to measure the file before seeking elsewhere.
+  if (origin == SEEK_END && offset == 0)
+  {
+    fileHandle->position = position;
+    return;
+  }
+
+  std::unique_ptr<kodi::vfs::CFile> reopened(new kodi::vfs::CFile);
+  if (!reopened->OpenFile(fileHandle->path, 0))
+    return;
+
+  char buffer[64 * 1024];
+  int64_t remaining = position;
+  while (remaining > 0)
+  {
+    const size_t chunkSize = remaining < static_cast<int64_t>(sizeof(buffer))
+                                 ? static_cast<size_t>(remaining)
+                                 : sizeof(buffer);
+    const ssize_t bytesRead = reopened->Read(buffer, chunkSize);
+    if (bytesRead <= 0)
+      return;
+
+    remaining -= bytesRead;
+  }
+
+  fileHandle->file->Close();
+  fileHandle->file = std::move(reopened);
+  fileHandle->position = position;
 }
 
 size_t CCheevosFrontendBridge::ReadFile(void* file_handle, void* buffer, size_t requested_bytes)
