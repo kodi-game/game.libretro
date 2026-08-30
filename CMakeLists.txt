@@ -33,6 +33,7 @@ set(LIBRETRO_SOURCES src/client.cpp
                      src/cheevos/Cheevos.cpp
                      src/cheevos/CheevosEnvironment.cpp
                      src/cheevos/CheevosFrontendBridge.cpp
+                     src/cheevos/CheevosUtils.cpp
                      src/GameInfoLoader.cpp
                      src/input/ButtonMapper.cpp
                      src/input/ControllerLayout.cpp
@@ -58,6 +59,7 @@ set(LIBRETRO_SOURCES src/client.cpp
                      src/settings/LibretroSettings.cpp
                      src/settings/Settings.cpp
                      src/settings/SettingsGenerator.cpp
+                     src/utils/Base64.cpp
                      src/utils/Timer.cpp
                      src/video/VideoGeometry.cpp
                      src/video/VideoStream.cpp
@@ -70,6 +72,7 @@ set(LIBRETRO_HEADERS src/GameInfoLoader.h
                      src/audio/SingleFrameAudio.h
                      src/input/ButtonMapper.h
                      src/cheevos/Cheevos.h
+                     src/cheevos/CheevosUtils.h
                      src/input/ControllerLayout.h
                      src/input/ControllerTopology.h
                      src/input/DefaultControllerDefines.h
@@ -100,6 +103,7 @@ set(LIBRETRO_HEADERS src/GameInfoLoader.h
                      src/settings/SettingsGenerator.h
                      src/settings/Settings.h
                      src/settings/SettingsTypes.h
+                     src/utils/Base64.h
                      src/utils/Timer.h
                      src/video/VideoGeometry.h
                      src/video/VideoStream.h
