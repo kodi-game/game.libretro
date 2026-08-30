@@ -26,7 +26,6 @@
 #include <chrono>
 #include <cstring>
 #include <future>
-#include <thread>
 #include <vector>
 
 using namespace LIBRETRO;
@@ -38,9 +37,12 @@ namespace
 // rcheevos' own clause as that library documents.
 constexpr const char* RA_CLIENT_NAME = "KodiRetroPlayer";
 constexpr size_t RA_USER_AGENT_CLAUSE_SIZE = 64;
-constexpr int RP_PING_INTERVAL_MS = 120000;
-constexpr int RP_SLEEP_INTERVAL_MS = 100;
+constexpr unsigned int GAME_LOAD_RETRY_MAX_DELAY_SECONDS = 120;
+constexpr unsigned int LOGIN_RETRY_MAX_DELAY_SECONDS = 120;
+constexpr std::chrono::minutes RP_PING_INTERVAL{2};
 constexpr unsigned int RP_BUFFER_SIZE = 512;
+constexpr std::chrono::seconds HTTP_REQUEST_TIMEOUT{30};
+constexpr const char* HTTP_CONNECTION_TIMEOUT_SECONDS = "10";
 constexpr size_t HTTP_READ_CHUNK = 4096;
 
 } // namespace
@@ -145,6 +147,7 @@ void CCheevos::BeginLogin()
   }
 
   m_loginStarted = true;
+  m_loginRetryScheduled = false;
 
   // Begin async login — game load triggered on success
   kodi::Log(ADDON_LOG_INFO, "CCheevos: logging in as '%s'", userName.c_str());
@@ -152,38 +155,39 @@ void CCheevos::BeginLogin()
                                    RcheevosLoginCallback, this);
 }
 
+void CCheevos::BeginGameLoad()
+{
+  if (m_rcClient == nullptr || m_gamePath.empty())
+    return;
+
+  m_gameLoadRetryScheduled = false;
+
+  kodi::Log(ADDON_LOG_INFO, "CCheevos: identifying game: %s", m_gamePath.c_str());
+
+  // rc_hash_generate_from_file() cannot identify a game whose console is not
+  // known up front. Let rc_client try every suitable hashing method instead.
+  rc_client_begin_identify_and_load_game(m_rcClient, RC_CONSOLE_UNKNOWN, m_gamePath.c_str(),
+                                         nullptr, 0, RcheevosGameLoadCallback, this);
+}
+
 void CCheevos::Deinitialize()
 {
-  m_richPresenceRunning = false;
-  if (m_richPresenceThread.joinable())
-    m_richPresenceThread.join();
-
-  // Must happen before rc_client_destroy(): each in-flight request holds a
-  // callback_data pointer owned by the client.
-  //
-  // Requests are moved out before being waited on, never waited on under the
-  // lock: rc_client chains requests from its callbacks, so a completing
-  // request can start another one, and that one needs the same lock. Looping
-  // catches anything started while draining; the shutdown flag stops new
-  // requests reaching the network so the loop terminates.
-  m_shuttingDown = true;
-  for (;;)
+  std::vector<std::future<void>> inFlight;
   {
-    std::vector<std::future<void>> inFlight;
-    {
-      std::lock_guard<std::mutex> lock(m_serverCallsMutex);
-      inFlight.swap(m_serverCalls);
-    }
-
-    if (inFlight.empty())
-      break;
-
-    for (std::future<void>& call : inFlight)
-    {
-      if (call.valid())
-        call.wait();
-    }
+    std::lock_guard<std::mutex> lock(m_serverCallsMutex);
+    m_shuttingDown = true;
+    inFlight.swap(m_serverCalls);
   }
+
+  for (std::future<void>& call : inFlight)
+  {
+    if (call.valid())
+      call.wait();
+  }
+
+  // callback_data belongs to rc_client, so queued responses must be consumed
+  // before the client is destroyed.
+  DispatchServerResponses();
 
   if (m_memoryInitialized)
   {
@@ -197,7 +201,19 @@ void CCheevos::Deinitialize()
     m_rcClient = nullptr;
   }
 
+  {
+    std::lock_guard<std::mutex> lock(m_pendingProgressMutex);
+    m_pendingProgress.clear();
+    m_hasPendingProgress = false;
+  }
+
   m_loginStarted = false;
+  m_loginRetryScheduled = false;
+  m_loginRetryDelaySeconds = 0;
+  m_gameLoadRetryScheduled = false;
+  m_gameLoadRetryDelaySeconds = 0;
+  m_richPresenceActive = false;
+  m_lastProgressSignature.clear();
   m_gameInstance = nullptr;
 }
 
@@ -209,6 +225,9 @@ void CCheevos::SetCredentials(const std::string& username, const std::string& to
     m_loginToken = token;
   }
 
+  m_loginRetryScheduled = false;
+  m_loginRetryDelaySeconds = 0;
+
   // Kodi supplies credentials after the game has been loaded, so this is
   // normally where the login actually starts
   BeginLogin();
@@ -218,6 +237,14 @@ void CCheevos::DoFrame()
 {
   if (m_rcClient == nullptr)
     return;
+
+  DispatchServerResponses();
+
+  if (m_loginRetryScheduled && std::chrono::steady_clock::now() >= m_nextLoginAttempt)
+    BeginLogin();
+
+  if (m_gameLoadRetryScheduled && std::chrono::steady_clock::now() >= m_nextGameLoadAttempt)
+    BeginGameLoad();
 
   rc_client_do_frame(m_rcClient);
 
@@ -234,6 +261,14 @@ void CCheevos::DoFrame()
     m_framesSincePublish = 0;
     PublishAchievementProgress();
   }
+
+  UpdateRichPresence();
+}
+
+void CCheevos::ResetRuntime()
+{
+  if (m_rcClient != nullptr)
+    rc_client_reset(m_rcClient);
 }
 
 void CCheevos::PublishAchievementProgress()
@@ -283,12 +318,9 @@ void CCheevos::PublishAchievementProgress()
   {
     m_lastProgressSignature = signature;
 
-    if (!progress.empty())
-    {
-      kodi::Log(ADDON_LOG_DEBUG, "CCheevos: publishing progress for %zu achievement(s): %s",
-                progress.size(), signature.c_str());
-      m_gameInstance->RCOnAchievementProgress(progress);
-    }
+    kodi::Log(ADDON_LOG_DEBUG, "CCheevos: publishing progress for %zu achievement(s): %s",
+              progress.size(), signature.c_str());
+    m_gameInstance->RCOnAchievementProgress(progress);
   }
 
   rc_client_destroy_achievement_list(achList);
@@ -420,10 +452,7 @@ void CCheevos::RcheevosServerCall(const rc_api_request_t* request,
   CCheevos* const cheevos = static_cast<CCheevos*>(rc_client_get_userdata(client));
 
   std::string userAgent;
-  // rc_client requires the callback to be invoked exactly once. With no
-  // instance to track the request against, or with teardown under way, answer
-  // immediately rather than starting work that would outlive the client.
-  if (cheevos == nullptr || cheevos->m_shuttingDown)
+  if (cheevos == nullptr)
   {
     rc_api_server_response_t resp{};
     resp.http_status_code = HTTP_STATUS_NO_RESPONSE;
@@ -436,65 +465,127 @@ void CCheevos::RcheevosServerCall(const rc_api_request_t* request,
     userAgent = cheevos->m_userAgent;
   }
 
-  auto task = std::async(std::launch::async, [url, postData, userAgent, callback, callback_data]()
+  auto worker = [cheevos, url, postData, userAgent, callback, callback_data]()
   {
     std::string responseData;
     unsigned int statusCode = HTTP_STATUS_NO_RESPONSE;
+    const auto deadline = std::chrono::steady_clock::now() + HTTP_REQUEST_TIMEOUT;
 
-    // Options are set through the curl API rather than the "url|opt=value"
-    // syntax, because the post body is form data full of '&' and '=' which
-    // that syntax would split into further options
-    kodi::vfs::CFile file;
-    if (file.CURLCreate(url))
+    try
     {
-      if (!userAgent.empty())
-        file.CURLAddOption(ADDON_CURL_OPTION_PROTOCOL, "User-Agent", userAgent);
-
-      // RetroAchievements reports failures as a JSON body with a 4xx status,
-      // and rc_client needs that body to explain the failure
-      file.CURLAddOption(ADDON_CURL_OPTION_PROTOCOL, "failonerror", "false");
-
-      // Kodi base64-decodes this option, so it has to be encoded here
-      if (!postData.empty())
-        file.CURLAddOption(ADDON_CURL_OPTION_PROTOCOL, "postdata", Base64Encode(postData));
-
-      if (file.CURLOpen(ADDON_READ_NO_CACHE))
+      // Options are set through the curl API rather than the "url|opt=value"
+      // syntax, because the post body is form data full of '&' and '=' which
+      // that syntax would split into further options
+      kodi::vfs::CFile file;
+      if (file.CURLCreate(url))
       {
-        char buffer[HTTP_READ_CHUNK];
-        ssize_t bytesRead;
-        while ((bytesRead = file.Read(buffer, sizeof(buffer))) > 0)
-          responseData.append(buffer, static_cast<size_t>(bytesRead));
+        if (!userAgent.empty())
+          file.CURLAddOption(ADDON_CURL_OPTION_PROTOCOL, "User-Agent", userAgent);
 
-        statusCode = ParseHttpStatus(
-            file.GetPropertyValue(ADDON_FILE_PROPERTY_RESPONSE_PROTOCOL, ""));
+        file.CURLAddOption(ADDON_CURL_OPTION_PROTOCOL, "connection-timeout",
+                           HTTP_CONNECTION_TIMEOUT_SECONDS);
 
-        file.Close();
+        // RetroAchievements reports failures as a JSON body with a 4xx status,
+        // and rc_client needs that body to explain the failure
+        file.CURLAddOption(ADDON_CURL_OPTION_PROTOCOL, "failonerror", "false");
+
+        // Kodi base64-decodes this option, so it has to be encoded here
+        if (!postData.empty())
+          file.CURLAddOption(ADDON_CURL_OPTION_PROTOCOL, "postdata", Base64Encode(postData));
+
+        if (file.CURLOpen(ADDON_READ_NO_CACHE | ADDON_READ_TRUNCATED))
+        {
+          char buffer[HTTP_READ_CHUNK];
+          ssize_t bytesRead;
+          while (!cheevos->m_shuttingDown && std::chrono::steady_clock::now() < deadline &&
+                 (bytesRead = file.Read(buffer, sizeof(buffer))) > 0)
+            responseData.append(buffer, static_cast<size_t>(bytesRead));
+
+          if (!cheevos->m_shuttingDown && std::chrono::steady_clock::now() < deadline)
+          {
+            statusCode = ParseHttpStatus(
+                file.GetPropertyValue(ADDON_FILE_PROPERTY_RESPONSE_PROTOCOL, ""));
+          }
+          else
+          {
+            responseData.clear();
+          }
+
+          file.Close();
+        }
       }
+    }
+    catch (...)
+    {
+      responseData.clear();
     }
 
     if (statusCode == HTTP_STATUS_NO_RESPONSE)
       kodi::Log(ADDON_LOG_ERROR, "CCheevos: request failed: %s", url.c_str());
 
-    rc_api_server_response_t resp{};
-    resp.body = responseData.c_str();
-    resp.body_length = responseData.size();
-    resp.http_status_code = static_cast<int>(statusCode);
+    cheevos->QueueServerResponse(callback, callback_data, std::move(responseData),
+                                 static_cast<int>(statusCode));
+  };
 
-    callback(&resp, callback_data);
-  });
-
-  // Tracked rather than detached: rc_client owns callback_data, so a request
-  // outliving rc_client_destroy() would invoke the callback against freed
-  // memory. Deinitialize() waits for everything held here first.
   {
     std::lock_guard<std::mutex> lock(cheevos->m_serverCallsMutex);
+
+    if (cheevos->m_shuttingDown)
+    {
+      cheevos->m_serverResponses.push_back(
+          {callback, callback_data, {}, HTTP_STATUS_NO_RESPONSE});
+      return;
+    }
 
     std::erase_if(cheevos->m_serverCalls, [](const std::future<void>& call)
                   { return call.wait_for(std::chrono::seconds(0)) == std::future_status::ready; });
 
-    cheevos->m_serverCalls.emplace_back(std::move(task));
+    try
+    {
+      cheevos->m_serverCalls.reserve(cheevos->m_serverCalls.size() + 1);
+      cheevos->m_serverCalls.emplace_back(std::async(std::launch::async, std::move(worker)));
+    }
+    catch (...)
+    {
+      cheevos->m_serverResponses.push_back(
+          {callback, callback_data, {}, HTTP_STATUS_NO_RESPONSE});
+    }
   }
 }
+
+void CCheevos::QueueServerResponse(rc_client_server_callback_t callback,
+                                   void* callbackData,
+                                   std::string body,
+                                   int statusCode)
+{
+  std::lock_guard<std::mutex> lock(m_serverCallsMutex);
+  m_serverResponses.push_back({callback, callbackData, std::move(body), statusCode});
+}
+
+void CCheevos::DispatchServerResponses()
+{
+  for (;;)
+  {
+    std::vector<ServerResponse> responses;
+    {
+      std::lock_guard<std::mutex> lock(m_serverCallsMutex);
+      responses.swap(m_serverResponses);
+    }
+
+    if (responses.empty())
+      return;
+
+    for (ServerResponse& completed : responses)
+    {
+      rc_api_server_response_t response{};
+      response.body = completed.body.c_str();
+      response.body_length = completed.body.size();
+      response.http_status_code = completed.statusCode;
+      completed.callback(&response, completed.callbackData);
+    }
+  }
+}
+
 // Memory read callback
 uint32_t CCheevos::RcheevosReadMemory(uint32_t address, uint8_t* buffer,
                                        uint32_t num_bytes, rc_client_t* client)
@@ -652,10 +743,7 @@ void CCheevos::RcheevosLoginCallback(int result, const char* errorMessage,
     kodi::Log(ADDON_LOG_ERROR, "CCheevos: login failed: %s",
               errorMessage != nullptr ? errorMessage : "unknown error");
 
-    // Let the next credentials try again. This guard exists to stop a second
-    // login racing one already in flight, not to make failure permanent --
-    // left set, a corrected username or token could not start a login until
-    // the game was unloaded.
+    // Allow corrected credentials or a scheduled retry to start another login.
     cheevos->m_loginStarted = false;
 
     game_rc_login_result data{};
@@ -668,9 +756,30 @@ void CCheevos::RcheevosLoginCallback(int result, const char* errorMessage,
     data.credentials_rejected = (result == RC_INVALID_CREDENTIALS ||
                                  result == RC_EXPIRED_TOKEN || result == RC_ACCESS_DENIED);
 
+    if (data.credentials_rejected)
+    {
+      cheevos->m_loginRetryScheduled = false;
+      cheevos->m_loginRetryDelaySeconds = 0;
+    }
+    else
+    {
+      if (cheevos->m_loginRetryDelaySeconds == 0)
+        cheevos->m_loginRetryDelaySeconds = 1;
+      else
+        cheevos->m_loginRetryDelaySeconds =
+            std::min(cheevos->m_loginRetryDelaySeconds * 2, LOGIN_RETRY_MAX_DELAY_SECONDS);
+
+      cheevos->m_nextLoginAttempt = std::chrono::steady_clock::now() +
+                                    std::chrono::seconds(cheevos->m_loginRetryDelaySeconds);
+      cheevos->m_loginRetryScheduled = true;
+    }
+
     cheevos->m_gameInstance->RCOnLoginResult(data);
     return;
   }
+
+  cheevos->m_loginRetryScheduled = false;
+  cheevos->m_loginRetryDelaySeconds = 0;
 
   const rc_client_user_t* user = rc_client_get_user_info(client);
   if (user != nullptr)
@@ -693,20 +802,7 @@ void CCheevos::RcheevosLoginCallback(int result, const char* errorMessage,
               user->username != nullptr ? user->username : "", user->score);
   }
 
-  // Now identify and load the game
-  if (!cheevos->m_gamePath.empty())
-  {
-    kodi::Log(ADDON_LOG_INFO, "CCheevos: identifying game: %s", cheevos->m_gamePath.c_str());
-
-    // rc_hash_generate_from_file() rejects RC_CONSOLE_UNKNOWN: its console
-    // switch has no case for it and the default arm returns an error, so it
-    // cannot identify a game whose console isn't known up front. Let rc_client
-    // do the identification instead, which tries every hashing method that
-    // suits the file rather than requiring the console to be named.
-    rc_client_begin_identify_and_load_game(client, RC_CONSOLE_UNKNOWN,
-                                           cheevos->m_gamePath.c_str(), nullptr, 0,
-                                           RcheevosGameLoadCallback, cheevos);
-  }
+  cheevos->BeginGameLoad();
 }
 
 // Game load callback
@@ -717,12 +813,48 @@ void CCheevos::RcheevosGameLoadCallback(int result, const char* errorMessage,
   if (cheevos == nullptr || cheevos->m_gameInstance == nullptr)
     return;
 
+  if (result == RC_NO_GAME_LOADED)
+  {
+    cheevos->m_gameLoadRetryScheduled = false;
+    cheevos->m_gameLoadRetryDelaySeconds = 0;
+
+    game_rc_game_loaded empty{};
+    cheevos->m_gameInstance->RCOnGameLoaded(empty);
+    return;
+  }
+
   if (result != RC_OK)
   {
     kodi::Log(ADDON_LOG_ERROR, "CCheevos: game load failed: %s",
               errorMessage != nullptr ? errorMessage : "unknown error");
+
+    if (result == RC_NO_RESPONSE || result == RC_API_FAILURE || result == RC_INVALID_JSON)
+    {
+      if (cheevos->m_gameLoadRetryDelaySeconds == 0)
+        cheevos->m_gameLoadRetryDelaySeconds = 1;
+      else
+        cheevos->m_gameLoadRetryDelaySeconds = std::min(
+            cheevos->m_gameLoadRetryDelaySeconds * 2, GAME_LOAD_RETRY_MAX_DELAY_SECONDS);
+
+      cheevos->m_nextGameLoadAttempt =
+          std::chrono::steady_clock::now() +
+          std::chrono::seconds(cheevos->m_gameLoadRetryDelaySeconds);
+      cheevos->m_gameLoadRetryScheduled = true;
+    }
+    else if (result != RC_ABORTED)
+    {
+      cheevos->m_gameLoadRetryScheduled = false;
+      cheevos->m_gameLoadRetryDelaySeconds = 0;
+
+      game_rc_game_loaded empty{};
+      cheevos->m_gameInstance->RCOnGameLoaded(empty);
+    }
+
     return;
   }
+
+  cheevos->m_gameLoadRetryScheduled = false;
+  cheevos->m_gameLoadRetryDelaySeconds = 0;
 
   const rc_client_game_t* gameInfo = rc_client_get_game_info(client);
 
@@ -739,6 +871,8 @@ void CCheevos::RcheevosGameLoadCallback(int result, const char* errorMessage,
   {
     kodi::Log(ADDON_LOG_INFO, "CCheevos: '%s' - this ROM version has no achievements",
               gameInfo->title);
+
+    rc_client_unload_game(client);
 
     game_rc_game_loaded empty{};
     cheevos->m_gameInstance->RCOnGameLoaded(empty);
@@ -803,27 +937,25 @@ void CCheevos::RcheevosGameLoadCallback(int result, const char* errorMessage,
 
   cheevos->ApplyPendingProgress();
 
-  // Start rich presence ping thread
-  cheevos->m_richPresenceRunning = true;
-  cheevos->m_richPresenceThread = std::thread(&CCheevos::RichPresencePingThread, cheevos);
+  cheevos->m_richPresenceActive = true;
+  cheevos->m_nextRichPresencePing = std::chrono::steady_clock::now();
 }
 
-// Rich presence ping thread
-void CCheevos::RichPresencePingThread()
+void CCheevos::UpdateRichPresence()
 {
-  while (m_richPresenceRunning)
-  {
-    if (m_rcClient != nullptr && m_gameInstance != nullptr)
-    {
-      char buffer[RP_BUFFER_SIZE]{};
-      rc_client_get_rich_presence_message(m_rcClient, buffer, sizeof(buffer));
-      const std::string rpMessage(buffer);
+  if (!m_richPresenceActive || m_rcClient == nullptr || m_gameInstance == nullptr)
+    return;
 
-      if (!rpMessage.empty())
-        m_gameInstance->RCOnRichPresenceUpdated(rpMessage.c_str());
-    }
+  const auto now = std::chrono::steady_clock::now();
+  if (now < m_nextRichPresencePing)
+    return;
 
-    for (int i = 0; i < (RP_PING_INTERVAL_MS / RP_SLEEP_INTERVAL_MS) && m_richPresenceRunning; ++i)
-      std::this_thread::sleep_for(std::chrono::milliseconds(RP_SLEEP_INTERVAL_MS));
-  }
+  m_nextRichPresencePing = now + RP_PING_INTERVAL;
+
+  char buffer[RP_BUFFER_SIZE]{};
+  rc_client_get_rich_presence_message(m_rcClient, buffer, sizeof(buffer));
+  const std::string rpMessage(buffer);
+
+  if (!rpMessage.empty())
+    m_gameInstance->RCOnRichPresenceUpdated(rpMessage.c_str());
 }

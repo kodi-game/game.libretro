@@ -305,6 +305,7 @@ GAME_ERROR CGameLibRetro::RunFrame()
 GAME_ERROR CGameLibRetro::Reset()
 {
   m_client.retro_reset();
+  CCheevos::Get().ResetRuntime();
 
   return GAME_ERROR_NO_ERROR;
 }

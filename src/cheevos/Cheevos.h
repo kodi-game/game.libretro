@@ -7,11 +7,11 @@
 #pragma once
 
 #include <atomic>
+#include <chrono>
 #include <functional>
 #include <future>
 #include <mutex>
 #include <string>
-#include <thread>
 #include <vector>
 
 #define RC_CLIENT_SUPPORTS_HASH
@@ -49,6 +49,9 @@ public:
 
   /// @brief Called every emulated frame from RunFrame()
   void DoFrame();
+
+  /// @brief Reset the loaded achievement runtime after the core resets
+  void ResetRuntime();
 
   /*!
    * @brief Send progress for every measured achievement to the frontend
@@ -96,6 +99,14 @@ public:
   bool DeserializeProgress(const uint8_t* buffer, size_t size);
 
 private:
+  struct ServerResponse
+  {
+    rc_client_server_callback_t callback{nullptr};
+    void* callbackData{nullptr};
+    std::string body;
+    int statusCode{0};
+  };
+
   /*!
    * @brief Apply progress that arrived before the game had been identified
    *
@@ -111,6 +122,14 @@ private:
    * nothing on the second call.
    */
   void BeginLogin();
+  void BeginGameLoad();
+
+  void QueueServerResponse(rc_client_server_callback_t callback,
+                           void* callbackData,
+                           std::string body,
+                           int statusCode);
+  void DispatchServerResponses();
+  void UpdateRichPresence();
 
   // rc_client C callbacks (static — use s_instance to get back to instance)
   static void RcheevosEventHandler(const rc_client_event_t* event, rc_client_t* client);
@@ -127,9 +146,6 @@ private:
   static void RcheevosGameLoadCallback(int result, const char* errorMessage, rc_client_t* client,
                                        void* userdata);
 
-  // Rich presence ping thread
-  void RichPresencePingThread();
-
   // rc_client state
   rc_client_t* m_rcClient{nullptr};
   kodi::addon::CInstanceGame* m_gameInstance{nullptr};
@@ -144,6 +160,12 @@ private:
   std::string m_userAgent;
   mutable std::mutex m_userAgentMutex;
   std::atomic<bool> m_loginStarted{false};
+  bool m_loginRetryScheduled{false};
+  unsigned int m_loginRetryDelaySeconds{0};
+  std::chrono::steady_clock::time_point m_nextLoginAttempt;
+  bool m_gameLoadRetryScheduled{false};
+  unsigned int m_gameLoadRetryDelaySeconds{0};
+  std::chrono::steady_clock::time_point m_nextGameLoadAttempt;
 
   // Memory access
   MemoryAccessCallback m_memoryCallback;
@@ -172,16 +194,17 @@ private:
   std::vector<uint8_t> m_pendingProgress;
   bool m_hasPendingProgress{false};
 
-  // Background threads
-  std::atomic<bool> m_richPresenceRunning{false};
-  std::thread m_richPresenceThread;
+  bool m_richPresenceActive{false};
+  std::chrono::steady_clock::time_point m_nextRichPresencePing;
+
   /*!
    * @brief In-flight HTTP requests to RetroAchievements
    *
-   * Each holds a callback_data pointer owned by rc_client, so these are waited
-   * on in Deinitialize() before the client is destroyed rather than detached.
+   * The workers only perform network I/O. Their responses are dispatched on
+   * the game thread while callback_data is still owned by rc_client.
    */
   std::vector<std::future<void>> m_serverCalls;
+  std::vector<ServerResponse> m_serverResponses;
   std::mutex m_serverCallsMutex;
 
   /// @brief Set during teardown so no further requests reach the network
