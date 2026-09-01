@@ -696,9 +696,60 @@ void CCheevos::RcheevosEventHandler(const rc_client_event_t* event, rc_client_t*
     case RC_CLIENT_EVENT_ACHIEVEMENT_PROGRESS_INDICATOR_SHOW:
     case RC_CLIENT_EVENT_ACHIEVEMENT_PROGRESS_INDICATOR_UPDATE:
     {
-      // rc_client reports one achievement at a time, but the frontend shows a
-      // snapshot of every measured achievement, so publish the whole set
+      // Two things want this. The achievements dialog lists every measured
+      // achievement, so publish the whole set; the on-screen indicator shows
+      // the one the runtime picked out, so forward that as well.
       cheevos->PublishAchievementProgress();
+
+#if defined(HAVE_GAME_RC_INDICATORS)
+      const rc_client_achievement_t* achievement = event->achievement;
+      if (achievement != nullptr)
+      {
+        game_rc_progress_indicator indicator{};
+        indicator.id = achievement->id;
+        indicator.title = achievement->title;
+        indicator.badge_url = achievement->badge_url;
+        indicator.measured_progress = achievement->measured_progress;
+        indicator.measured_percent = achievement->measured_percent;
+
+        kodi::Log(ADDON_LOG_DEBUG,
+                  "CCheevos: forwarding progress indicator for achievement %u '%s' at %s",
+                  achievement->id, achievement->title != nullptr ? achievement->title : "",
+                  achievement->measured_progress != nullptr ? achievement->measured_progress : "");
+        cheevos->m_gameInstance->RCOnProgressIndicator(&indicator);
+      }
+#endif
+      break;
+    }
+    case RC_CLIENT_EVENT_ACHIEVEMENT_CHALLENGE_INDICATOR_SHOW:
+    {
+#if defined(HAVE_GAME_RC_INDICATORS)
+      const rc_client_achievement_t* achievement = event->achievement;
+      if (achievement != nullptr)
+      {
+        game_rc_challenge_indicator indicator{};
+        indicator.id = achievement->id;
+        indicator.title = achievement->title;
+        indicator.badge_url = achievement->badge_url;
+
+        cheevos->m_gameInstance->RCOnChallengeIndicator(&indicator);
+      }
+#endif
+      break;
+    }
+    case RC_CLIENT_EVENT_ACHIEVEMENT_CHALLENGE_INDICATOR_HIDE:
+    {
+#if defined(HAVE_GAME_RC_INDICATORS)
+      cheevos->m_gameInstance->RCOnChallengeIndicator(nullptr);
+#endif
+      break;
+    }
+    case RC_CLIENT_EVENT_ACHIEVEMENT_PROGRESS_INDICATOR_HIDE:
+    {
+#if defined(HAVE_GAME_RC_INDICATORS)
+      // The runtime decides when the player has stopped working towards it
+      cheevos->m_gameInstance->RCOnProgressIndicator(nullptr);
+#endif
       break;
     }
     case RC_CLIENT_EVENT_SERVER_ERROR:

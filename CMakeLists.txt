@@ -110,7 +110,22 @@ set(LIBRETRO_HEADERS src/GameInfoLoader.h
                      src/video/VideoTiming.h
 )
 
+# The frontend gains the achievement indicator callbacks in Game API 8.1.0.
+# Against an older API they are not there, so build without forwarding them and
+# leave the frontend showing nothing. Detected rather than version-tested,
+# because the two land together and either may arrive first.
+include(CheckStructHasMember)
+check_struct_has_member("AddonToKodiFuncTable_Game"
+                        RCOnProgressIndicator
+                        "${KODI_INCLUDE_DIR}/c-api/addon-instance/game.h"
+                        HAVE_GAME_RC_INDICATORS
+                        LANGUAGE CXX)
+
 build_addon(${PROJECT_NAME} LIBRETRO DEPLIBS)
+
+if(HAVE_GAME_RC_INDICATORS)
+  target_compile_definitions(${PROJECT_NAME} PRIVATE HAVE_GAME_RC_INDICATORS)
+endif()
 
 if(ENABLE_INTERNAL_LIBRETROCOMMON)
   add_dependencies(${PROJECT_NAME} libretro-common)
