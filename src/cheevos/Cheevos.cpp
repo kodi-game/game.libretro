@@ -122,6 +122,11 @@ void CCheevos::Initialize(kodi::addon::CInstanceGame* gameInstance,
       kodi::Log(ADDON_LOG_DEBUG, "rc_client: %s", message);
     });
 
+  // After logging is enabled, so the client reports the mode it starts in.
+  // Applied here as well as when it is set, because the frontend sends it once
+  // per game while the client is built per game.
+  rc_client_set_encore_mode_enabled(m_rcClient, m_encoreModeEnabled ? 1 : 0);
+
   // The frontend may not have supplied credentials yet, in which case
   // SetCredentials() starts the login when they arrive
   BeginLogin();
@@ -215,6 +220,18 @@ void CCheevos::Deinitialize()
   m_richPresenceActive = false;
   m_lastProgressSignature.clear();
   m_gameInstance = nullptr;
+}
+
+void CCheevos::SetEncoreModeEnabled(bool enabled)
+{
+  m_encoreModeEnabled = enabled;
+
+  kodi::Log(ADDON_LOG_INFO, "CCheevos: encore mode %s", enabled ? "enabled" : "disabled");
+
+  // Usually arrives before there is a client to tell: the frontend sends it as
+  // part of loading a game, and the client is created once that game is up
+  if (m_rcClient != nullptr)
+    rc_client_set_encore_mode_enabled(m_rcClient, enabled ? 1 : 0);
 }
 
 void CCheevos::SetCredentials(const std::string& username, const std::string& token)

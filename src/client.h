@@ -79,6 +79,9 @@ public:
 
   // --- RCheevos ----------------------------------------------------------------
   GAME_ERROR SetRetroAchievementsCredentials(const std::string& username, const std::string& token) override;
+#if defined(HAVE_GAME_RC_ENCORE_MODE)
+  GAME_ERROR RCSetEncoreModeEnabled(bool enabled) override;
+#endif
   GAME_ERROR ActivateAchievement(unsigned cheevo_id, const std::string& memAddrExpression) override;
   GAME_ERROR GetCheevoUrlId(const std::function<void(const std::string& achievementUrl,
                                                      unsigned int cheevoId)>& callback) override;

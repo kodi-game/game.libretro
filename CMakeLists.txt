@@ -110,7 +110,21 @@ set(LIBRETRO_HEADERS src/GameInfoLoader.h
                      src/video/VideoTiming.h
 )
 
+# The frontend gains the encore-mode call in Game API 8.1.0. Against an older
+# API it is not there, so build without it. Detected rather than version-tested,
+# because the two land together and either may arrive first.
+include(CheckStructHasMember)
+check_struct_has_member("KodiToAddonFuncTable_Game"
+                        RCSetEncoreModeEnabled
+                        "${KODI_INCLUDE_DIR}/c-api/addon-instance/game.h"
+                        HAVE_GAME_RC_ENCORE_MODE
+                        LANGUAGE CXX)
+
 build_addon(${PROJECT_NAME} LIBRETRO DEPLIBS)
+
+if(HAVE_GAME_RC_ENCORE_MODE)
+  target_compile_definitions(${PROJECT_NAME} PRIVATE HAVE_GAME_RC_ENCORE_MODE)
+endif()
 
 if(ENABLE_INTERNAL_LIBRETROCOMMON)
   add_dependencies(${PROJECT_NAME} libretro-common)
