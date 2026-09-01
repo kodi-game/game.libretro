@@ -77,9 +77,32 @@ void CFrontendBridge::LogFrontend(retro_log_level level, const char *fmt, ...)
 
 void CFrontendBridge::VideoRefresh(const void* data, unsigned int width, unsigned int height, size_t pitch)
 {
+  // Logged once per session, for each kind of frame a core can send. A core
+  // that shows nothing has either stopped calling this or is calling it in a
+  // way the frontend does not turn into a picture, and the two look identical
+  // from the outside.
+  {
+    static bool bLoggedHw = false;
+    static bool bLoggedDupe = false;
+    static bool bLoggedSw = false;
+
+    bool* logged = (data == RETRO_HW_FRAME_BUFFER_VALID) ? &bLoggedHw
+                   : (data == nullptr)                   ? &bLoggedDupe
+                                                         : &bLoggedSw;
+    if (!*logged)
+    {
+      *logged = true;
+      kodi::Log(ADDON_LOG_INFO, "First %s frame from the core: %ux%u",
+                (data == RETRO_HW_FRAME_BUFFER_VALID) ? "hardware"
+                : (data == nullptr)                   ? "duplicate"
+                                                      : "software",
+                width, height);
+    }
+  }
+
   if (data == RETRO_HW_FRAME_BUFFER_VALID)
   {
-    CLibretroEnvironment::Get().Video().RenderHwFrame();
+    CLibretroEnvironment::Get().Video().RenderHwFrame(width, height);
   }
   else if (data == nullptr)
   {
