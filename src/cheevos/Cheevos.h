@@ -47,6 +47,14 @@ public:
   /// @brief Store credentials from Kodi (called before LoadGame)
   void SetCredentials(const std::string& username, const std::string& token);
 
+  /*!
+   * \brief Play for achievements the user has already earned
+   *
+   * Kept as well as applied, because rc_client only reads it when a game is
+   * loaded and the frontend sends it before the load.
+   */
+  void SetEncoreModeEnabled(bool enabled);
+
   /// @brief Called every emulated frame from RunFrame()
   void DoFrame();
 
@@ -159,6 +167,7 @@ private:
   // Identifies this add-on to RetroAchievements, built once in Initialize()
   std::string m_userAgent;
   mutable std::mutex m_userAgentMutex;
+  std::atomic<bool> m_encoreModeEnabled{false};
   std::atomic<bool> m_loginStarted{false};
   bool m_loginRetryScheduled{false};
   unsigned int m_loginRetryDelaySeconds{0};
