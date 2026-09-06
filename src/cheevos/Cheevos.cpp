@@ -26,6 +26,7 @@
 #include <chrono>
 #include <cstring>
 #include <future>
+#include <string_view>
 #include <vector>
 
 using namespace LIBRETRO;
@@ -44,6 +45,55 @@ constexpr unsigned int RP_BUFFER_SIZE = 512;
 constexpr std::chrono::seconds HTTP_REQUEST_TIMEOUT{30};
 constexpr const char* HTTP_CONNECTION_TIMEOUT_SECONDS = "10";
 constexpr size_t HTTP_READ_CHUNK = 4096;
+
+// Keep IDs unique across simultaneous requests and game reloads.
+std::atomic<unsigned long long> s_nextRequestId{0};
+
+long long Milliseconds(std::chrono::steady_clock::duration duration)
+{
+  return std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+}
+
+const char* RequestOperation(std::string_view postData)
+{
+  while (!postData.empty())
+  {
+    const size_t end = postData.find('&');
+    const std::string_view field = postData.substr(0, end);
+    if (field.substr(0, 2) == "r=")
+    {
+      // Return literals, never arbitrary POST data, even for malformed requests.
+      for (const char* operation : {"login2", "gameid", "patch", "achievementsets", "startsession",
+                                    "unlocks", "ping", "awardachievement", "submitlbentry", "lbinfo",
+                                    "achievementwondata", "gameslist", "gameinfolist", "hashlibrary",
+                                    "getfriendlist", "allprogress"})
+      {
+        if (field.substr(2) == operation)
+          return operation;
+      }
+      return "unknown";
+    }
+    if (end == std::string_view::npos)
+      break;
+    postData.remove_prefix(end + 1);
+  }
+  return "unknown";
+}
+
+std::string RequestUrlForLog(const std::string& url)
+{
+  // Strip query/fragment/VFS options and URL userinfo before logging.
+  std::string safeUrl = url.substr(0, url.find_first_of("?#|\r\n"));
+  const size_t scheme = safeUrl.find("://");
+  if (scheme == std::string::npos)
+    return "<redacted>";
+  const size_t authority = scheme + 3;
+  const size_t path = safeUrl.find('/', authority);
+  const size_t userinfo = safeUrl.rfind('@', path);
+  if (userinfo != std::string::npos && userinfo >= authority)
+    safeUrl.erase(authority, userinfo - authority + 1);
+  return safeUrl;
+}
 
 } // namespace
 
@@ -457,14 +507,50 @@ bool CCheevos::DeserializeProgress(const uint8_t* buffer, size_t size)
   return rc_client_deserialize_progress_sized(m_rcClient, buffer, size) == RC_OK;
 }
 
+long long CCheevos::ServerRequestTiming::ElapsedMs() const
+{
+  return Milliseconds(std::chrono::steady_clock::now() - entered);
+}
+
+void CCheevos::ServerRequestTiming::LogCheckpoint(const char* checkpoint) const
+{
+  kodi::Log(ADDON_LOG_DEBUG, "CCheevos: RA request #%llu %s %s: elapsed=%lld ms", requestId,
+            operation, checkpoint, ElapsedMs());
+}
+
+void CCheevos::ServerRequestTiming::MarkQueued()
+{
+  responseQueuedMs = ElapsedMs();
+  LogCheckpoint("response queued to game thread");
+}
+
+void CCheevos::ServerRequestTiming::LogCompleted(int statusCode) const
+{
+  const long long totalMs = ElapsedMs();
+  // Total ends at callback dispatch; dispatch measures the response queue wait.
+  kodi::Log(ADDON_LOG_DEBUG,
+            "CCheevos: RA request #%llu %s completed: result=%s, status=%d, worker=%lld ms, "
+            "create=%lld ms, open=%lld ms, ttfb=%lld ms, read=%lld ms, dispatch=%lld ms, "
+            "total=%lld ms, bytes=%zu, deadline=%d, shutdown=%d",
+            requestId, operation, outcome, statusCode, workerMs, createMs, openMs, ttfbMs,
+            readMs, responseQueuedMs < 0 ? -1LL : totalMs - responseQueuedMs, totalMs, bytes,
+            deadlineReached, shutdownObserved);
+}
+
 // HTTP server callback — uses Kodi VFS (which wraps libcurl internally)
 void CCheevos::RcheevosServerCall(const rc_api_request_t* request,
                                   rc_client_server_callback_t callback,
                                   void* callback_data,
                                   rc_client_t* client)
 {
+  ServerRequestTiming timing;
+  timing.entered = std::chrono::steady_clock::now();
+  timing.requestId = s_nextRequestId.fetch_add(1, std::memory_order_relaxed) + 1;
   const std::string url = (request->url != nullptr) ? request->url : "";
   const std::string postData = (request->post_data != nullptr) ? request->post_data : "";
+  timing.operation = RequestOperation(postData);
+  kodi::Log(ADDON_LOG_DEBUG, "CCheevos: RA request #%llu %s entered/queued: url=%s, elapsed=%lld ms",
+            timing.requestId, timing.operation, RequestUrlForLog(url).c_str(), timing.ElapsedMs());
 
   CCheevos* const cheevos = static_cast<CCheevos*>(rc_client_get_userdata(client));
 
@@ -473,6 +559,9 @@ void CCheevos::RcheevosServerCall(const rc_api_request_t* request,
   {
     rc_api_server_response_t resp{};
     resp.http_status_code = HTTP_STATUS_NO_RESPONSE;
+    timing.outcome = "no-client-userdata";
+    timing.LogCheckpoint("response dispatched directly to rcheevos callback");
+    timing.LogCompleted(resp.http_status_code);
     callback(&resp, callback_data);
     return;
   }
@@ -482,11 +571,13 @@ void CCheevos::RcheevosServerCall(const rc_api_request_t* request,
     userAgent = cheevos->m_userAgent;
   }
 
-  auto worker = [cheevos, url, postData, userAgent, callback, callback_data]()
+  auto worker = [cheevos, url, postData, userAgent, callback, callback_data, timing]() mutable
   {
     std::string responseData;
     unsigned int statusCode = HTTP_STATUS_NO_RESPONSE;
     const auto deadline = std::chrono::steady_clock::now() + HTTP_REQUEST_TIMEOUT;
+    timing.workerMs = timing.ElapsedMs();
+    timing.LogCheckpoint("worker started");
 
     try
     {
@@ -494,7 +585,16 @@ void CCheevos::RcheevosServerCall(const rc_api_request_t* request,
       // syntax, because the post body is form data full of '&' and '=' which
       // that syntax would split into further options
       kodi::vfs::CFile file;
-      if (file.CURLCreate(url))
+      timing.LogCheckpoint("CURLCreate starting");
+      const auto createStarted = std::chrono::steady_clock::now();
+      const bool created = file.CURLCreate(url);
+      timing.createMs = Milliseconds(std::chrono::steady_clock::now() - createStarted);
+      timing.outcome = "curlcreate-failed";
+      kodi::Log(ADDON_LOG_DEBUG,
+                "CCheevos: RA request #%llu %s CURLCreate returned: success=%d, create=%lld ms, "
+                "elapsed=%lld ms", timing.requestId, timing.operation, created, timing.createMs,
+                timing.ElapsedMs());
+      if (created)
       {
         if (!userAgent.empty())
           file.CURLAddOption(ADDON_CURL_OPTION_PROTOCOL, "User-Agent", userAgent);
@@ -510,38 +610,88 @@ void CCheevos::RcheevosServerCall(const rc_api_request_t* request,
         if (!postData.empty())
           file.CURLAddOption(ADDON_CURL_OPTION_PROTOCOL, "postdata", Base64Encode(postData));
 
-        if (file.CURLOpen(ADDON_READ_NO_CACHE | ADDON_READ_TRUNCATED))
+        timing.LogCheckpoint("CURLOpen starting");
+        const auto openStarted = std::chrono::steady_clock::now();
+        const bool opened = file.CURLOpen(ADDON_READ_NO_CACHE | ADDON_READ_TRUNCATED);
+        const auto openFinished = std::chrono::steady_clock::now();
+        timing.openMs = Milliseconds(openFinished - openStarted);
+        timing.outcome = "curlopen-failed";
+        kodi::Log(ADDON_LOG_DEBUG,
+                  "CCheevos: RA request #%llu %s CURLOpen returned: success=%d, open=%lld ms, "
+                  "elapsed=%lld ms", timing.requestId, timing.operation, opened, timing.openMs,
+                  timing.ElapsedMs());
+        if (opened)
         {
           char buffer[HTTP_READ_CHUNK];
-          ssize_t bytesRead;
+          ssize_t bytesRead = 0;
+          timing.LogCheckpoint("read loop starting");
+          const auto readStarted = std::chrono::steady_clock::now();
           while (!cheevos->m_shuttingDown && std::chrono::steady_clock::now() < deadline &&
                  (bytesRead = file.Read(buffer, sizeof(buffer))) > 0)
+          {
+            if (timing.ttfbMs < 0)
+            {
+              // First byte delivered by VFS, which may already have buffered data in CURLOpen.
+              timing.ttfbMs = Milliseconds(std::chrono::steady_clock::now() - openStarted);
+              kodi::Log(ADDON_LOG_DEBUG,
+                        "CCheevos: RA request #%llu %s first Read bytes: ttfb=%lld ms, "
+                        "elapsed=%lld ms", timing.requestId, timing.operation, timing.ttfbMs,
+                        timing.ElapsedMs());
+            }
+            timing.bytes += static_cast<size_t>(bytesRead);
             responseData.append(buffer, static_cast<size_t>(bytesRead));
+          }
+          timing.readMs = Milliseconds(std::chrono::steady_clock::now() - readStarted);
+          timing.outcome = bytesRead < 0 ? "read-error" : "read-ended";
+          kodi::Log(ADDON_LOG_DEBUG,
+                    "CCheevos: RA request #%llu %s read loop completed: result=%s, read=%lld ms, "
+                    "bytes=%zu, elapsed=%lld ms", timing.requestId, timing.operation,
+                    timing.outcome, timing.readMs, timing.bytes, timing.ElapsedMs());
 
           if (!cheevos->m_shuttingDown && std::chrono::steady_clock::now() < deadline)
           {
+            timing.LogCheckpoint("HTTP status querying");
             statusCode = ParseHttpStatus(
                 file.GetPropertyValue(ADDON_FILE_PROPERTY_RESPONSE_PROTOCOL, ""));
+            // Diagnostic only: preserve the existing status/body even after a negative Read.
+            if (bytesRead >= 0)
+              timing.outcome =
+                  statusCode == HTTP_STATUS_NO_RESPONSE ? "no-http-status" : "http-response";
+            kodi::Log(ADDON_LOG_DEBUG,
+                      "CCheevos: RA request #%llu %s HTTP status obtained: status=%u, elapsed=%lld ms",
+                      timing.requestId, timing.operation, statusCode, timing.ElapsedMs());
           }
           else
           {
+            timing.outcome = cheevos->m_shuttingDown ? "shutdown-cancelled" : "deadline-reached";
+            timing.LogCheckpoint(timing.outcome);
             responseData.clear();
           }
 
+          timing.LogCheckpoint("Close starting");
           file.Close();
+          timing.LogCheckpoint("Close returned");
         }
       }
     }
     catch (...)
     {
+      timing.outcome = "exception";
+      timing.LogCheckpoint(timing.outcome);
       responseData.clear();
     }
 
+    // Observations only; do not add deadline/shutdown gates around blocking VFS calls.
+    timing.deadlineReached = std::chrono::steady_clock::now() >= deadline;
+    timing.shutdownObserved = cheevos->m_shuttingDown;
     if (statusCode == HTTP_STATUS_NO_RESPONSE)
-      kodi::Log(ADDON_LOG_ERROR, "CCheevos: request failed: %s", url.c_str());
+      kodi::Log(ADDON_LOG_ERROR, "CCheevos: RA request #%llu %s failed: result=%s, "
+                "deadline=%d, shutdown=%d, elapsed=%lld ms", timing.requestId, timing.operation,
+                timing.outcome, timing.deadlineReached, timing.shutdownObserved, timing.ElapsedMs());
 
+    timing.LogCheckpoint("queueing response");
     cheevos->QueueServerResponse(callback, callback_data, std::move(responseData),
-                                 static_cast<int>(statusCode));
+                                 static_cast<int>(statusCode), std::move(timing));
   };
 
   {
@@ -549,8 +699,11 @@ void CCheevos::RcheevosServerCall(const rc_api_request_t* request,
 
     if (cheevos->m_shuttingDown)
     {
+      timing.outcome = "shutdown-cancelled";
+      timing.shutdownObserved = true;
       cheevos->m_serverResponses.push_back(
-          {callback, callback_data, {}, HTTP_STATUS_NO_RESPONSE});
+          {callback, callback_data, {}, HTTP_STATUS_NO_RESPONSE, std::move(timing)});
+      cheevos->m_serverResponses.back().timing.MarkQueued();
       return;
     }
 
@@ -564,8 +717,10 @@ void CCheevos::RcheevosServerCall(const rc_api_request_t* request,
     }
     catch (...)
     {
+      timing.outcome = "worker-launch-failed";
       cheevos->m_serverResponses.push_back(
-          {callback, callback_data, {}, HTTP_STATUS_NO_RESPONSE});
+          {callback, callback_data, {}, HTTP_STATUS_NO_RESPONSE, std::move(timing)});
+      cheevos->m_serverResponses.back().timing.MarkQueued();
     }
   }
 }
@@ -573,10 +728,12 @@ void CCheevos::RcheevosServerCall(const rc_api_request_t* request,
 void CCheevos::QueueServerResponse(rc_client_server_callback_t callback,
                                    void* callbackData,
                                    std::string body,
-                                   int statusCode)
+                                   int statusCode,
+                                   ServerRequestTiming timing)
 {
   std::lock_guard<std::mutex> lock(m_serverCallsMutex);
-  m_serverResponses.push_back({callback, callbackData, std::move(body), statusCode});
+  m_serverResponses.push_back({callback, callbackData, std::move(body), statusCode, std::move(timing)});
+  m_serverResponses.back().timing.MarkQueued();
 }
 
 void CCheevos::DispatchServerResponses()
@@ -598,6 +755,8 @@ void CCheevos::DispatchServerResponses()
       response.body = completed.body.c_str();
       response.body_length = completed.body.size();
       response.http_status_code = completed.statusCode;
+      completed.timing.LogCheckpoint("response dispatched to rcheevos callback");
+      completed.timing.LogCompleted(completed.statusCode);
       completed.callback(&response, completed.callbackData);
     }
   }
