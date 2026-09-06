@@ -107,12 +107,37 @@ public:
   bool DeserializeProgress(const uint8_t* buffer, size_t size);
 
 private:
+  // Copied into the worker, then moved with the response to the game thread.
+  struct ServerRequestTiming
+  {
+    unsigned long long requestId{0};
+    const char* operation{"unknown"}; // Only static, allowlisted operation names
+    std::chrono::steady_clock::time_point entered{};
+    // -1 means the checkpoint was not reached (or no body byte was received).
+    long long workerMs{-1};
+    long long createMs{-1};
+    long long openMs{-1};
+    long long ttfbMs{-1}; // CURLOpen start to first positive Read
+    long long readMs{-1};
+    long long responseQueuedMs{-1};
+    size_t bytes{0};
+    const char* outcome{"not-started"};
+    bool deadlineReached{false};
+    bool shutdownObserved{false};
+
+    long long ElapsedMs() const;
+    void LogCheckpoint(const char* checkpoint) const;
+    void MarkQueued();
+    void LogCompleted(int statusCode) const;
+  };
+
   struct ServerResponse
   {
     rc_client_server_callback_t callback{nullptr};
     void* callbackData{nullptr};
     std::string body;
     int statusCode{0};
+    ServerRequestTiming timing;
   };
 
   /*!
@@ -135,7 +160,8 @@ private:
   void QueueServerResponse(rc_client_server_callback_t callback,
                            void* callbackData,
                            std::string body,
-                           int statusCode);
+                           int statusCode,
+                           ServerRequestTiming timing);
   void DispatchServerResponses();
   void UpdateRichPresence();
 
