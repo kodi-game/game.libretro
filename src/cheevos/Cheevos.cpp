@@ -97,7 +97,6 @@ void CCheevos::Initialize(kodi::addon::CInstanceGame* gameInstance,
   rc_client_set_userdata(m_rcClient, this);
 
   rc_client_set_event_handler(m_rcClient, RcheevosEventHandler);
-  rc_client_set_hardcore_enabled(m_rcClient, 0);
 
   {
     char clause[RA_USER_AGENT_CLAUSE_SIZE]{};
@@ -140,9 +139,11 @@ void CCheevos::Initialize(kodi::addon::CInstanceGame* gameInstance,
       kodi::Log(ADDON_LOG_DEBUG, "rc_client: %s", message);
     });
 
-  // After logging is enabled, so the client reports the mode it starts in.
-  // Applied here as well as when it is set, because the frontend sends it once
-  // per game while the client is built per game.
+  // After logging is enabled, so the client reports the modes it starts in.
+  // Applied here as well as when they are set, because the frontend sends them
+  // once per game while the client is built per game. Before the game is
+  // identified, so that what it unlocks is credited to the right mode.
+  rc_client_set_hardcore_enabled(m_rcClient, m_hardcoreEnabled ? 1 : 0);
   rc_client_set_encore_mode_enabled(m_rcClient, m_encoreModeEnabled ? 1 : 0);
 
   // The frontend may not have supplied credentials yet, in which case
@@ -233,6 +234,19 @@ void CCheevos::Deinitialize()
   m_richPresenceActive = false;
   m_lastProgressSignature.clear();
   m_gameInstance = nullptr;
+}
+
+void CCheevos::SetHardcoreEnabled(bool enabled)
+{
+  m_hardcoreEnabled = enabled;
+
+  kodi::Log(ADDON_LOG_INFO, "CCheevos: hardcore mode %s", enabled ? "enabled" : "disabled");
+
+  // As for encore, this usually arrives before there is a client to tell.
+  // Switching it on with a game up raises RC_CLIENT_EVENT_RESET from inside
+  // this call, which is forwarded to the frontend.
+  if (m_rcClient != nullptr)
+    rc_client_set_hardcore_enabled(m_rcClient, enabled ? 1 : 0);
 }
 
 void CCheevos::SetEncoreModeEnabled(bool enabled)
