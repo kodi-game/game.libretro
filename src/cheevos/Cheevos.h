@@ -42,6 +42,17 @@ public:
                   const CLibretroMemory& memory);
   void Deinitialize();
 
+  /*!
+   * @brief Name the emulator the achievements will be earned on
+   *
+   * RetroAchievements approves emulators, not just frontends, and reads which
+   * one produced an unlock from the User-Agent. Taken from the core's own
+   * `retro_get_system_info()`, so it is the emulator's account of itself.
+   *
+   * Called as the core is loaded, which is before the client is built.
+   */
+  void SetCoreIdentity(const std::string& name, const std::string& version);
+
   /// @brief Store credentials from Kodi (called before LoadGame)
   void SetCredentials(const std::string& username, const std::string& token);
 
@@ -163,6 +174,11 @@ private:
   // Identifies this add-on to RetroAchievements, built once in Initialize()
   std::string m_userAgent;
   mutable std::mutex m_userAgentMutex;
+
+  // The emulator, as it describes itself
+  std::string m_coreName;
+  std::string m_coreVersion;
+
   std::atomic<bool> m_encoreModeEnabled{false};
   std::atomic<bool> m_loginStarted{false};
   bool m_loginRetryScheduled{false};
