@@ -119,6 +119,9 @@ ADDON_STATUS CGameLibRetro::Create()
     std::string libraryVersion = systemInfo.library_version ? systemInfo.library_version : "";
     std::string extensions = systemInfo.valid_extensions ? systemInfo.valid_extensions : "";
 
+    // RetroAchievements is told which emulator this is, from the same source
+    CCheevos::Get().SetCoreIdentity(libraryName, libraryVersion);
+
     dsyslog("CORE: ----------------------------------");
     dsyslog("CORE: Library name:    %s", libraryName.c_str());
     dsyslog("CORE: Library version: %s", libraryVersion.c_str());
