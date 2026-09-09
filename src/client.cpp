@@ -573,6 +573,14 @@ GAME_ERROR CGameLibRetro::GetMemory(GAME_MEMORY type, uint8_t*& data, size_t& si
 
 GAME_ERROR CGameLibRetro::SetCheat(unsigned int index, bool enabled, const std::string& code)
 {
+  // Refused here as well as in the frontend: this is the last point before the
+  // core, and RetroAchievements forbids cheats in hardcore
+  if (CCheevos::Get().IsHardcoreEnabled())
+  {
+    kodi::Log(ADDON_LOG_INFO, "Refusing to set a cheat in hardcore mode");
+    return GAME_ERROR_REJECTED;
+  }
+
   m_client.retro_cheat_set(index, enabled, code.c_str());
 
   return GAME_ERROR_NO_ERROR;
@@ -581,6 +589,12 @@ GAME_ERROR CGameLibRetro::SetCheat(unsigned int index, bool enabled, const std::
 GAME_ERROR CGameLibRetro::SetRetroAchievementsCredentials(const std::string& username, const std::string& token)
 {
   CCheevos::Get().SetCredentials(username, token);
+  return GAME_ERROR_NO_ERROR;
+}
+
+GAME_ERROR CGameLibRetro::RCSetHardcoreEnabled(bool enabled)
+{
+  CCheevos::Get().SetHardcoreEnabled(enabled);
   return GAME_ERROR_NO_ERROR;
 }
 
