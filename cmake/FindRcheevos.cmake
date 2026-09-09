@@ -11,6 +11,10 @@
 
 if(ENABLE_INTERNAL_RCHEEVOS)
   include(ExternalProject)
+  find_program(PATCH_EXECUTABLE NAMES patch)
+  if(NOT PATCH_EXECUTABLE)
+    message(FATAL_ERROR "patch is required to build internal rcheevos")
+  endif()
   file(STRINGS ${CMAKE_SOURCE_DIR}/depends/common/rcheevos/rcheevos.txt rcheevosurl REGEX "^rcheevos[\t ]*.+$")
   string(REGEX REPLACE "^rcheevos[\t ]*(.+)[\t ]*$" "\\1" url "${rcheevosurl}")
 
@@ -38,6 +42,8 @@ if(ENABLE_INTERNAL_RCHEEVOS)
                       DOWNLOAD_DIR ${CMAKE_BINARY_DIR}/download
                       PREFIX ${CMAKE_BINARY_DIR}/build/rcheevos
                       PATCH_COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/depends/common/rcheevos/CMakeLists.txt ${CMAKE_BINARY_DIR}/build/rcheevos/src/rcheevos/
+                      COMMAND ${PATCH_EXECUTABLE} -p1 -i ${CMAKE_SOURCE_DIR}/depends/common/rcheevos/0001-preserve-encore-unlock-times.patch
+                      COMMAND ${PATCH_EXECUTABLE} -p1 -i ${CMAKE_SOURCE_DIR}/depends/common/rcheevos/0002-expose-zero-achievement-progress.patch
                       CMAKE_ARGS
                         -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/build/depends
                         -DCMAKE_POSITION_INDEPENDENT_CODE=ON

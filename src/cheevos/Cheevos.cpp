@@ -122,6 +122,11 @@ void CCheevos::Initialize(kodi::addon::CInstanceGame* gameInstance,
       kodi::Log(ADDON_LOG_DEBUG, "rc_client: %s", message);
     });
 
+  // After logging is enabled, so the client reports the mode it starts in.
+  // Applied here as well as when it is set, because the frontend sends it once
+  // per game while the client is built per game.
+  rc_client_set_encore_mode_enabled(m_rcClient, m_encoreModeEnabled ? 1 : 0);
+
   // The frontend may not have supplied credentials yet, in which case
   // SetCredentials() starts the login when they arrive
   BeginLogin();
@@ -215,6 +220,18 @@ void CCheevos::Deinitialize()
   m_richPresenceActive = false;
   m_lastProgressSignature.clear();
   m_gameInstance = nullptr;
+}
+
+void CCheevos::SetEncoreModeEnabled(bool enabled)
+{
+  m_encoreModeEnabled = enabled;
+
+  kodi::Log(ADDON_LOG_INFO, "CCheevos: encore mode %s", enabled ? "enabled" : "disabled");
+
+  // Usually arrives before there is a client to tell: the frontend sends it as
+  // part of loading a game, and the client is created once that game is up
+  if (m_rcClient != nullptr)
+    rc_client_set_encore_mode_enabled(m_rcClient, enabled ? 1 : 0);
 }
 
 void CCheevos::SetCredentials(const std::string& username, const std::string& token)
@@ -696,9 +713,31 @@ void CCheevos::RcheevosEventHandler(const rc_client_event_t* event, rc_client_t*
     case RC_CLIENT_EVENT_ACHIEVEMENT_PROGRESS_INDICATOR_SHOW:
     case RC_CLIENT_EVENT_ACHIEVEMENT_PROGRESS_INDICATOR_UPDATE:
     {
-      // rc_client reports one achievement at a time, but the frontend shows a
-      // snapshot of every measured achievement, so publish the whole set
+      // Two different things want this. The achievements dialog shows a
+      // snapshot of every measured achievement, so publish the whole set; the
+      // on-screen indicator shows the one the runtime picked out.
       cheevos->PublishAchievementProgress();
+
+      const rc_client_achievement_t* ach = event->achievement;
+      if (ach != nullptr)
+      {
+        game_rc_achievement_progress_indicator data{};
+        data.id = ach->id;
+        data.title = ach->title;
+        data.badge_url = ach->badge_url;
+        data.measured_progress = ach->measured_progress;
+        data.measured_percent = ach->measured_percent;
+
+        kodi::Log(ADDON_LOG_DEBUG,
+                  "CCheevos: progress indicator for achievement %u '%s' at %s (%.0f%%)", ach->id,
+                  ach->title != nullptr ? ach->title : "", ach->measured_progress,
+                  ach->measured_percent);
+
+        if (event->type == RC_CLIENT_EVENT_ACHIEVEMENT_PROGRESS_INDICATOR_UPDATE)
+          cheevos->m_gameInstance->RCOnAchievementProgressUpdate(data);
+        else
+          cheevos->m_gameInstance->RCOnAchievementProgressIndicator(data, true);
+      }
       break;
     }
     case RC_CLIENT_EVENT_SERVER_ERROR:
@@ -722,6 +761,119 @@ void CCheevos::RcheevosEventHandler(const rc_client_event_t* event, rc_client_t*
     {
       kodi::Log(ADDON_LOG_INFO, "CCheevos: reconnected to RetroAchievements");
       cheevos->m_gameInstance->RCOnConnectionChanged(true);
+      break;
+    }
+    case RC_CLIENT_EVENT_ACHIEVEMENT_PROGRESS_INDICATOR_HIDE:
+    {
+      // The achievement stopped reporting progress. Republish so the
+      // frontend's snapshot drops it rather than showing a stale bar.
+      cheevos->PublishAchievementProgress();
+
+      // rc_client may send no achievement with the hide, in which case an id
+      // of zero tells the frontend to clear whatever it is showing
+      game_rc_achievement_progress_indicator data{};
+      const rc_client_achievement_t* ach = event->achievement;
+      if (ach != nullptr)
+        data.id = ach->id;
+
+      cheevos->m_gameInstance->RCOnAchievementProgressIndicator(data, false);
+      break;
+    }
+    case RC_CLIENT_EVENT_ACHIEVEMENT_CHALLENGE_INDICATOR_SHOW:
+    case RC_CLIENT_EVENT_ACHIEVEMENT_CHALLENGE_INDICATOR_HIDE:
+    {
+      const rc_client_achievement_t* ach = event->achievement;
+      if (ach != nullptr)
+      {
+        const bool show = (event->type == RC_CLIENT_EVENT_ACHIEVEMENT_CHALLENGE_INDICATOR_SHOW);
+
+        game_rc_achievement_challenge data{};
+        data.id = ach->id;
+        data.title = ach->title;
+        data.badge_url = ach->badge_url;
+
+        kodi::Log(ADDON_LOG_DEBUG, "CCheevos: challenge indicator %s for achievement %u '%s'",
+                  show ? "show" : "hide", ach->id, ach->title != nullptr ? ach->title : "");
+
+        cheevos->m_gameInstance->RCOnChallengeIndicator(data, show);
+      }
+      break;
+    }
+    case RC_CLIENT_EVENT_SUBSET_COMPLETED:
+    {
+      const rc_client_subset_t* subset = event->subset;
+      const char* title = (subset != nullptr && subset->title != nullptr) ? subset->title : "";
+      cheevos->m_gameInstance->RCOnSubsetCompleted(title);
+      break;
+    }
+    case RC_CLIENT_EVENT_RESET:
+    {
+      // Raised when a mode change invalidates the session in progress
+      kodi::Log(ADDON_LOG_INFO, "CCheevos: runtime requested a reset");
+      cheevos->m_gameInstance->RCOnReset();
+      break;
+    }
+    case RC_CLIENT_EVENT_LEADERBOARD_STARTED:
+    case RC_CLIENT_EVENT_LEADERBOARD_FAILED:
+    case RC_CLIENT_EVENT_LEADERBOARD_SUBMITTED:
+    {
+      const rc_client_leaderboard_t* lb = event->leaderboard;
+      if (lb != nullptr)
+      {
+        game_rc_leaderboard data{};
+        data.id = lb->id;
+        data.title = lb->title;
+        data.description = lb->description;
+        data.value = lb->tracker_value;
+
+        if (event->type == RC_CLIENT_EVENT_LEADERBOARD_STARTED)
+          cheevos->m_gameInstance->RCOnLeaderboardStarted(data);
+        else if (event->type == RC_CLIENT_EVENT_LEADERBOARD_FAILED)
+          cheevos->m_gameInstance->RCOnLeaderboardFailed(data);
+        else
+          cheevos->m_gameInstance->RCOnLeaderboardSubmitted(data);
+      }
+      break;
+    }
+    case RC_CLIENT_EVENT_LEADERBOARD_SCOREBOARD:
+    {
+      const rc_client_leaderboard_scoreboard_t* sb = event->leaderboard_scoreboard;
+      if (sb != nullptr)
+      {
+        // submitted_score and best_score are fixed-size buffers rather than
+        // pointers, so they are always safe to pass
+        game_rc_leaderboard_scoreboard data{};
+        data.id = sb->leaderboard_id;
+        data.submitted_score = sb->submitted_score;
+        data.best_score = sb->best_score;
+        data.new_rank = sb->new_rank;
+        data.num_entries = sb->num_entries;
+
+        kodi::Log(ADDON_LOG_INFO, "CCheevos: leaderboard %u placed %u of %u", sb->leaderboard_id,
+                  sb->new_rank, sb->num_entries);
+
+        cheevos->m_gameInstance->RCOnLeaderboardScoreboard(data);
+      }
+      break;
+    }
+    case RC_CLIENT_EVENT_LEADERBOARD_TRACKER_SHOW:
+    case RC_CLIENT_EVENT_LEADERBOARD_TRACKER_HIDE:
+    case RC_CLIENT_EVENT_LEADERBOARD_TRACKER_UPDATE:
+    {
+      const rc_client_leaderboard_tracker_t* tracker = event->leaderboard_tracker;
+      if (tracker != nullptr)
+      {
+        game_rc_leaderboard_tracker data{};
+        data.id = tracker->id;
+        data.display = tracker->display;
+
+        if (event->type == RC_CLIENT_EVENT_LEADERBOARD_TRACKER_HIDE)
+          cheevos->m_gameInstance->RCOnLeaderboardTracker(data, false);
+        else if (event->type == RC_CLIENT_EVENT_LEADERBOARD_TRACKER_UPDATE)
+          cheevos->m_gameInstance->RCOnLeaderboardTrackerUpdate(data);
+        else
+          cheevos->m_gameInstance->RCOnLeaderboardTracker(data, true);
+      }
       break;
     }
     default:

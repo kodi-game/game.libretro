@@ -537,6 +537,12 @@ GAME_ERROR CGameLibRetro::SetRetroAchievementsCredentials(const std::string& use
   return GAME_ERROR_NO_ERROR;
 }
 
+GAME_ERROR CGameLibRetro::RCSetEncoreModeEnabled(bool enabled)
+{
+  CCheevos::Get().SetEncoreModeEnabled(enabled);
+  return GAME_ERROR_NO_ERROR;
+}
+
 GAME_ERROR CGameLibRetro::ActivateAchievement(unsigned cheevo_id, const std::string& memAddrExpression)
 {
   return GAME_ERROR_NOT_IMPLEMENTED;
