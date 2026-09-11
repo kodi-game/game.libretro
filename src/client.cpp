@@ -310,6 +310,16 @@ GAME_ERROR CGameLibRetro::Reset()
   return GAME_ERROR_NO_ERROR;
 }
 
+GAME_ERROR CGameLibRetro::HwContextReset()
+{
+  return m_clientBridge.HwContextReset();
+}
+
+GAME_ERROR CGameLibRetro::HwContextDestroy()
+{
+  return m_clientBridge.HwContextDestroy();
+}
+
 /*!
  * \Brief Notify a core about audio being available for writing
  *
