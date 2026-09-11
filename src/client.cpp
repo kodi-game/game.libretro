@@ -341,16 +341,6 @@ GAME_ERROR CGameLibRetro::AudioAvailable()
   return m_clientBridge.AudioAvailable();
 }
 
-GAME_ERROR CGameLibRetro::HwContextReset()
-{
-  return m_clientBridge.HwContextReset();
-}
-
-GAME_ERROR CGameLibRetro::HwContextDestroy()
-{
-  return m_clientBridge.HwContextDestroy();
-}
-
 bool CGameLibRetro::HasFeature(const std::string& controller_id, const std::string& feature_name)
 {
   return CButtonMapper::Get().GetLibretroIndex(controller_id, feature_name) >= 0;
