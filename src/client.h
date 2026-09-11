@@ -51,6 +51,10 @@ public:
   GAME_ERROR HwContextReset() override;
   GAME_ERROR HwContextDestroy() override;
 
+  // --- Audio operations --------------------------------------------------------
+
+  GAME_ERROR AudioAvailable() override;
+
   // --- Input operations --------------------------------------------------------
 
   bool HasFeature(const std::string& controller_id, const std::string& feature_name) override;
@@ -99,8 +103,6 @@ public:
   std::string GetImageLabel(unsigned int imageIndex) override;
 
 private:
-  GAME_ERROR AudioAvailable();
-
   LIBRETRO::Timer                         m_timer;
   LIBRETRO::CLibretroDLL                  m_client;
   LIBRETRO::CClientBridge                 m_clientBridge;
