@@ -267,9 +267,17 @@ GAME_ERROR CGameLibRetro::GetGameTiming(game_system_timing& timing_info)
   timing_info.sample_rate = retro_info.timing.sample_rate;
 
   // Report info to CLibretroEnvironment
-  CLibretroEnvironment::Get().UpdateVideoGeometry(retro_info.geometry);
+  CLibretroEnvironment::Get().UpdateVideoGeometry(retro_info.geometry, true);
   CLibretroEnvironment::Get().VideoTiming().SetFrameRate(retro_info.timing.fps);
   CLibretroEnvironment::Get().AudioTiming().SetSampleRate(retro_info.timing.sample_rate);
+
+  // The geometry the hardware rendering stream needs is now known, so bring the
+  // core's context up before the frontend asks anything that depends on it.
+  // Failing here fails the load: a core that asked for hardware rendering and
+  // did not get it cannot be run, and this is the last point at which the
+  // frontend will still abandon the game cleanly.
+  if (!CLibretroEnvironment::Get().Video().OpenHwStream())
+    return GAME_ERROR_FAILED;
 
   return GAME_ERROR_NO_ERROR;
 }
@@ -292,6 +300,15 @@ GAME_ERROR CGameLibRetro::RunFrame()
   m_clientBridge.FrameTime(delta);
 
   CLibretroEnvironment::Get().OnFrameBegin();
+
+  // Logged once, to separate a core that is not being run at all from one that
+  // runs but never presents a frame. A black picture looks the same either way.
+  static bool bLoggedFirstRun = false;
+  if (!bLoggedFirstRun)
+  {
+    bLoggedFirstRun = true;
+    kodi::Log(ADDON_LOG_INFO, "Running the core's first frame");
+  }
 
   m_client.retro_run();
 

@@ -17,6 +17,18 @@ include_directories(${KODI_INCLUDE_DIR}
                     ${TINYXML_INCLUDE_DIRS}
                     ${RCHEEVOS_INCLUDE_DIRS})
 
+# Game API 7.0.0 gives the hardware framebuffer structures a size: the largest
+# frame a core will draw, and the size of each frame it actually draws. Against
+# an older API the fields are not there, so build without them and let the
+# frontend fall back to showing the whole framebuffer. Detected rather than
+# version-tested, because the two land together and either may arrive first.
+include(CheckStructHasMember)
+check_struct_has_member("game_stream_hw_framebuffer_packet"
+                        width
+                        "${KODI_INCLUDE_DIR}/c-api/addon-instance/game.h"
+                        HAVE_GAME_HW_FRAMEBUFFER_SIZE
+                        LANGUAGE CXX)
+
 list(APPEND DEPLIBS ${TINYXML_LIBRARIES})
 list(APPEND DEPLIBS ${RCHEEVOS_LIBRARIES})
 
@@ -111,6 +123,10 @@ set(LIBRETRO_HEADERS src/GameInfoLoader.h
 )
 
 build_addon(${PROJECT_NAME} LIBRETRO DEPLIBS)
+
+if(HAVE_GAME_HW_FRAMEBUFFER_SIZE)
+  target_compile_definitions(${PROJECT_NAME} PRIVATE HAVE_GAME_HW_FRAMEBUFFER_SIZE)
+endif()
 
 if(ENABLE_INTERNAL_LIBRETROCOMMON)
   add_dependencies(${PROJECT_NAME} libretro-common)
