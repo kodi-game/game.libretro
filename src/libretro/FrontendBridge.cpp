@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <assert.h>
+#include <chrono>
 #include <kodi/Filesystem.h>
 #include <kodi/General.h>
 #include <limits>
@@ -321,7 +322,9 @@ void CFrontendBridge::StopCamera(void)
 
 retro_time_t CFrontendBridge::PerfGetTimeUsec(void)
 {
-  return 0; // Not implemented
+  return std::chrono::duration_cast<std::chrono::microseconds>(
+             std::chrono::steady_clock::now().time_since_epoch())
+      .count();
 }
 
 retro_perf_tick_t CFrontendBridge::PerfGetCounter(void)
