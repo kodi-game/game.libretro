@@ -162,6 +162,8 @@ ADDON_STATUS CGameLibRetro::SetSetting(const std::string& settingName, const kod
 
 GAME_ERROR CGameLibRetro::LoadGame(const std::string& url)
 {
+  CLibretroEnvironment::Get().InitializeStreams();
+
   // Build info loader vector
   SAFE_DELETE_GAME_INFO(m_gameInfo);
   m_gameInfo.push_back(new CGameInfoLoader(url, m_supportsVFS));
@@ -236,6 +238,8 @@ GAME_ERROR CGameLibRetro::LoadGameSpecial(SPECIAL_GAME_TYPE type, const std::vec
 
 GAME_ERROR CGameLibRetro::LoadStandalone()
 {
+  CLibretroEnvironment::Get().InitializeStreams();
+
   if (!m_client.retro_load_game(nullptr))
     return GAME_ERROR_FAILED;
 

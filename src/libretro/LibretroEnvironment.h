@@ -50,6 +50,7 @@ namespace LIBRETRO
     CAudioStream& Audio(void) { return m_audioStream; }
     CAudioTiming& AudioTiming(void) { return m_audioTiming; }
 
+    void InitializeStreams();
     void CloseStreams();
 
     void UpdateVideoGeometry(const retro_game_geometry &geometry);

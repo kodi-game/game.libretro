@@ -52,8 +52,7 @@ void CLibretroEnvironment::InitializeEnvironment(CGameLibRetro* addon,
   m_client = client;
   m_clientBridge = clientBridge;
 
-  m_videoStream.Initialize(m_addon);
-  m_audioStream.Initialize(m_addon);
+  InitializeStreams();
 
   m_settings.Initialize(m_addon);
   m_resources.Initialize(m_addon);
@@ -78,6 +77,12 @@ void CLibretroEnvironment::Deinitialize()
 
   m_resources.Deinitialize();
   m_settings.Deinitialize();
+}
+
+void CLibretroEnvironment::InitializeStreams()
+{
+  m_videoStream.Initialize(m_addon);
+  m_audioStream.Initialize(m_addon);
 }
 
 void CLibretroEnvironment::CloseStreams()
