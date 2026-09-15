@@ -28,19 +28,29 @@ namespace LIBRETRO
 
     void SetGeometry(const CVideoGeometry &geometry);
 
+    /*!
+     * \brief The geometry currently in force
+     */
+    const CVideoGeometry& Geometry() const { return *m_geometry; }
+
     bool EnableHardwareRendering();
+    void DisableHardwareRendering();
 
     uintptr_t GetHwFramebuffer();
     bool GetSwFramebuffer(unsigned int width, unsigned int height, GAME_PIXEL_FORMAT requestedFormat, game_stream_sw_framebuffer_buffer &framebuffer);
 
     void AddFrame(const uint8_t* data, unsigned int size, unsigned int width, unsigned int height, GAME_PIXEL_FORMAT format, GAME_VIDEO_ROTATION rotation);
     void DupeFrame() { } // Not supported
-    void RenderHwFrame();
+    void RenderHwFrame(unsigned int width, unsigned int height);
+
+    bool OpenHwStream();
 
     void OnFrameBegin();
     void OnFrameEnd();
 
   private:
+    void ReleaseOutgrownFramebuffer(const CVideoGeometry &geometry);
+
     void CloseStream();
 
     // Initialization parameters
@@ -52,5 +62,7 @@ namespace LIBRETRO
     GAME_STREAM_TYPE m_streamType = GAME_STREAM_UNKNOWN;
     GAME_PIXEL_FORMAT m_format = GAME_PIXEL_FORMAT_UNKNOWN; // Guard against libretro changing formats
     std::unique_ptr<game_stream_buffer> m_framebuffer;
+    unsigned int m_framebufferWidth = 0;
+    unsigned int m_framebufferHeight = 0;
   };
 }
