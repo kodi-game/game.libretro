@@ -333,6 +333,12 @@ GAME_ERROR CGameLibRetro::Reset()
 
 GAME_ERROR CGameLibRetro::HwContextReset()
 {
+  if (CLibretroEnvironment::Get().Video().GetHwFramebuffer() == 0)
+  {
+    kodi::Log(ADDON_LOG_ERROR, "Cannot reset hardware context without a framebuffer");
+    return GAME_ERROR_FAILED;
+  }
+
   return m_clientBridge.HwContextReset();
 }
 

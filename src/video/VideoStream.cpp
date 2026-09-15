@@ -133,14 +133,18 @@ uintptr_t CVideoStream::GetHwFramebuffer()
     // a zero-initialised buffer is always refused
     framebuffer->type = GAME_STREAM_HW_FRAMEBUFFER;
 
-    // Don't cache a failed lookup, or the core would be stuck with a
-    // framebuffer of 0 for the rest of the session. The frontend may not have
-    // a renderer ready yet on the first few frames.
+    // Stream startup prepares the framebuffer before invoking context reset.
     if (!m_stream.GetBuffer(width, height, *framebuffer))
+    {
+      kodi::Log(ADDON_LOG_ERROR, "Failed to acquire the hardware framebuffer (%ux%u)", width, height);
       return 0;
+    }
 
     if (framebuffer->hw_framebuffer.framebuffer == 0)
+    {
+      kodi::Log(ADDON_LOG_ERROR, "Frontend returned an invalid hardware framebuffer");
       return 0;
+    }
 
     m_framebuffer = std::move(framebuffer);
     m_framebufferWidth = width;
@@ -290,6 +294,7 @@ void CVideoStream::RenderHwFrame(unsigned int width, unsigned int height)
   // whole framebuffer, so the image sits in a corner of it.
   packet.hw_framebuffer.width = width;
   packet.hw_framebuffer.height = height;
+  packet.hw_framebuffer.display_aspect_ratio = m_geometry->DisplayAspectRatio();
 
   m_stream.AddData(packet);
 }
@@ -322,9 +327,11 @@ bool CVideoStream::OpenHwStream()
     game_stream_properties streamProperties{GAME_STREAM_HW_FRAMEBUFFER};
     streamProperties.hw_framebuffer.max_width = m_geometry->MaxWidth();
     streamProperties.hw_framebuffer.max_height = m_geometry->MaxHeight();
+    streamProperties.hw_framebuffer.nominal_display_aspect_ratio = m_geometry->DisplayAspectRatio();
 
     if (!m_stream.Open(streamProperties))
     {
+      CloseStream();
       // This will stop the stream from trying to be opened twice
       m_streamType = GAME_STREAM_UNKNOWN;
 
@@ -339,15 +346,6 @@ bool CVideoStream::OpenHwStream()
       // Report the failure instead and let the caller fail the load.
       kodi::Log(ADDON_LOG_ERROR, "Failed to open the hardware rendering stream");
       return false;
-    }
-    else if (m_addon != nullptr)
-    {
-      // Tell the core its context is ready, now that the stream is open.
-      // This cannot happen while the stream is being opened: cores ask for
-      // their framebuffer from inside context_reset, and the stream has no
-      // handle to ask through until Open() has returned.
-      kodi::Log(ADDON_LOG_DEBUG, "Hardware rendering stream open, resetting core context");
-      m_addon->HwContextReset();
     }
   }
 

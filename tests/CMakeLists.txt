@@ -18,4 +18,6 @@ target_compile_features(test_reload PRIVATE cxx_std_11)
 enable_testing()
 add_test(NAME retained_instance_reload
          COMMAND test_reload "${GAME_LIBRETRO_LIBRARY}" $<TARGET_FILE:reload_core>)
-set_tests_properties(retained_instance_reload PROPERTIES TIMEOUT 10)
+add_test(NAME hardware_stream_lifecycle
+         COMMAND test_reload "${GAME_LIBRETRO_LIBRARY}" $<TARGET_FILE:reload_core> hardware)
+set_tests_properties(retained_instance_reload hardware_stream_lifecycle PROPERTIES TIMEOUT 10)
