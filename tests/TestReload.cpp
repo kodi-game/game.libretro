@@ -216,6 +216,9 @@ int main(int argc, char** argv)
   const bool testPreference = std::strncmp(scenario, "preferred_", 10) == 0;
   const bool testHandoff = std::strcmp(scenario, "retained_hardware_software") == 0;
   const bool testGrowth = std::strcmp(scenario, "hardware_geometry_growth") == 0;
+  const bool testFailedLoad = std::strncmp(scenario, "failed_load_", 12) == 0;
+  const bool memoryRetry = std::strcmp(scenario, "failed_load_memory_retry") == 0;
+  const bool standaloneFailure = std::strcmp(scenario, "failed_load_standalone") == 0;
   if (std::strcmp(scenario, "preferred_gles") == 0)
     backend = HardwareBackend::OpenGLES;
   else if (std::strcmp(scenario, "preferred_none") == 0)
@@ -229,6 +232,7 @@ int main(int argc, char** argv)
       dlsym(coreLibrary, "test_core_environment"));
   Require(environment != nullptr, "fixture environment unavailable");
   ReloadCoreState& core = *getCoreState();
+  core.memoryLoad = memoryRetry;
   core.hardware = testHardware || testGrowth;
   core.growGeometry = testGrowth;
   geometryGrowth = testGrowth;
@@ -246,6 +250,16 @@ int main(int argc, char** argv)
   AddonToKodiFuncTable_kodi_filesystem filesystemCallbacks{};
   filesystemCallbacks.directory_exists = [](void*, const char*) { return true; };
   filesystemCallbacks.file_exists = [](void*, const char*, bool) { return false; };
+  filesystemCallbacks.stat_file = [](void*, const char*, STAT_STRUCTURE*) { return false; };
+  if (memoryRetry)
+  {
+    filesystemCallbacks.file_exists = [](void*, const char*, bool) { return true; };
+    filesystemCallbacks.open_file = [](void*, const char*, unsigned int) -> void*
+    { return new int; };
+    filesystemCallbacks.read_file = [](void*, void*, void* buffer, size_t) -> ssize_t
+    { *static_cast<char*>(buffer) = 0; return 1; };
+    filesystemCallbacks.close_file = [](void*, void* file) { delete static_cast<int*>(file); };
+  }
   AddonToKodiFuncTable_kodi_network networkCallbacks{};
   networkCallbacks.get_user_agent = [](void*) { return strdup("reload-test"); };
   AddonToKodiFuncTable_Addon callbacks{};
@@ -256,6 +270,7 @@ int main(int argc, char** argv)
   callbacks.kodi_network = &networkCallbacks;
 
   AddonProps_Game properties{};
+  properties.supports_vfs = memoryRetry;
   properties.game_client_dll_path = argv[2];
   properties.profile_directory = "/unused-reload-test";
   AddonToKodiFuncTable_Game gameCallbacks{};
@@ -295,7 +310,88 @@ int main(int argc, char** argv)
   const ADDON_STATUS status = create(&interface);
   Require(status == ADDON_STATUS_OK || status == ADDON_STATUS_NEED_SETTINGS, "addon creation failed");
 
-  if (testGrowth)
+  if (testFailedLoad)
+  {
+    const auto load = [&]
+    {
+      return standaloneFailure ? gameFunctions.LoadStandalone(&game)
+                               : gameFunctions.LoadGame(&game, "reload.test");
+    };
+    const auto checkCleared = [&]
+    {
+      Require(streams.empty(), "failed load left a stream open");
+      Require(negotiated.context_type == GAME_HW_CONTEXT_NONE && !hardwareRefused,
+              "failed load retained frontend hardware negotiation");
+      const auto resets = core.resets;
+      const auto destroys = core.destroys;
+      gameFunctions.HwContextReset(&game);
+      gameFunctions.HwContextDestroy(&game);
+      Require(core.resets == resets && core.destroys == destroys,
+              "failed load retained core hardware callbacks");
+      Require(core.failedCallbacks == 0, "callback from failed load was invoked");
+    };
+    const auto runAndUnload = [&]
+    {
+      game_system_timing timing{};
+      Require(gameFunctions.GetGameTiming(&game, &timing) == GAME_ERROR_NO_ERROR,
+              "retry timing failed");
+      contextCurrent = core.hardware;
+      Require(gameFunctions.RunFrame(&game) == GAME_ERROR_NO_ERROR, "retry frame failed");
+      contextCurrent = false;
+      DestroyHardwareContexts();
+      Require(gameFunctions.UnloadGame(&game) == GAME_ERROR_NO_ERROR, "retry unload failed");
+      checkCleared();
+    };
+
+    if (memoryRetry)
+    {
+      core.hardware = true;
+      core.failedLoads = 1;
+      core.softwareAfterFailure = true;
+      Require(load() == GAME_ERROR_NO_ERROR, "memory-to-path retry failed");
+      Require(core.loadAttempts == 2 && core.memoryAttempts == 1,
+              "memory-to-path fallback was not exercised");
+      runAndUnload();
+      Require(videoPackets == 1 && hardwareOpens == 0 && core.resets == 0 && core.destroys == 0,
+              "software fallback inherited failed hardware load");
+    }
+    else
+    {
+      for (unsigned cycle = 0; cycle < 6; ++cycle)
+      {
+        core.hardware = cycle != 4;
+        core.emitFailureFrame = cycle == 4;
+        core.probeBeforeLoad = cycle == 3;
+        core.failedLoads = 1;
+        backend = cycle == 5 ? HardwareBackend::None : HardwareBackend::OpenGL;
+        Require(load() == GAME_ERROR_FAILED, "fixture load should fail");
+        checkCleared();
+        Require(core.resets == 0 && core.destroys == 0 && hardwareOpens == 0,
+                "failed negotiation created or destroyed core GPU state");
+      }
+      backend = HardwareBackend::OpenGL;
+      core.failedLoads = 0;
+      core.probeBeforeLoad = false;
+      core.hardware = false;
+      core.emitFailureFrame = false;
+      Require(videoPackets == 1 && audioPackets == 1,
+              "failed load did not exercise stream creation");
+      Require(load() == GAME_ERROR_NO_ERROR, "retained software retry failed");
+      runAndUnload();
+      Require(videoPackets == 2 && hardwareOpens == 0, "software retry inherited hardware mode");
+      core.hardware = true;
+      Require(load() == GAME_ERROR_NO_ERROR, "retained hardware retry failed");
+      Require(negotiated.context_type != GAME_HW_CONTEXT_NONE,
+              "successful load lost its hardware negotiation");
+      gameFunctions.HwContextDestroy(&game);
+      Require(core.destroys == 0, "destroy callback ran before context reset");
+      runAndUnload();
+      Require(hardwarePackets == 1 && core.resets == 1 && core.destroys == 1,
+              "hardware retry did not preserve normal context lifecycle");
+    }
+    std::printf("PASS: %s\n", scenario);
+  }
+  else if (testGrowth)
   {
     Require(gameFunctions.LoadGame(&game, "reload.test") == GAME_ERROR_NO_ERROR, "growth load failed");
     game_system_timing timing{};
@@ -470,11 +566,11 @@ int main(int argc, char** argv)
         Require(core.resets == resets + 1, "libretro layered an extra reset over stream startup");
       }
       DestroyHardwareContexts();
-      Require(core.destroys == destroys + (failOpen ? 0 : 1), "core must release GPU state before unload");
+      Require(core.destroys == destroys + expectedResets, "core must release GPU state before unload");
       Require(gameFunctions.UnloadGame(&game) == GAME_ERROR_NO_ERROR, "hardware unload failed");
       Require(streams.empty(), "hardware unload must close all streams");
       Require(hardwareCloses == closes + (failOpen ? 0 : 1), "hardware stream closed more than once");
-      Require(core.destroys == destroys + (failOpen ? 0 : 1), "hardware context destroyed more than once");
+      Require(core.destroys == destroys + expectedResets, "hardware context destroyed more than once");
       Require(core.destroysAfterUnload == 0, "hardware context destroyed after core unload");
     }
     std::puts("PASS: hardware reset, framebuffer, restoration, DAR, rotation, "

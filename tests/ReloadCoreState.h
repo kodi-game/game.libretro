@@ -24,4 +24,12 @@ struct ReloadCoreState
   retro_hw_context_type contextType{RETRO_HW_CONTEXT_OPENGL};
   bool growGeometry{};
   uintptr_t geometryFramebuffer{};
+  bool memoryLoad{};
+  bool probeBeforeLoad{};
+  bool softwareAfterFailure{};
+  unsigned failedLoads{};
+  unsigned loadAttempts{};
+  unsigned memoryAttempts{};
+  bool emitFailureFrame{};
+  unsigned failedCallbacks{};
 };

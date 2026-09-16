@@ -22,6 +22,13 @@ use a small libretro fixture core on one retained addon instance:
   repeats growth on both axes, and verifies that `SET_GEOMETRY` ignores maxima.
   The core alternates framebuffer acquisition with using its cached framebuffer
   ID; the stream stays open without another context reset.
+- `failed_load_content` and `failed_load_standalone` repeat failed hardware
+  negotiations, preferred-render probing, frontend refusal, and a failure that
+  opens software video/audio streams. Subsequent software and hardware loads
+  must not inherit callbacks, stream mode, or frontend negotiation. They also
+  verify that context destruction cannot notify a core before context reset.
+- `failed_load_memory_retry` fails hardware loading from memory, then succeeds
+  with software through the same `LoadGame()` call's path fallback.
 
 Kodi callbacks are supplied in-process, including `StartStream()` and a fake
 framebuffer with ID 42. The hardware test exercises the real dev-kit, wrapper,

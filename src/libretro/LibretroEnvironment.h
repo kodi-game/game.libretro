@@ -51,6 +51,7 @@ namespace LIBRETRO
     CAudioTiming& AudioTiming(void) { return m_audioTiming; }
 
     void InitializeStreams();
+    void ResetLoadState();
     void CloseStreams();
 
     /*!

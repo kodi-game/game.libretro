@@ -107,6 +107,16 @@ void CLibretroEnvironment::CloseStreams()
 {
   m_videoStream.Deinitialize();
   m_audioStream.Deinitialize();
+  if (m_clientBridge)
+    m_clientBridge->ResetHardwareRendering();
+  if (m_addon)
+    m_addon->EnableHardwareRendering({});
+}
+
+void CLibretroEnvironment::ResetLoadState()
+{
+  CloseStreams();
+  InitializeStreams();
 }
 
 void CLibretroEnvironment::UpdateVideoGeometry(const retro_game_geometry &geometry,
@@ -287,8 +297,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
           // would otherwise go on to open a framebuffer that has just been
           // refused, and close the game part-way through the core's startup.
           m_videoStream.DisableHardwareRendering();
-          m_clientBridge->SetHwContextReset(nullptr);
-          m_clientBridge->SetHwContextDestroy(nullptr);
+          m_clientBridge->ResetHardwareRendering();
           typedData->get_current_framebuffer = nullptr;
           typedData->get_proc_address = nullptr;
           return false;

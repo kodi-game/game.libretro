@@ -34,7 +34,7 @@ void retro_deinit() {}
 unsigned retro_api_version() { return RETRO_API_VERSION; }
 void retro_get_system_info(retro_system_info* info)
 {
-  *info = {"Reload test", "1", "test", true, false};
+  *info = {"Reload test", "1", "test", !state.memoryLoad, false};
 }
 void retro_get_system_av_info(retro_system_av_info* info)
 {
@@ -100,10 +100,18 @@ bool retro_unserialize(const void*, size_t size)
 }
 void retro_cheat_reset() {}
 void retro_cheat_set(unsigned, bool, const char*) {}
-bool retro_load_game(const retro_game_info*)
+bool retro_load_game(const retro_game_info* info)
 {
   if (loaded)
     return false;
+  ++state.loadAttempts;
+  if (info && info->data)
+    ++state.memoryAttempts;
+  if (state.probeBeforeLoad)
+  {
+    retro_hw_context_type preferred = RETRO_HW_CONTEXT_NONE;
+    environment(RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER, &preferred);
+  }
   if (state.hardware)
   {
     state.frames = 0;
@@ -127,8 +135,29 @@ bool retro_load_game(const retro_game_info*)
         ++state.destroysAfterUnload;
       state.ready = false;
     };
+    if (state.failedLoads > 0)
+    {
+      hardware.context_reset = [] { ++state.failedCallbacks; };
+      hardware.context_destroy = [] { ++state.failedCallbacks; };
+    }
     if (!environment(RETRO_ENVIRONMENT_SET_HW_RENDER, &hardware))
       return false;
+  }
+  if (state.failedLoads > 0)
+  {
+    if (state.emitFailureFrame)
+    {
+      retro_system_av_info info{{2, 2, 2, 2, 1.0f}, {70.0, 48000.0}};
+      environment(RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO, &info);
+      const uint16_t pixels[] = {0x7c00, 0x03e0, 0x001f, 0x7fff};
+      const int16_t samples[] = {100, -100, 200, -200};
+      video(pixels, 2, 2, 2 * sizeof(uint16_t));
+      audio(samples, 2);
+    }
+    --state.failedLoads;
+    if (state.softwareAfterFailure)
+      state.hardware = false;
+    return false;
   }
   loaded = true;
   return true;

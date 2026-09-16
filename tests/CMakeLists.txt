@@ -26,3 +26,9 @@ foreach(scenario preferred_gl preferred_gles preferred_none retained_hardware_so
            COMMAND test_reload "${GAME_LIBRETRO_LIBRARY}" $<TARGET_FILE:reload_core> ${scenario})
   set_tests_properties(${scenario} PROPERTIES TIMEOUT 10)
 endforeach()
+
+foreach(scenario failed_load_content failed_load_standalone failed_load_memory_retry)
+  add_test(NAME ${scenario}
+           COMMAND test_reload "${GAME_LIBRETRO_LIBRARY}" $<TARGET_FILE:reload_core> ${scenario})
+  set_tests_properties(${scenario} PROPERTIES TIMEOUT 10)
+endforeach()

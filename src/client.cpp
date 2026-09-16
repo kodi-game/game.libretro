@@ -162,8 +162,6 @@ ADDON_STATUS CGameLibRetro::SetSetting(const std::string& settingName, const kod
 
 GAME_ERROR CGameLibRetro::LoadGame(const std::string& url)
 {
-  CLibretroEnvironment::Get().InitializeStreams();
-
   // Build info loader vector
   SAFE_DELETE_GAME_INFO(m_gameInfo);
   m_gameInfo.push_back(new CGameInfoLoader(url, m_supportsVFS));
@@ -175,14 +173,14 @@ GAME_ERROR CGameLibRetro::LoadGame(const std::string& url)
   if (m_gameInfo[0]->Load())
   {
     m_gameInfo[0]->GetMemoryStruct(gameInfo);
-    bResult = m_client.retro_load_game(&gameInfo);
+    bResult = LoadGameInternal(&gameInfo);
   }
 
   if (!bResult)
   {
     // Fall back to loading via path
     m_gameInfo[0]->GetPathStruct(gameInfo);
-    bResult = m_client.retro_load_game(&gameInfo);
+    bResult = LoadGameInternal(&gameInfo);
   }
 
   if (bResult)
@@ -238,12 +236,18 @@ GAME_ERROR CGameLibRetro::LoadGameSpecial(SPECIAL_GAME_TYPE type, const std::vec
 
 GAME_ERROR CGameLibRetro::LoadStandalone()
 {
-  CLibretroEnvironment::Get().InitializeStreams();
+  return LoadGameInternal(nullptr) ? GAME_ERROR_NO_ERROR : GAME_ERROR_FAILED;
+}
 
-  if (!m_client.retro_load_game(nullptr))
-    return GAME_ERROR_FAILED;
+bool CGameLibRetro::LoadGameInternal(const retro_game_info* gameInfo)
+{
+  auto& environment = CLibretroEnvironment::Get();
+  environment.ResetLoadState();
+  if (m_client.retro_load_game(gameInfo))
+    return true;
 
-  return GAME_ERROR_NO_ERROR;
+  environment.CloseStreams();
+  return false;
 }
 
 GAME_ERROR CGameLibRetro::UnloadGame()
