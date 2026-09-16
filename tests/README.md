@@ -9,7 +9,7 @@ use a small libretro fixture core on one retained addon instance:
   its stream handle, framebuffer acquisition inside reset, preframe serialization
   sizing and restoration, and one context destroy before the core unloads. A
   320x240 frame carries nominal 16:9 DAR and current DAR of 1.5, followed by zero
-  for square pixels. Nine loads
+  for square pixels, with all four counterclockwise frame rotations. Nine loads
   interleave successes with open, start, framebuffer-lookup, and framebuffer-zero
   failures to verify closure and recovery without reusing stale buffers.
 

@@ -295,6 +295,7 @@ void CVideoStream::RenderHwFrame(unsigned int width, unsigned int height)
   packet.hw_framebuffer.width = width;
   packet.hw_framebuffer.height = height;
   packet.hw_framebuffer.display_aspect_ratio = m_geometry->DisplayAspectRatio();
+  packet.hw_framebuffer.rotation = CLibretroEnvironment::Get().GetVideoRotation();
 
   m_stream.AddData(packet);
 }

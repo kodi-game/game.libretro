@@ -150,6 +150,11 @@ void AddStreamData(KODI_HANDLE, KODI_GAME_STREAM_HANDLE handle, const game_strea
             "incorrect hardware frame dimensions");
     Require(packet->hw_framebuffer.display_aspect_ratio == (hardwarePackets % 2 ? 0.0f : 1.5f),
             "current hardware display aspect ratio lost");
+    const GAME_VIDEO_ROTATION rotations[] = {
+        GAME_VIDEO_ROTATION_0, GAME_VIDEO_ROTATION_90_CCW,
+        GAME_VIDEO_ROTATION_180_CCW, GAME_VIDEO_ROTATION_270_CCW};
+    Require(packet->hw_framebuffer.rotation == rotations[hardwarePackets % 4],
+            "current hardware rotation lost");
     ++hardwarePackets;
   }
   else
@@ -271,13 +276,13 @@ int main(int argc, char** argv)
                 "preframe state restoration failed");
         Require(core.restores == restores + 1 && core.frames == 0, "restoration required a gameplay frame");
         const auto packets = hardwarePackets;
-        for (unsigned frame = 0; frame < 2; ++frame)
+        for (unsigned frame = 0; frame < 4; ++frame)
         {
           contextCurrent = true;
           Require(gameFunctions.RunFrame(&game) == GAME_ERROR_NO_ERROR, "hardware frame failed");
           contextCurrent = false;
         }
-        Require(hardwarePackets == packets + 2, "hardware frames were dropped");
+        Require(hardwarePackets == packets + 4, "hardware frames were dropped");
         Require(core.resets == resets + 1, "libretro layered an extra reset over stream startup");
       }
       DestroyHardwareContexts();
@@ -288,7 +293,8 @@ int main(int argc, char** argv)
       Require(core.destroys == destroys + (failOpen ? 0 : 1), "hardware context destroyed more than once");
       Require(core.destroysAfterUnload == 0, "hardware context destroyed after core unload");
     }
-    std::puts("PASS: hardware reset, framebuffer, restoration, DAR, failures, and reload");
+    std::puts("PASS: hardware reset, framebuffer, restoration, DAR, rotation, "
+              "failures, and reload");
   }
   else
   {

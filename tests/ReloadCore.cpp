@@ -51,6 +51,8 @@ void retro_run()
       ++state.frames;
       retro_game_geometry geometry{320, 240, 320, 240, state.frames % 2 ? 1.5f : 0.0f};
       environment(RETRO_ENVIRONMENT_SET_GEOMETRY, &geometry);
+      unsigned rotation = (state.frames - 1) % 4;
+      environment(RETRO_ENVIRONMENT_SET_ROTATION, &rotation);
       video(RETRO_HW_FRAME_BUFFER_VALID, 320, 240, 0);
       return;
     }
