@@ -11,7 +11,7 @@ endif()
 add_library(reload_core SHARED ReloadCore.cpp)
 target_include_directories(reload_core PRIVATE ${LIBRETRO_INCLUDE_DIR})
 add_executable(test_reload TestReload.cpp)
-target_include_directories(test_reload PRIVATE ${KODI_INCLUDE_DIR}/..)
+target_include_directories(test_reload PRIVATE ${KODI_INCLUDE_DIR}/.. ${LIBRETRO_INCLUDE_DIR})
 target_link_libraries(test_reload PRIVATE ${CMAKE_DL_LIBS})
 target_compile_features(test_reload PRIVATE cxx_std_11)
 
@@ -21,3 +21,8 @@ add_test(NAME retained_instance_reload
 add_test(NAME hardware_stream_lifecycle
          COMMAND test_reload "${GAME_LIBRETRO_LIBRARY}" $<TARGET_FILE:reload_core> hardware)
 set_tests_properties(retained_instance_reload hardware_stream_lifecycle PROPERTIES TIMEOUT 10)
+foreach(scenario preferred_gl preferred_gles preferred_none retained_hardware_software hardware_geometry_growth)
+  add_test(NAME ${scenario}
+           COMMAND test_reload "${GAME_LIBRETRO_LIBRARY}" $<TARGET_FILE:reload_core> ${scenario})
+  set_tests_properties(${scenario} PROPERTIES TIMEOUT 10)
+endforeach()

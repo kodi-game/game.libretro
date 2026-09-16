@@ -8,6 +8,7 @@
 #pragma once
 
 #include <cstdint>
+#include <libretro.h>
 
 struct ReloadCoreState
 {
@@ -20,4 +21,7 @@ struct ReloadCoreState
   unsigned preframeSizeQueries{};
   unsigned restores{};
   uintptr_t resetFramebuffer{};
+  retro_hw_context_type contextType{RETRO_HW_CONTEXT_OPENGL};
+  bool growGeometry{};
+  uintptr_t geometryFramebuffer{};
 };

@@ -18,6 +18,8 @@
 #include <cstring>
 #include <dlfcn.h>
 #include <map>
+#include <utility>
+#include <vector>
 
 namespace
 {
@@ -36,12 +38,19 @@ unsigned hardwareOpens = 0;
 unsigned hardwareStarts = 0;
 unsigned hardwareCloses = 0;
 unsigned framebufferQueries = 0;
+bool geometryGrowth = false;
+std::vector<std::pair<unsigned, unsigned>> framebufferSizes;
 bool failOpen = false;
 bool failStart = false;
 bool failFramebuffer = false;
 bool zeroFramebuffer = false;
 bool contextCurrent = false;
 AddonInstance_Game* currentGame = nullptr;
+enum class HardwareBackend { OpenGL, OpenGLES, None };
+HardwareBackend backend = HardwareBackend::OpenGL;
+game_hw_rendering_properties negotiated{};
+bool hardwareRefused = false;
+unsigned negotiations = 0;
 
 void Require(bool condition, const char* message)
 {
@@ -56,6 +65,8 @@ KODI_GAME_STREAM_HANDLE OpenStream(KODI_HANDLE, const game_stream_properties* pr
 {
   if (properties->type == GAME_STREAM_HW_FRAMEBUFFER)
   {
+    Require(negotiated.context_type != GAME_HW_CONTEXT_NONE,
+            "hardware stream opened without an accepted context");
     ++hardwareOpens;
     Require(properties->hw_framebuffer.max_width == 320 &&
                 properties->hw_framebuffer.max_height == 240,
@@ -67,7 +78,39 @@ KODI_GAME_STREAM_HANDLE OpenStream(KODI_HANDLE, const game_stream_properties* pr
   }
   auto* handle = new int;
   streams.emplace(handle, StreamState{properties->type});
+  if (properties->type == GAME_STREAM_VIDEO || properties->type == GAME_STREAM_SW_FRAMEBUFFER)
+    hardwareRefused = false;
   return handle;
+}
+
+bool EnableHardwareRendering(KODI_HANDLE, const game_hw_rendering_properties* properties)
+{
+  ++negotiations;
+  for (const auto& stream : streams)
+  {
+    if (stream.second.type == GAME_STREAM_HW_FRAMEBUFFER)
+      return false;
+  }
+  negotiated = {};
+  hardwareRefused = false;
+  if (properties->context_type == GAME_HW_CONTEXT_NONE)
+    return false;
+  const bool supported =
+      (backend == HardwareBackend::OpenGL &&
+       (properties->context_type == GAME_HW_CONTEXT_OPENGL ||
+        properties->context_type == GAME_HW_CONTEXT_OPENGL_CORE)) ||
+      (backend == HardwareBackend::OpenGLES &&
+       (properties->context_type == GAME_HW_CONTEXT_OPENGLES2 ||
+        properties->context_type == GAME_HW_CONTEXT_OPENGLES3 ||
+        properties->context_type == GAME_HW_CONTEXT_OPENGLES_VERSION));
+  if (!supported || (properties->context_type == GAME_HW_CONTEXT_OPENGL_CORE &&
+                     properties->version_major == 0))
+  {
+    hardwareRefused = true;
+    return false;
+  }
+  negotiated = *properties;
+  return true;
 }
 
 void DestroyHardwareContext(KODI_GAME_STREAM_HANDLE handle)
@@ -115,7 +158,9 @@ bool GetStreamBuffer(KODI_HANDLE, KODI_GAME_STREAM_HANDLE handle,
 {
   Require(streams.at(handle).type == GAME_STREAM_HW_FRAMEBUFFER, "framebuffer requested without handle");
   Require(contextCurrent, "framebuffer requested without current context");
-  Require(width == 320 && height == 240, "incorrect framebuffer request geometry");
+  if (!geometryGrowth)
+    Require(width == 320 && height == 240, "incorrect framebuffer request geometry");
+  framebufferSizes.emplace_back(width, height);
   Require(buffer->type == GAME_STREAM_HW_FRAMEBUFFER, "incorrect framebuffer request type");
   ++framebufferQueries;
   if (failFramebuffer)
@@ -165,15 +210,28 @@ void AddStreamData(KODI_HANDLE, KODI_GAME_STREAM_HANDLE handle, const game_strea
 int main(int argc, char** argv)
 {
   Require(argc == 3 || argc == 4,
-          "usage: test_reload <wrapper library> <fixture core library> [hardware]");
-  const bool testHardware = argc == 4;
+          "usage: test_reload <wrapper library> <fixture core library> [scenario]");
+  const char* scenario = argc == 4 ? argv[3] : "software";
+  const bool testHardware = std::strcmp(scenario, "hardware") == 0;
+  const bool testPreference = std::strncmp(scenario, "preferred_", 10) == 0;
+  const bool testHandoff = std::strcmp(scenario, "retained_hardware_software") == 0;
+  const bool testGrowth = std::strcmp(scenario, "hardware_geometry_growth") == 0;
+  if (std::strcmp(scenario, "preferred_gles") == 0)
+    backend = HardwareBackend::OpenGLES;
+  else if (std::strcmp(scenario, "preferred_none") == 0)
+    backend = HardwareBackend::None;
   void* coreLibrary = dlopen(argv[2], RTLD_NOW | RTLD_LOCAL);
   Require(coreLibrary != nullptr, "fixture core must load");
   const auto getCoreState = reinterpret_cast<ReloadCoreState* (*)()>(
       dlsym(coreLibrary, "test_core_state"));
   Require(getCoreState != nullptr, "fixture state unavailable");
+  const auto environment = reinterpret_cast<bool (*)(unsigned, void*)>(
+      dlsym(coreLibrary, "test_core_environment"));
+  Require(environment != nullptr, "fixture environment unavailable");
   ReloadCoreState& core = *getCoreState();
-  core.hardware = testHardware;
+  core.hardware = testHardware || testGrowth;
+  core.growGeometry = testGrowth;
+  geometryGrowth = testGrowth;
   void* library = dlopen(argv[1], RTLD_NOW | RTLD_LOCAL);
   if (!library)
   {
@@ -204,8 +262,12 @@ int main(int argc, char** argv)
   gameCallbacks.OpenStream = OpenStream;
   gameCallbacks.CloseStream = CloseStream;
   gameCallbacks.AddStreamData = AddStreamData;
-  gameCallbacks.EnableHardwareRendering = [](void*, const game_hw_rendering_properties* properties)
-  { return properties->context_type == GAME_HW_CONTEXT_OPENGL; };
+  gameCallbacks.EnableHardwareRendering = EnableHardwareRendering;
+  gameCallbacks.SetGameTiming = [](KODI_HANDLE, const game_system_timing* timing)
+  {
+    Require(timing->fps == 70.0 && timing->sample_rate == 48000.0,
+            "SET_SYSTEM_AV_INFO lost timing");
+  };
   gameCallbacks.StartStream = StartStream;
   gameCallbacks.GetStreamBuffer = GetStreamBuffer;
   gameCallbacks.ReleaseStreamBuffer = [](KODI_HANDLE, KODI_GAME_STREAM_HANDLE handle,
@@ -233,7 +295,129 @@ int main(int argc, char** argv)
   const ADDON_STATUS status = create(&interface);
   Require(status == ADDON_STATUS_OK || status == ADDON_STATUS_NEED_SETTINGS, "addon creation failed");
 
-  if (testHardware)
+  if (testGrowth)
+  {
+    Require(gameFunctions.LoadGame(&game, "reload.test") == GAME_ERROR_NO_ERROR, "growth load failed");
+    game_system_timing timing{};
+    Require(gameFunctions.GetGameTiming(&game, &timing) == GAME_ERROR_NO_ERROR, "growth timing failed");
+    for (unsigned frame = 0; frame < 5; ++frame)
+    {
+      contextCurrent = true;
+      Require(gameFunctions.RunFrame(&game) == GAME_ERROR_NO_ERROR, "growth frame failed");
+      contextCurrent = false;
+      Require(core.geometryFramebuffer == 42, "maximum change invalidated cached framebuffer");
+      Require(core.resets == 1 && core.destroys == 0 && hardwareOpens == 1 && hardwareStarts == 1 &&
+                  hardwareCloses == 0, "maximum change reopened hardware context");
+    }
+    const std::vector<std::pair<unsigned, unsigned>> expectedSizes = {
+        {320, 240}, {640, 480}, {640, 480}, {320, 240},
+        {800, 480}, {800, 480}, {800, 600}, {800, 600}};
+    Require(framebufferSizes == expectedSizes, "maximum changes requested incorrect framebuffer sizes");
+    Require(hardwarePackets == 5, "frames missing after maximum changes");
+    DestroyHardwareContexts();
+    Require(gameFunctions.UnloadGame(&game) == GAME_ERROR_NO_ERROR, "growth unload failed");
+    Require(streams.empty() && core.destroys == 1, "growth stream did not close exactly once");
+    std::puts("PASS: growth, shrink, repeated growth, ignored SET_GEOMETRY maximum and cached FBO");
+  }
+  else if (testPreference || testHandoff)
+  {
+    const auto unload = [&]
+    {
+      DestroyHardwareContexts();
+      Require(gameFunctions.UnloadGame(&game) == GAME_ERROR_NO_ERROR, "unload failed");
+      Require(streams.empty(), "unload left streams open");
+      negotiated = {};
+      hardwareRefused = false;
+    };
+    const auto runFrame = [&]
+    {
+      game_system_timing timing{};
+      Require(gameFunctions.GetGameTiming(&game, &timing) == GAME_ERROR_NO_ERROR,
+              "timing failed after preference or retained load");
+      contextCurrent = core.hardware;
+      Require(gameFunctions.RunFrame(&game) == GAME_ERROR_NO_ERROR, "frame failed");
+      contextCurrent = false;
+    };
+    const auto queryPreference = [&]
+    {
+      for (unsigned query = 0; query < 2; ++query)
+      {
+        retro_hw_context_type preferred = RETRO_HW_CONTEXT_NONE;
+        const bool available = environment(RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER, &preferred);
+        Require(available == (backend != HardwareBackend::None), "incorrect preference availability");
+        const auto expected = backend == HardwareBackend::OpenGL ? RETRO_HW_CONTEXT_OPENGL_CORE :
+                              backend == HardwareBackend::OpenGLES ? RETRO_HW_CONTEXT_OPENGLES3 :
+                                                                    RETRO_HW_CONTEXT_NONE;
+        Require(preferred == expected, "preferred API is unavailable on frontend");
+        Require(negotiated.context_type == GAME_HW_CONTEXT_NONE && !hardwareRefused,
+                "preference probe left an accepted context or refusal");
+        Require(streams.empty(), "preference probe opened a stream");
+        core.contextType = preferred;
+      }
+    };
+    const auto queryAfterNegotiation = [&]
+    {
+      const auto requests = negotiations;
+      retro_hw_context_type preferred = RETRO_HW_CONTEXT_NONE;
+      environment(RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER, &preferred);
+      Require(negotiations == requests, "late preference query changed hardware negotiation");
+      Require(negotiated.depth && negotiated.stencil && negotiated.bottom_left_origin,
+              "late preference query lost negotiated context flags");
+    };
+
+    if (testPreference)
+    {
+      const auto availableBackend = backend;
+      backend = HardwareBackend::None;
+      queryPreference();
+      backend = availableBackend;
+      queryPreference();
+      Require(!environment(RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER, nullptr),
+              "null preference query should be declined");
+      retro_hw_render_callback unavailable{};
+      unavailable.context_type = RETRO_HW_CONTEXT_VULKAN;
+      Require(!environment(RETRO_ENVIRONMENT_SET_HW_RENDER, &unavailable),
+              "unavailable context was accepted after probing");
+      Require(!unavailable.get_current_framebuffer && !unavailable.get_proc_address,
+              "refused context left hardware callbacks installed");
+      core.hardware = false;
+      Require(gameFunctions.LoadGame(&game, "reload.test") == GAME_ERROR_NO_ERROR,
+              "software load after preference failed");
+      runFrame();
+      Require(videoPackets == 1 && hardwareOpens == 0, "preference changed software fallback");
+      Require(!hardwareRefused && negotiated.context_type == GAME_HW_CONTEXT_NONE,
+              "software fallback retained hardware negotiation");
+      unload();
+      queryPreference();
+    }
+
+    if (backend != HardwareBackend::None)
+    {
+      core.hardware = true;
+      Require(gameFunctions.LoadGame(&game, "reload.test") == GAME_ERROR_NO_ERROR,
+              "SET_HW_RENDER after preference failed");
+      if (testPreference)
+        queryAfterNegotiation();
+      runFrame();
+      Require(hardwarePackets == 1 && core.resets == 1, "hardware negotiation did not render");
+      if (testPreference)
+        queryAfterNegotiation();
+      unload();
+      if (testPreference)
+        queryPreference();
+    }
+    core.hardware = false;
+    const auto pixels = videoPackets;
+    const auto opens = hardwareOpens;
+    Require(gameFunctions.LoadGame(&game, "reload.test") == GAME_ERROR_NO_ERROR,
+            "retained software load failed");
+    runFrame();
+    Require(videoPackets == pixels + 1 && hardwareOpens == opens,
+            "retained software load inherited hardware mode");
+    unload();
+    std::printf("PASS: %s\n", scenario);
+  }
+  else if (testHardware)
   {
     for (unsigned cycle = 0; cycle < 9; ++cycle)
     {
@@ -321,6 +505,6 @@ int main(int argc, char** argv)
   functions.destroy(interface.addonBase);
   dlclose(library);
   dlclose(coreLibrary);
-  if (!testHardware)
+  if (std::strcmp(scenario, "software") == 0)
     std::puts("PASS: timing, video, and audio survive six loads on one addon instance");
 }

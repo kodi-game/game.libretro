@@ -33,6 +33,7 @@ void CVideoStream::Deinitialize()
 
   CloseStream();
 
+  m_streamType = GAME_STREAM_UNKNOWN;
   m_addon = nullptr;
 }
 

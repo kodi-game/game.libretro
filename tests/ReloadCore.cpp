@@ -22,6 +22,7 @@ bool loaded = false;
 extern "C"
 {
 ReloadCoreState* test_core_state() { return &state; }
+bool test_core_environment(unsigned command, void* data) { return environment(command, data); }
 void retro_set_environment(retro_environment_t callback) { environment = callback; }
 void retro_set_video_refresh(retro_video_refresh_t callback) { video = callback; }
 void retro_set_audio_sample(retro_audio_sample_t) {}
@@ -53,6 +54,27 @@ void retro_run()
       environment(RETRO_ENVIRONMENT_SET_GEOMETRY, &geometry);
       unsigned rotation = (state.frames - 1) % 4;
       environment(RETRO_ENVIRONMENT_SET_ROTATION, &rotation);
+      if (state.growGeometry)
+      {
+        hardware.get_current_framebuffer();
+        const unsigned maximums[][2] = {{640, 480}, {320, 240}, {800, 480}, {800, 600}};
+        if (state.frames <= 4)
+        {
+          retro_system_av_info info{geometry, {70.0, 48000.0}};
+          info.geometry.max_width = maximums[state.frames - 1][0];
+          info.geometry.max_height = maximums[state.frames - 1][1];
+          environment(RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO, &info);
+        }
+        else
+        {
+          geometry.max_width = 4096;
+          geometry.max_height = 4096;
+          environment(RETRO_ENVIRONMENT_SET_GEOMETRY, &geometry);
+        }
+        // Alternate explicit reacquisition with the FBO cached during context reset.
+        state.geometryFramebuffer = state.frames % 2 ? hardware.get_current_framebuffer()
+                                                      : state.resetFramebuffer;
+      }
       video(RETRO_HW_FRAME_BUFFER_VALID, 320, 240, 0);
       return;
     }
@@ -86,7 +108,12 @@ bool retro_load_game(const retro_game_info*)
   {
     state.frames = 0;
     hardware = {};
-    hardware.context_type = RETRO_HW_CONTEXT_OPENGL;
+    hardware.context_type = state.contextType;
+    hardware.version_major = 3;
+    hardware.version_minor = state.contextType == RETRO_HW_CONTEXT_OPENGL_CORE ? 2 : 0;
+    hardware.depth = true;
+    hardware.stencil = true;
+    hardware.bottom_left_origin = true;
     hardware.context_reset = []
     {
       ++state.resets;

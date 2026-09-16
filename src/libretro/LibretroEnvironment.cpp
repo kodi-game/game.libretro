@@ -815,18 +815,30 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   case RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER:
   {
     retro_hw_context_type* typedData = static_cast<retro_hw_context_type*>(data);
-    if (typedData)
+    // Probing replaces pending context properties, so leave a real negotiation intact.
+    if (!typedData || !m_addon || m_videoStream.IsHardwareRendering())
+      return false;
+
+    retro_hw_context_type preferred = RETRO_HW_CONTEXT_NONE;
+    for (const auto context : {RETRO_HW_CONTEXT_OPENGL_CORE, RETRO_HW_CONTEXT_OPENGLES3})
     {
-      // Kodi's hardware rendering path is OpenGL. Saying so lets a core that
-      // can drive several backends pick the one we can actually present, and
-      // lets a Vulkan-only core fail here, where it can still fall back to
-      // software, rather than later at context_reset.
-      //
-      // Cores that ask this and get no answer typically fall back to their
-      // software renderer, so leaving it unanswered silently costs hardware
-      // rendering on cores that would otherwise support it.
-      *typedData = RETRO_HW_CONTEXT_OPENGL_CORE;
+      game_hw_rendering_properties properties{};
+      properties.context_type = LibretroTranslator::GetHWContextType(context);
+      properties.version_major = 3;
+      properties.version_minor = context == RETRO_HW_CONTEXT_OPENGL_CORE ? 2 : 0;
+      if (m_addon->EnableHardwareRendering(properties))
+      {
+        preferred = context;
+        break;
+      }
     }
+
+    // NONE clears both the accepted probe and any refusal without creating a context.
+    m_addon->EnableHardwareRendering({});
+    if (preferred == RETRO_HW_CONTEXT_NONE)
+      return false;
+
+    *typedData = preferred;
     return true;
   }
   case RETRO_ENVIRONMENT_GET_DISK_CONTROL_INTERFACE_VERSION:

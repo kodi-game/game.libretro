@@ -35,6 +35,7 @@ namespace LIBRETRO
 
     bool EnableHardwareRendering();
     void DisableHardwareRendering();
+    bool IsHardwareRendering() const { return m_streamType == GAME_STREAM_HW_FRAMEBUFFER; }
 
     uintptr_t GetHwFramebuffer();
     bool GetSwFramebuffer(unsigned int width, unsigned int height, GAME_PIXEL_FORMAT requestedFormat, game_stream_sw_framebuffer_buffer &framebuffer);
