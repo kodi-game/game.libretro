@@ -104,6 +104,8 @@ jobs:
             -DKodi_DIR:PATH="$KODI_SDK_DIR/lib/kodi" \
             -DKODI_INCLUDE_DIR:PATH="$KODI_SOURCE_DIR/xbmc/addons/kodi-dev-kit/include/kodi" \
             -DLIBRETRO_INCLUDE_DIR:PATH="$LIBRETRO_INCLUDE_DIR" \
+            -DRCHEEVOS_INCLUDE_DIR:PATH="$ADDON_BUILD_DIR/build/depends/include/rcheevos" \
+            -DRCHEEVOS_LIBRARY:FILEPATH="$ADDON_BUILD_DIR/build/depends/lib/librcheevoslib.a" \
             -DGAME_LIBRETRO_LIBRARY:FILEPATH="$GAME_LIBRETRO_LIBRARY"
           # Assert and log the SDK/header selection for both consumers.
           for build_dir in "$ADDON_BUILD_DIR" "$TEST_BUILD_DIR"; do
