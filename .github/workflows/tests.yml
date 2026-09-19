@@ -1,0 +1,159 @@
+name: Regression tests
+
+on:
+  pull_request:
+  push:
+    branches: [Piers, retroplayer-piers]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: game-libretro-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  KODI_REPOSITORY: https://github.com/xbmc/xbmc.git
+  KODI_BRANCH: master
+
+jobs:
+  tests:
+    name: Native Linux regressions
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Set build paths
+        run: |
+          set -euo pipefail
+          {
+            printf 'KODI_SOURCE_DIR=%s/kodi\n' "$RUNNER_TEMP"
+            printf 'KODI_SDK_DIR=%s/kodi-sdk\n' "$RUNNER_TEMP"
+            printf 'ADDON_BUILD_DIR=%s/build-addon\n' "$RUNNER_TEMP"
+            printf 'TEST_BUILD_DIR=%s/build-tests\n' "$RUNNER_TEMP"
+            printf 'GAME_LIBRETRO_LIBRARY=%s/build-addon/game.libretro.so\n' "$RUNNER_TEMP"
+            printf 'LIBRETRO_INCLUDE_DIR=%s/build-addon/build/depends/include/libretro-common\n' "$RUNNER_TEMP"
+          } >> "$GITHUB_ENV"
+
+      - name: Check out game.libretro
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Install native build dependencies
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y \
+            build-essential ca-certificates cmake git libtinyxml-dev ninja-build patch
+
+      - name: Clone Kodi
+        run: |
+          set -euo pipefail
+          git clone --branch "$KODI_BRANCH" --depth=1 "$KODI_REPOSITORY" "$KODI_SOURCE_DIR"
+          git -C "$KODI_SOURCE_DIR" remote get-url origin
+          git -C "$KODI_SOURCE_DIR" branch --show-current
+          git -C "$KODI_SOURCE_DIR" rev-parse HEAD
+          git -C "$GITHUB_WORKSPACE" rev-parse HEAD
+          grep -E '^#define ADDON_INSTANCE_VERSION_GAME +"' \
+            "$KODI_SOURCE_DIR/xbmc/addons/kodi-dev-kit/include/kodi/versions.h"
+
+      - name: Prepare Kodi addon SDK
+        run: |
+          set -euo pipefail
+          # Use the SDK generator and compiler settings from Kodi's addon build.
+          cmake -C "$KODI_SOURCE_DIR/cmake/scripts/common/CompilerSettings.cmake" \
+            -DCORE_SOURCE_DIR="$KODI_SOURCE_DIR" \
+            -DADDON_DEPENDS_PATH="$KODI_SDK_DIR" \
+            -DAPP_PREFIX="$KODI_SDK_DIR" \
+            -DCORE_SYSTEM_NAME=linux \
+            -DARCH_DEFINES="$(cat "$KODI_SOURCE_DIR/cmake/platform/linux/defines.txt")" \
+            -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+            -DCMAKE_CXX_EXTENSIONS=OFF \
+            -P "$KODI_SOURCE_DIR/cmake/scripts/common/PrepareEnv.cmake"
+
+      - name: Configure wrapper
+        run: |
+          set -euo pipefail
+          cmake -S "$GITHUB_WORKSPACE" -B "$ADDON_BUILD_DIR" -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_SHARED_LIBS=ON \
+            -DKodi_DIR:PATH="$KODI_SDK_DIR/lib/kodi" \
+            -DKODI_INCLUDE_DIR:PATH="$KODI_SOURCE_DIR/xbmc/addons/kodi-dev-kit/include/kodi" \
+            -DENABLE_INTERNAL_LIBRETROCOMMON=ON \
+            -DENABLE_INTERNAL_RCHEEVOS=ON
+
+      - name: Build wrapper
+        run: |
+          set -euo pipefail
+          cmake --build "$ADDON_BUILD_DIR" --target game.libretro --parallel 2
+          # AddonHelpers.cmake creates this unversioned link in the build root.
+          test -f "$GAME_LIBRETRO_LIBRARY"
+          test -f "$LIBRETRO_INCLUDE_DIR/libretro.h"
+          printf 'Wrapper: %s\n' "$(readlink -f "$GAME_LIBRETRO_LIBRARY")"
+          printf 'libretro-common headers: %s\n' "$LIBRETRO_INCLUDE_DIR"
+          ldd "$GAME_LIBRETRO_LIBRARY"
+
+      - name: Configure regression tests
+        run: |
+          set -euo pipefail
+          cmake -S "$GITHUB_WORKSPACE/tests" -B "$TEST_BUILD_DIR" -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DKodi_DIR:PATH="$KODI_SDK_DIR/lib/kodi" \
+            -DKODI_INCLUDE_DIR:PATH="$KODI_SOURCE_DIR/xbmc/addons/kodi-dev-kit/include/kodi" \
+            -DLIBRETRO_INCLUDE_DIR:PATH="$LIBRETRO_INCLUDE_DIR" \
+            -DRCHEEVOS_INCLUDE_DIR:PATH="$ADDON_BUILD_DIR/build/depends/include/rcheevos" \
+            -DRCHEEVOS_LIBRARY:FILEPATH="$ADDON_BUILD_DIR/build/depends/lib/librcheevoslib.a" \
+            -DGAME_LIBRETRO_LIBRARY:FILEPATH="$GAME_LIBRETRO_LIBRARY"
+          # Assert and log the SDK/header selection for both consumers.
+          for build_dir in "$ADDON_BUILD_DIR" "$TEST_BUILD_DIR"; do
+            printf 'Build configuration: %s\n' "$build_dir"
+            grep -Fx "Kodi_DIR:PATH=$KODI_SDK_DIR/lib/kodi" "$build_dir/CMakeCache.txt"
+            grep -Fx "KODI_INCLUDE_DIR:PATH=$KODI_SOURCE_DIR/xbmc/addons/kodi-dev-kit/include/kodi" \
+              "$build_dir/CMakeCache.txt"
+          done
+          grep -Fx "LIBRETRO_INCLUDE_DIR:PATH=$LIBRETRO_INCLUDE_DIR" "$TEST_BUILD_DIR/CMakeCache.txt"
+          grep -Fx "GAME_LIBRETRO_LIBRARY:FILEPATH=$GAME_LIBRETRO_LIBRARY" "$TEST_BUILD_DIR/CMakeCache.txt"
+
+      - name: Build regression tests
+        run: |
+          set -euo pipefail
+          cmake --build "$TEST_BUILD_DIR" --parallel 2
+
+      - name: Discover regression tests
+        run: |
+          set -euo pipefail
+          ctest --test-dir "$TEST_BUILD_DIR" -N | tee "$TEST_BUILD_DIR/discovered-tests.txt"
+
+      - name: Run regression tests
+        id: ctest
+        run: |
+          set -euo pipefail
+          ctest --test-dir "$TEST_BUILD_DIR" --no-tests=error --output-on-failure \
+            --output-junit "$TEST_BUILD_DIR/results.xml"
+
+      - name: Summarize regression tests
+        if: always()
+        env:
+          CTEST_RESULT: ${{ steps.ctest.outcome }}
+        run: |
+          set -euo pipefail
+          {
+            printf 'Wrapper: `%s`\n\n' "$GAME_LIBRETRO_LIBRARY"
+            printf 'Kodi: `%s` / `%s`\n\n' "$KODI_REPOSITORY" "$KODI_BRANCH"
+            if [[ -f "$TEST_BUILD_DIR/discovered-tests.txt" ]]; then
+              grep '^Total Tests:' "$TEST_BUILD_DIR/discovered-tests.txt"
+            fi
+            printf '\nCTest result: **%s**\n' "$CTEST_RESULT"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload regression test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: game-libretro-test-results
+          path: |
+            ${{ env.TEST_BUILD_DIR }}/results.xml
+            ${{ env.TEST_BUILD_DIR }}/discovered-tests.txt
+            ${{ env.TEST_BUILD_DIR }}/Testing/Temporary/

@@ -8,8 +8,6 @@
 #include "Cheevos.h"
 
 #include "CheevosUtils.h"
-#include "libretro/LibretroEnvironment.h"
-#include "libretro/MemoryMap.h"
 #include "utils/Base64.h"
 
 #include <kodi/Filesystem.h>
@@ -20,7 +18,6 @@
 
 #include <rcheevos/rc_api_runtime.h>
 #include <rcheevos/rc_client.h>
-#include <rcheevos/rc_libretro.h>
 
 #include <algorithm>
 #include <chrono>
@@ -47,15 +44,6 @@ constexpr size_t HTTP_READ_CHUNK = 4096;
 
 } // namespace
 
-// rc_libretro's get_core_memory_info callback takes neither a client nor a
-// userdata pointer, so it alone has no way to be handed the instance. It is
-// only ever called from inside rc_libretro_memory_init(), which we call
-// ourselves, so the pointer is set around that call and cleared after rather
-// than being left set for the life of the add-on. Every rc_client callback
-// carries rc_client_t* and reads the instance back with
-// rc_client_get_userdata() instead.
-static CCheevos* s_memoryInfoInstance = nullptr;
-
 CCheevos::CCheevos() = default;
 
 CCheevos& CCheevos::Get()
@@ -66,7 +54,7 @@ CCheevos& CCheevos::Get()
 
 void CCheevos::Initialize(kodi::addon::CInstanceGame* gameInstance,
                           const std::string& gamePath,
-                          MemoryAccessCallback memoryCallback)
+                          const CLibretroMemory& memory)
 {
   Deinitialize();
 
@@ -77,7 +65,7 @@ void CCheevos::Initialize(kodi::addon::CInstanceGame* gameInstance,
 
   m_gameInstance = gameInstance;
   m_gamePath = gamePath;
-  m_memoryCallback = std::move(memoryCallback);
+  m_memory = std::make_unique<CCheevosMemory>(memory);
 
   // Create rc_client
   m_rcClient = rc_client_create(RcheevosReadMemory, RcheevosServerCall);
@@ -194,17 +182,12 @@ void CCheevos::Deinitialize()
   // before the client is destroyed.
   DispatchServerResponses();
 
-  if (m_memoryInitialized)
-  {
-    rc_libretro_memory_destroy(&m_memoryRegions);
-    m_memoryInitialized = false;
-  }
-
   if (m_rcClient != nullptr)
   {
     rc_client_destroy(m_rcClient);
     m_rcClient = nullptr;
   }
+  m_memory.reset();
 
   {
     std::lock_guard<std::mutex> lock(m_pendingProgressMutex);
@@ -608,69 +591,16 @@ uint32_t CCheevos::RcheevosReadMemory(uint32_t address, uint8_t* buffer,
                                        uint32_t num_bytes, rc_client_t* client)
 {
   CCheevos* const cheevos = static_cast<CCheevos*>(rc_client_get_userdata(client));
-  if (cheevos == nullptr)
+  if (cheevos == nullptr || !cheevos->m_memory)
     return 0;
 
-  // rc_client validates every achievement's addresses as soon as the session
-  // starts, which is before the game-load callback runs. If the mapping isn't
-  // ready by then every achievement is disabled as out of range, so it is
-  // built here on first use rather than after the game has loaded.
-  if (!cheevos->m_memoryInitialized)
-  {
-    const rc_client_game_t* gameInfo = rc_client_get_game_info(client);
-    if (gameInfo == nullptr)
-      return 0;
+  // Address validation can read memory before the game-load callback. Derive
+  // lazily, and rederive on every generation/console change on the game thread.
+  const rc_client_game_t* gameInfo = rc_client_get_game_info(client);
+  if (gameInfo == nullptr)
+    return 0;
 
-    std::lock_guard<std::mutex> lock(cheevos->m_memoryMutex);
-    if (!cheevos->m_memoryInitialized)
-    {
-      // rcheevos matches the regions a console is expected to have against the
-      // core's memory map. Without one it can only see what the core exposes as
-      // RETRO_MEMORY_SYSTEM_RAM, which is a single flat block: enough for a
-      // console whose memory is one region, and nothing at all for one that is
-      // split. The Saturn wants fourteen regions and matched none of them, so
-      // every achievement it had was reported unsupported.
-      const CMemoryMap& memoryMap = CLibretroEnvironment::Get().GetMemoryMap();
-
-      std::vector<retro_memory_descriptor> descriptors;
-      descriptors.reserve(memoryMap.Size());
-      for (size_t i = 0; i < memoryMap.Size(); ++i)
-        descriptors.emplace_back(memoryMap[static_cast<int>(i)].descriptor);
-
-      retro_memory_map retroMemoryMap{};
-      retroMemoryMap.descriptors = descriptors.data();
-      retroMemoryMap.num_descriptors = static_cast<unsigned int>(descriptors.size());
-
-      // A core that publishes no map is no worse off than before, and still
-      // gets whatever it exposes as system RAM
-      s_memoryInfoInstance = cheevos;
-      rc_libretro_memory_init(&cheevos->m_memoryRegions,
-                              descriptors.empty() ? nullptr : &retroMemoryMap,
-                              RcheevosGetCoreMemoryInfo, gameInfo->console_id);
-      s_memoryInfoInstance = nullptr;
-      cheevos->m_memoryInitialized = true;
-
-      kodi::Log(ADDON_LOG_INFO,
-                "CCheevos: memory mapped for console %u from %zu descriptors, total_size=%u",
-                gameInfo->console_id, descriptors.size(),
-                cheevos->m_memoryRegions.total_size);
-    }
-  }
-
-  return rc_libretro_memory_read(&cheevos->m_memoryRegions, address, buffer, num_bytes);
-}
-
-void CCheevos::RcheevosGetCoreMemoryInfo(unsigned int id,
-                                          rc_libretro_core_memory_info_t* info)
-{
-  if (s_memoryInfoInstance == nullptr || !s_memoryInfoInstance->m_memoryCallback || info == nullptr)
-    return;
-
-  uint8_t* data = nullptr;
-  size_t size = 0;
-  s_memoryInfoInstance->m_memoryCallback(id, data, size);
-  info->data = data;
-  info->size = size;
+  return cheevos->m_memory->Read(gameInfo->console_id, address, buffer, num_bytes);
 }
 
 // Event handler
