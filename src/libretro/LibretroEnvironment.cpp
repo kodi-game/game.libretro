@@ -95,6 +95,9 @@ void CLibretroEnvironment::Deinitialize()
 
   m_resources.Deinitialize();
   m_settings.Deinitialize();
+  m_addon = nullptr;
+  m_client = nullptr;
+  m_clientBridge = nullptr;
 }
 
 void CLibretroEnvironment::InitializeStreams()
@@ -531,10 +534,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   case RETRO_ENVIRONMENT_SET_MEMORY_MAPS:
   {
     const retro_memory_map* typedData = static_cast<const retro_memory_map*>(data);
-    if (typedData)
-      m_mmap.Initialize(*typedData);
-
-    break;
+    return typedData && m_addon && m_addon->Memory().SetMemoryMap(*typedData);
   }
   case RETRO_ENVIRONMENT_SET_GEOMETRY:
   {
@@ -1094,9 +1094,4 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   }
 
   return true;
-}
-
-const CMemoryMap& CLibretroEnvironment::GetMemoryMap()
-{
-  return m_mmap;
 }

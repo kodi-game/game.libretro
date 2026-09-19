@@ -217,6 +217,7 @@ int main(int argc, char** argv)
   const bool testHandoff = std::strcmp(scenario, "retained_hardware_software") == 0;
   const bool testGrowth = std::strcmp(scenario, "hardware_geometry_growth") == 0;
   const bool testFailedLoad = std::strncmp(scenario, "failed_load_", 12) == 0;
+  const bool testMemoryMap = std::strncmp(scenario, "memory_map_", 11) == 0;
   const bool memoryRetry = std::strcmp(scenario, "failed_load_memory_retry") == 0;
   const bool standaloneFailure = std::strcmp(scenario, "failed_load_standalone") == 0;
   if (std::strcmp(scenario, "preferred_gles") == 0)
@@ -232,6 +233,7 @@ int main(int argc, char** argv)
       dlsym(coreLibrary, "test_core_environment"));
   Require(environment != nullptr, "fixture environment unavailable");
   ReloadCoreState& core = *getCoreState();
+  core.memoryMaps = testMemoryMap;
   core.memoryLoad = memoryRetry;
   core.hardware = testHardware || testGrowth;
   core.growGeometry = testGrowth;
@@ -310,7 +312,82 @@ int main(int argc, char** argv)
   const ADDON_STATUS status = create(&interface);
   Require(status == ADDON_STATUS_OK || status == ADDON_STATUS_NEED_SETTINGS, "addon creation failed");
 
-  if (testFailedLoad)
+  if (testMemoryMap)
+  {
+    Require(core.initializations == 1 && core.acceptedMemoryMaps == 1,
+            "retro_init memory map was not accepted");
+    Require(!environment(RETRO_ENVIRONMENT_SET_MEMORY_MAPS, nullptr), "null map must fail");
+    retro_memory_map invalid{nullptr, 1};
+    Require(!environment(RETRO_ENVIRONMENT_SET_MEMORY_MAPS, &invalid), "invalid map must fail");
+    const auto checkMemory = [&](uint8_t expected)
+    {
+      uint8_t* data = nullptr;
+      size_t size = 0;
+      Require(gameFunctions.GetMemory(&game, GAME_MEMORY_SYSTEM_RAM, &data, &size) == GAME_ERROR_NO_ERROR,
+              "flat memory ABI failed");
+      Require(data && size == 16 && data[0] == expected, "wrong current core buffer");
+      Require(gameFunctions.GetMemory(&game, GAME_MEMORY_SAVE_RAM, &data, &size) == GAME_ERROR_NO_ERROR &&
+                  !data && !size, "unavailable type must keep success ABI with empty outputs");
+    };
+    const auto load = [&]
+    {
+      Require(gameFunctions.LoadGame(&game, "reload.test") == GAME_ERROR_NO_ERROR, "memory load failed");
+      game_system_timing timing{};
+      Require(gameFunctions.GetGameTiming(&game, &timing) == GAME_ERROR_NO_ERROR, "memory timing failed");
+    };
+    const auto unload = [&]
+    {
+      Require(gameFunctions.UnloadGame(&game) == GAME_ERROR_NO_ERROR, "memory unload failed");
+      uint8_t* data = reinterpret_cast<uint8_t*>(1);
+      size_t size = 123;
+      Require(gameFunctions.GetMemory(&game, GAME_MEMORY_SYSTEM_RAM, &data, &size) == GAME_ERROR_NO_ERROR &&
+                  !data && !size, "unloaded memory must be empty without changing success ABI");
+      Require(core.memoryQueriesAfterUnload == 0, "called core memory outside content lifetime");
+    };
+    const bool runtime = std::strcmp(scenario, "memory_map_runtime_replace") == 0;
+    const bool failed = std::strcmp(scenario, "memory_map_failed_load") == 0;
+    if (failed)
+    {
+      core.publishLoadMap = true;
+      core.failedLoads = 1;
+      Require(gameFunctions.LoadGame(&game, "reload.test") == GAME_ERROR_FAILED,
+              "fixture must fail after publishing content map");
+      Require(core.acceptedMemoryMaps == 2 && core.unloads == 0,
+              "failed load was not handled without retro_unload_game");
+      core.publishLoadMap = false; // Retry intentionally supplies no new map.
+      load();
+      checkMemory(0x22);
+      unload();
+    }
+    else
+    {
+      load(); // No replacement: init map remains current.
+      checkMemory(0x11);
+      unload();
+      core.publishLoadMap = true;
+      load();
+      checkMemory(0x22);
+      if (runtime)
+      {
+        core.replaceMapOnRun = true;
+        core.invalidMapOnRun = true;
+        Require(gameFunctions.RunFrame(&game) == GAME_ERROR_NO_ERROR, "runtime replacement frame failed");
+        checkMemory(0x33);
+        Require(core.runtimeReplacements == 1 && core.rejectedMemoryMaps == 1 &&
+                    core.acceptedMemoryMaps == 3, "runtime map callback results lost");
+      }
+      unload();
+    }
+    core.publishLoadMap = false;
+    const auto maps = core.memoryMapCalls;
+    Require(gameFunctions.LoadStandalone(&game) == GAME_ERROR_NO_ERROR, "retained standalone load failed");
+    checkMemory(runtime ? 0x33 : 0x22);
+    Require(core.memoryMapCalls == maps && core.initializations == 1,
+            "retained load must not require reinitializing core or republishing map");
+    // Leave content loaded: destruction must unload it before retro_deinit.
+    std::printf("PASS: %s\n", scenario);
+  }
+  else if (testFailedLoad)
   {
     const auto load = [&]
     {
@@ -599,6 +676,34 @@ int main(int argc, char** argv)
     }
   }
   functions.destroy(interface.addonBase);
+  if (testMemoryMap)
+  {
+    Require(core.deinitializations == 1 && !core.deinitializedWithContent,
+            "destructor must unload retained content before core deinit");
+    const unsigned unloads = core.unloads;
+    Require(unloads == (std::strcmp(scenario, "memory_map_failed_load") == 0 ? 2u : 3u),
+            "destruction did not unload content exactly once");
+    retro_memory_map empty{nullptr, 0};
+    Require(!environment(RETRO_ENVIRONMENT_SET_MEMORY_MAPS, &empty),
+            "environment retained a destroyed addon owner");
+    core.memoryMaps = false;
+    // Kodi supplies a fresh host interface for a new addon. Its SDK leaves this
+    // host-owned field set after destroy; reusing the fixture must reset it.
+    interface.addonBase = nullptr;
+    interface.globalSingleInstance = nullptr;
+    const ADDON_STATUS secondStatus = create(&interface);
+    Require(secondStatus == ADDON_STATUS_OK || secondStatus == ADDON_STATUS_NEED_SETTINGS,
+            "second addon creation failed");
+    Require(gameFunctions.LoadStandalone(&game) == GAME_ERROR_NO_ERROR, "second instance load failed");
+    uint8_t* data = nullptr;
+    size_t size = 0;
+    Require(gameFunctions.GetMemory(&game, GAME_MEMORY_SYSTEM_RAM, &data, &size) == GAME_ERROR_NO_ERROR &&
+                !data && !size, "second instance without memory must return empty success");
+    Require(environment(RETRO_ENVIRONMENT_SET_MEMORY_MAPS, &empty), "new environment owner unavailable");
+    functions.destroy(interface.addonBase);
+    Require(core.deinitializations == 2 && !core.deinitializedWithContent,
+            "second instance teardown failed");
+  }
   dlclose(library);
   dlclose(coreLibrary);
   if (std::strcmp(scenario, "software") == 0)
