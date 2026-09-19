@@ -47,14 +47,22 @@ CGameLibRetro::~CGameLibRetro()
 
   CInputManager::Get().ClosePorts();
 
-  m_client.retro_deinit();
+  // Drain rc_client callbacks and destroy derived RAM pointers while the core
+  // is still alive, including destruction without an explicit UnloadGame().
+  if (m_contentLoaded)
+    UnloadGame();
+  else
+    CCheevos::Get().Deinitialize();
+
+  CLibretroEnvironment::Get().CloseStreams();
+  if (m_coreInitialized)
+    m_client.retro_deinit();
+  m_memory.Deinitialize();
 
   CControllerTopology::GetInstance().Clear();
 
   CLibretroEnvironment::Get().Deinitialize();
   CCheevosEnvironment::Get().Deinitialize();
-
-  CCheevos::Get().Deinitialize();
 
   CLog::Get().SetType(SYS_LOG_TYPE_CONSOLE);
 
@@ -84,6 +92,8 @@ ADDON_STATUS CGameLibRetro::Create()
       throw ADDON_STATUS_PERMANENT_FAILURE;
     }
 
+    m_memory.Initialize(m_client.retro_get_memory_data, m_client.retro_get_memory_size);
+
     // Environment must be initialized before calling retro_init()
     CLibretroEnvironment::Get().InitializeEnvironment(this, &m_client, &m_clientBridge);
     CCheevosEnvironment::Get().Initialize();
@@ -93,6 +103,7 @@ ADDON_STATUS CGameLibRetro::Create()
 
 
     m_client.retro_init();
+    m_coreInitialized = true;
 
     CLibretroEnvironment::Get().InitializeCallbacks();
 
@@ -173,26 +184,19 @@ GAME_ERROR CGameLibRetro::LoadGame(const std::string& url)
   if (m_gameInfo[0]->Load())
   {
     m_gameInfo[0]->GetMemoryStruct(gameInfo);
-    bResult = m_client.retro_load_game(&gameInfo);
+    bResult = LoadGameInternal(&gameInfo);
   }
 
   if (!bResult)
   {
     // Fall back to loading via path
     m_gameInfo[0]->GetPathStruct(gameInfo);
-    bResult = m_client.retro_load_game(&gameInfo);
+    bResult = LoadGameInternal(&gameInfo);
   }
 
   if (bResult)
   {
-    CCheevos::Get().Initialize(this, url,
-                               [this](unsigned int type, uint8_t*& data, size_t& size) -> bool
-                               {
-                                 data = static_cast<uint8_t*>(
-                                     m_client.retro_get_memory_data(type));
-                                 size = m_client.retro_get_memory_size(type);
-                                 return data != nullptr && size > 0;
-                               });
+    CCheevos::Get().Initialize(this, url, m_memory);
     return GAME_ERROR_NO_ERROR;
   }
 
@@ -236,10 +240,23 @@ GAME_ERROR CGameLibRetro::LoadGameSpecial(SPECIAL_GAME_TYPE type, const std::vec
 
 GAME_ERROR CGameLibRetro::LoadStandalone()
 {
-  if (!m_client.retro_load_game(nullptr))
-    return GAME_ERROR_FAILED;
+  return LoadGameInternal(nullptr) ? GAME_ERROR_NO_ERROR : GAME_ERROR_FAILED;
+}
 
-  return GAME_ERROR_NO_ERROR;
+bool CGameLibRetro::LoadGameInternal(const retro_game_info* gameInfo)
+{
+  auto& environment = CLibretroEnvironment::Get();
+  CCheevos::Get().Deinitialize();
+  m_memory.BeginContent();
+  if (m_client.retro_load_game(gameInfo))
+  {
+    m_contentLoaded = true;
+    return true;
+  }
+
+  environment.CloseStreams();
+  m_memory.EndContent();
+  return false;
 }
 
 GAME_ERROR CGameLibRetro::UnloadGame()
@@ -248,8 +265,10 @@ GAME_ERROR CGameLibRetro::UnloadGame()
 
   CCheevos::Get().Deinitialize();
   m_client.retro_unload_game();
+  m_contentLoaded = false;
 
   CLibretroEnvironment::Get().CloseStreams();
+  m_memory.EndContent();
 
   error = GAME_ERROR_NO_ERROR;
 
@@ -518,8 +537,7 @@ GAME_ERROR CGameLibRetro::CheatReset()
 
 GAME_ERROR CGameLibRetro::GetMemory(GAME_MEMORY type, uint8_t*& data, size_t& size)
 {
-  data = static_cast<uint8_t*>(m_client.retro_get_memory_data(type));
-  size = m_client.retro_get_memory_size(type);
+  m_memory.GetMemory(type, data, size);
 
   return GAME_ERROR_NO_ERROR;
 }

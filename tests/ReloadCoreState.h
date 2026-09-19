@@ -15,4 +15,18 @@ struct ReloadCoreState
   unsigned frames{};
   unsigned failedLoads{};
   unsigned loadAttempts{};
+  bool memoryMaps{};
+  bool publishLoadMap{};
+  bool replaceMapOnRun{};
+  bool invalidMapOnRun{};
+  unsigned memoryMapCalls{};
+  unsigned acceptedMemoryMaps{};
+  unsigned rejectedMemoryMaps{};
+  unsigned runtimeReplacements{};
+  unsigned memoryBuffer{};
+  unsigned memoryQueriesAfterUnload{};
+  unsigned initializations{};
+  unsigned deinitializations{};
+  unsigned unloads{};
+  bool deinitializedWithContent{};
 };
