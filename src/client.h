@@ -103,6 +103,8 @@ public:
   std::string GetImageLabel(unsigned int imageIndex) override;
 
 private:
+  bool LoadGameInternal(const retro_game_info* gameInfo);
+
   LIBRETRO::Timer                         m_timer;
   LIBRETRO::CLibretroDLL                  m_client;
   LIBRETRO::CClientBridge                 m_clientBridge;

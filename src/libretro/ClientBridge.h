@@ -34,6 +34,7 @@ namespace LIBRETRO
     GAME_ERROR KeyboardEvent(bool down, unsigned keycode, uint32_t character, uint16_t key_modifiers);
     GAME_ERROR HwContextReset(void);
     GAME_ERROR HwContextDestroy(void);
+    void ResetHardwareRendering();
     GAME_ERROR AudioEnable(bool enabled);
     GAME_ERROR AudioAvailable(void);
     GAME_ERROR FrameTime(int64_t);
@@ -80,6 +81,7 @@ namespace LIBRETRO
     KeyboardEventCallback    m_retro_keyboard_event;
     HwContextResetCallback   m_retro_hw_context_reset;
     HwContextDestroyCallback m_retro_hw_context_destroy;
+    bool m_hwContextReset{false};
     AudioEnableCallback      m_retro_audio_set_state_callback;
     AudioAvailableCallback   m_retro_audio_callback;
     FrameTimeCallback        m_retro_frame_time_callback;

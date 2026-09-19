@@ -173,14 +173,14 @@ GAME_ERROR CGameLibRetro::LoadGame(const std::string& url)
   if (m_gameInfo[0]->Load())
   {
     m_gameInfo[0]->GetMemoryStruct(gameInfo);
-    bResult = m_client.retro_load_game(&gameInfo);
+    bResult = LoadGameInternal(&gameInfo);
   }
 
   if (!bResult)
   {
     // Fall back to loading via path
     m_gameInfo[0]->GetPathStruct(gameInfo);
-    bResult = m_client.retro_load_game(&gameInfo);
+    bResult = LoadGameInternal(&gameInfo);
   }
 
   if (bResult)
@@ -236,10 +236,18 @@ GAME_ERROR CGameLibRetro::LoadGameSpecial(SPECIAL_GAME_TYPE type, const std::vec
 
 GAME_ERROR CGameLibRetro::LoadStandalone()
 {
-  if (!m_client.retro_load_game(nullptr))
-    return GAME_ERROR_FAILED;
+  return LoadGameInternal(nullptr) ? GAME_ERROR_NO_ERROR : GAME_ERROR_FAILED;
+}
 
-  return GAME_ERROR_NO_ERROR;
+bool CGameLibRetro::LoadGameInternal(const retro_game_info* gameInfo)
+{
+  auto& environment = CLibretroEnvironment::Get();
+  environment.ResetLoadState();
+  if (m_client.retro_load_game(gameInfo))
+    return true;
+
+  environment.CloseStreams();
+  return false;
 }
 
 GAME_ERROR CGameLibRetro::UnloadGame()
@@ -267,9 +275,17 @@ GAME_ERROR CGameLibRetro::GetGameTiming(game_system_timing& timing_info)
   timing_info.sample_rate = retro_info.timing.sample_rate;
 
   // Report info to CLibretroEnvironment
-  CLibretroEnvironment::Get().UpdateVideoGeometry(retro_info.geometry);
+  CLibretroEnvironment::Get().UpdateVideoGeometry(retro_info.geometry, true);
   CLibretroEnvironment::Get().VideoTiming().SetFrameRate(retro_info.timing.fps);
   CLibretroEnvironment::Get().AudioTiming().SetSampleRate(retro_info.timing.sample_rate);
+
+  // The geometry the hardware rendering stream needs is now known, so bring the
+  // core's context up before the frontend asks anything that depends on it.
+  // Failing here fails the load: a core that asked for hardware rendering and
+  // did not get it cannot be run, and this is the last point at which the
+  // frontend will still abandon the game cleanly.
+  if (!CLibretroEnvironment::Get().Video().OpenHwStream())
+    return GAME_ERROR_FAILED;
 
   return GAME_ERROR_NO_ERROR;
 }
@@ -293,6 +309,15 @@ GAME_ERROR CGameLibRetro::RunFrame()
 
   CLibretroEnvironment::Get().OnFrameBegin();
 
+  // Logged once, to separate a core that is not being run at all from one that
+  // runs but never presents a frame. A black picture looks the same either way.
+  static bool bLoggedFirstRun = false;
+  if (!bLoggedFirstRun)
+  {
+    bLoggedFirstRun = true;
+    kodi::Log(ADDON_LOG_INFO, "Running the core's first frame");
+  }
+
   m_client.retro_run();
 
   CCheevos::Get().DoFrame();
@@ -312,6 +337,12 @@ GAME_ERROR CGameLibRetro::Reset()
 
 GAME_ERROR CGameLibRetro::HwContextReset()
 {
+  if (CLibretroEnvironment::Get().Video().GetHwFramebuffer() == 0)
+  {
+    kodi::Log(ADDON_LOG_ERROR, "Cannot reset hardware context without a framebuffer");
+    return GAME_ERROR_FAILED;
+  }
+
   return m_clientBridge.HwContextReset();
 }
 

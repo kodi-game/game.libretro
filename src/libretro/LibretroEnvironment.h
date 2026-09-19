@@ -50,9 +50,19 @@ namespace LIBRETRO
     CAudioStream& Audio(void) { return m_audioStream; }
     CAudioTiming& AudioTiming(void) { return m_audioTiming; }
 
+    void InitializeStreams();
+    void ResetLoadState();
     void CloseStreams();
 
-    void UpdateVideoGeometry(const retro_game_geometry &geometry);
+    /*!
+     * \brief Take a geometry a core reported
+     *
+     * \param bAllowMaximumChange Whether max_width/max_height may be taken
+     *        from it. True for SET_SYSTEM_AV_INFO, false for SET_GEOMETRY,
+     *        which libretro.h says ignores them.
+     */
+    void UpdateVideoGeometry(const retro_game_geometry &geometry,
+                             bool bAllowMaximumChange);
 
     /*!
      * Returns the pixel format set by the libretro core. Instead of forwarding

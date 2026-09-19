@@ -27,6 +27,24 @@ namespace LIBRETRO
   {
     return CLibretroEnvironment::Get().EnvironmentCallback(cmd, data);
   }
+
+  // RetroArch-private environment commands. They are not in libretro.h, but
+  // cores ask for them anyway, so the values have to be spelled out here.
+  #define RETRO_ENVIRONMENT_RETROARCH_START_BLOCK 0x800000
+  #define RETRO_ENVIRONMENT_GET_CLEAR_ALL_THREAD_WAITS_CB (3 | RETRO_ENVIRONMENT_RETROARCH_START_BLOCK)
+
+  /*!
+   * \brief Release any of the frontend's blocking waits so a core can join its threads
+   *
+   * Nothing here blocks a core's threads, so there is nothing to release. It
+   * still has to exist: a core that runs its emulator in a thread stores this
+   * pointer and calls it while unloading without checking it, so leaving it
+   * unset crashes the core on the way out.
+   */
+  bool ClearAllThreadWaits(unsigned /* clearState */, void* /* data */)
+  {
+    return true;
+  }
 }
 
 CLibretroEnvironment::CLibretroEnvironment(void) :
@@ -52,8 +70,7 @@ void CLibretroEnvironment::InitializeEnvironment(CGameLibRetro* addon,
   m_client = client;
   m_clientBridge = clientBridge;
 
-  m_videoStream.Initialize(m_addon);
-  m_audioStream.Initialize(m_addon);
+  InitializeStreams();
 
   m_settings.Initialize(m_addon);
   m_resources.Initialize(m_addon);
@@ -80,15 +97,41 @@ void CLibretroEnvironment::Deinitialize()
   m_settings.Deinitialize();
 }
 
+void CLibretroEnvironment::InitializeStreams()
+{
+  m_videoStream.Initialize(m_addon);
+  m_audioStream.Initialize(m_addon);
+}
+
 void CLibretroEnvironment::CloseStreams()
 {
   m_videoStream.Deinitialize();
   m_audioStream.Deinitialize();
+  if (m_clientBridge)
+    m_clientBridge->ResetHardwareRendering();
+  if (m_addon)
+    m_addon->EnableHardwareRendering({});
 }
 
-void CLibretroEnvironment::UpdateVideoGeometry(const retro_game_geometry &geometry)
+void CLibretroEnvironment::ResetLoadState()
+{
+  CloseStreams();
+  InitializeStreams();
+}
+
+void CLibretroEnvironment::UpdateVideoGeometry(const retro_game_geometry &geometry,
+                                               bool bAllowMaximumChange)
 {
   CVideoGeometry videoGeometry(geometry);
+
+  // SET_GEOMETRY exists so a core can change the size it draws without the
+  // reinitialisation SET_SYSTEM_AV_INFO causes, and libretro.h is explicit that
+  // its max_width and max_height are ignored. Honouring them would resize the
+  // framebuffer behind a call whose whole purpose is not to.
+  if (!bAllowMaximumChange)
+    videoGeometry.SetMaximum(m_videoStream.Geometry().MaxWidth(),
+                             m_videoStream.Geometry().MaxHeight());
+
   m_videoStream.SetGeometry(videoGeometry);
 }
 
@@ -247,7 +290,18 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
 
         // Now that hooks are installed, enable HW rendering in the frontend
         if (!m_addon->EnableHardwareRendering(hw_info))
+        {
+          // The frontend cannot render this context type on the display stack
+          // it has. Returning false leaves the core to fall back to software,
+          // so put back everything set up above -- the stream especially, which
+          // would otherwise go on to open a framebuffer that has just been
+          // refused, and close the game part-way through the core's startup.
+          m_videoStream.DisableHardwareRendering();
+          m_clientBridge->ResetHardwareRendering();
+          typedData->get_current_framebuffer = nullptr;
+          typedData->get_proc_address = nullptr;
           return false;
+        }
       }
       break;
     }
@@ -430,7 +484,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       if (!typedData)
         return false;
 
-      UpdateVideoGeometry(typedData->geometry);
+      UpdateVideoGeometry(typedData->geometry, true);
 
       const double fps = typedData->timing.fps;
       const double sampleRate = typedData->timing.sample_rate;
@@ -487,7 +541,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     const retro_game_geometry* typedData = static_cast<const retro_game_geometry*>(data);
     if (typedData)
     {
-      UpdateVideoGeometry(*typedData);
+      UpdateVideoGeometry(*typedData, false);
     }
     break;
   }
@@ -608,12 +662,32 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     }
     break;
   }
+  case RETRO_ENVIRONMENT_GET_CLEAR_ALL_THREAD_WAITS_CB:
+  {
+    retro_environment_t* typedData = static_cast<retro_environment_t*>(data);
+    if (typedData)
+      *typedData = ClearAllThreadWaits;
+
+    break;
+  }
   case RETRO_ENVIRONMENT_SET_HW_SHARED_CONTEXT:
   {
     // Parameter is ignored
     (void)data;
 
-    // Not implemented
+    // Declined. This asks for a context the core may create further contexts
+    // from, on its own threads, which Kodi has no way to hand out. It is not
+    // the same thing as the context Kodi creates for hardware rendering, which
+    // does share Kodi's objects and is unaffected by this answer.
+    //
+    // Logged because cores warn about the refusal in terms that read like a
+    // failure of the hardware rendering setup. It is not: a core that asks for
+    // this loses whatever it wanted the extra contexts for, typically
+    // compiling shaders on a worker thread, and renders normally without them.
+    kodi::Log(ADDON_LOG_DEBUG,
+              "Core asked to create its own contexts (SET_HW_SHARED_CONTEXT); declined, the "
+              "frontend cannot provide them. Hardware rendering is unaffected.");
+
     return false;
   }
   case RETRO_ENVIRONMENT_GET_VFS_INTERFACE:
@@ -750,10 +824,31 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   case RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER:
   {
     retro_hw_context_type* typedData = static_cast<retro_hw_context_type*>(data);
+    // Probing replaces pending context properties, so leave a real negotiation intact.
+    if (!typedData || !m_addon || m_videoStream.IsHardwareRendering())
+      return false;
 
-    // Not implemented
-    (void)typedData;
-    return false;
+    retro_hw_context_type preferred = RETRO_HW_CONTEXT_NONE;
+    for (const auto context : {RETRO_HW_CONTEXT_OPENGL_CORE, RETRO_HW_CONTEXT_OPENGLES3})
+    {
+      game_hw_rendering_properties properties{};
+      properties.context_type = LibretroTranslator::GetHWContextType(context);
+      properties.version_major = 3;
+      properties.version_minor = context == RETRO_HW_CONTEXT_OPENGL_CORE ? 2 : 0;
+      if (m_addon->EnableHardwareRendering(properties))
+      {
+        preferred = context;
+        break;
+      }
+    }
+
+    // NONE clears both the accepted probe and any refusal without creating a context.
+    m_addon->EnableHardwareRendering({});
+    if (preferred == RETRO_HW_CONTEXT_NONE)
+      return false;
+
+    *typedData = preferred;
+    return true;
   }
   case RETRO_ENVIRONMENT_GET_DISK_CONTROL_INTERFACE_VERSION:
   {
