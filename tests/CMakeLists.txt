@@ -27,7 +27,7 @@ if(RCHEEVOS_INCLUDE_DIR AND RCHEEVOS_LIBRARY)
   add_test(NAME cheevos_memory COMMAND test_cheevos_memory)
   set_tests_properties(cheevos_memory PROPERTIES TIMEOUT 10)
 else()
-  message(STATUS "RA memory tests disabled: set RCHEEVOS_INCLUDE_DIR and RCHEEVOS_LIBRARY to v12.3.0")
+  message(STATUS "RA memory tests disabled: set RCHEEVOS_INCLUDE_DIR and RCHEEVOS_LIBRARY to v12.5.0")
 endif()
 
 set(GAME_LIBRETRO_LIBRARY "" CACHE FILEPATH "Built game.libretro library for retained-instance tests")

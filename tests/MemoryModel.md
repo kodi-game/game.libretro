@@ -133,7 +133,7 @@ standard-memory fallback. State, rather than a special generation value,
 determines whether a cached key is meaningful. Console-specific address
 translation stays entirely in rcheevos.
 
-Both pinned and current rcheevos consume the descriptor array synchronously:
+Both audited rcheevos revisions consume the descriptor array synchronously:
 `rc_libretro_memory_get_descriptor` is used during initialization, and only the
 resulting RAM pointers and sizes are copied into the regions object. Neither the
 map, its strings, nor its fallback callback is retained. The temporary descriptor
@@ -146,7 +146,8 @@ unchanged: the only memory-code diff is an explicit `uint32_t` cast of the
 `disconnect_size` expression. `memory_init`, `memory_destroy`, `memory_read`,
 `memory_find` / `find_avail`, descriptor selection/reduction, and standard-memory
 fallback have the same behavior. Other diffs concern disallowed core settings and
-string comparisons, outside this task. No dependency bump or backport is needed.
+string comparisons, outside the memory-model work. That work required no
+dependency bump or backport; the dependency was subsequently updated to v12.5.0.
 
 ## Deterministic test provenance
 
