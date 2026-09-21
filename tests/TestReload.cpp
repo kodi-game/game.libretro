@@ -18,6 +18,7 @@
 #include <cstring>
 #include <dlfcn.h>
 #include <map>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -51,6 +52,7 @@ HardwareBackend backend = HardwareBackend::OpenGL;
 game_hw_rendering_properties negotiated{};
 bool hardwareRefused = false;
 unsigned negotiations = 0;
+std::vector<std::string> settingsDirectories;
 
 void Require(bool condition, const char* message)
 {
@@ -212,6 +214,7 @@ int main(int argc, char** argv)
   Require(argc == 3 || argc == 4,
           "usage: test_reload <wrapper library> <fixture core library> [scenario]");
   const char* scenario = argc == 4 ? argv[3] : "software";
+  const bool testSettings = std::strcmp(scenario, "settings_core_switch") == 0;
   const bool testHardware = std::strcmp(scenario, "hardware") == 0;
   const bool testPreference = std::strncmp(scenario, "preferred_", 10) == 0;
   const bool testHandoff = std::strcmp(scenario, "retained_hardware_software") == 0;
@@ -253,6 +256,16 @@ int main(int argc, char** argv)
   filesystemCallbacks.directory_exists = [](void*, const char*) { return true; };
   filesystemCallbacks.file_exists = [](void*, const char*, bool) { return false; };
   filesystemCallbacks.stat_file = [](void*, const char*, STAT_STRUCTURE*) { return false; };
+  if (testSettings)
+  {
+    addonCallbacks.get_setting_string = [](KODI_ADDON_BACKEND_HDL, const char*, char**)
+    { return false; };
+    filesystemCallbacks.directory_exists = [](void*, const char* path)
+    {
+      settingsDirectories.emplace_back(path);
+      return true;
+    };
+  }
   if (memoryRetry)
   {
     filesystemCallbacks.file_exists = [](void*, const char*, bool) { return true; };
@@ -312,7 +325,72 @@ int main(int argc, char** argv)
   const ADDON_STATUS status = create(&interface);
   Require(status == ADDON_STATUS_OK || status == ADDON_STATUS_NEED_SETTINGS, "addon creation failed");
 
-  if (testMemoryMap)
+  if (testSettings)
+  {
+    const char* keys[] = {"core_a_option", "core_b_option", "core_c_option"};
+    const char* profiles[] = {"/unused-reload-test", "/unused-core-b", "/unused-core-c"};
+    for (unsigned cycle = 0; cycle < 3; ++cycle)
+    {
+      if (cycle != 0)
+      {
+        functions.destroy(interface.addonBase);
+        interface.addonBase = nullptr;
+        interface.globalSingleInstance = nullptr;
+        properties.profile_directory = profiles[cycle];
+        const ADDON_STATUS nextStatus = create(&interface);
+        Require(nextStatus == ADDON_STATUS_OK || nextStatus == ADDON_STATUS_NEED_SETTINGS,
+                "next core creation failed");
+      }
+      bool changed = false;
+      Require(environment(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &changed) && changed,
+              "new core must start with changed settings");
+      settingsDirectories.clear();
+      if (cycle == 0)
+      {
+        retro_variable options[] = {{keys[cycle], "Core A option; first|second"}, {nullptr, nullptr}};
+        Require(environment(RETRO_ENVIRONMENT_SET_VARIABLES, options), "legacy registration failed");
+      }
+      else if (cycle == 1)
+      {
+        retro_core_option_definition options[2]{};
+        options[0].key = keys[cycle];
+        options[0].desc = "Core B option";
+        options[0].values[0].value = "first";
+        options[0].values[1].value = "second";
+        options[0].default_value = "second";
+        Require(environment(RETRO_ENVIRONMENT_SET_CORE_OPTIONS, options), "v1 registration failed");
+      }
+      else
+      {
+        retro_core_option_v2_definition options[2]{};
+        options[0].key = keys[cycle];
+        options[0].desc = "Core C option";
+        options[0].values[0].value = "first";
+        options[0].values[1].value = "second";
+        options[0].default_value = "second";
+        retro_core_options_v2 definitions{nullptr, options};
+        Require(environment(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2, &definitions),
+                "v2 registration failed");
+      }
+      retro_variable value{keys[cycle], nullptr};
+      Require(environment(RETRO_ENVIRONMENT_GET_VARIABLE, &value) && value.value &&
+                  std::strcmp(value.value, cycle == 0 ? "first" : "second") == 0,
+              "current core option missing or incorrect");
+      Require(environment(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &changed) && !changed,
+              "reading settings must clear changed flag");
+      for (unsigned previous = 0; previous < cycle; ++previous)
+      {
+        value = {keys[previous], nullptr};
+        Require(environment(RETRO_ENVIRONMENT_GET_VARIABLE, &value) && value.value &&
+                    value.value[0] == '\0', "previous core option survived teardown");
+      }
+      Require(settingsDirectories.size() == 3 &&
+                  settingsDirectories.front() == std::string(profiles[cycle]) + "/generated",
+              "each core must attempt settings generation in its own profile");
+    }
+    std::puts("PASS: core settings, change notification, and generation reset across three lifetimes");
+  }
+  else if (testMemoryMap)
   {
     Require(core.initializations == 1 && core.acceptedMemoryMaps == 1,
             "retro_init memory map was not accepted");

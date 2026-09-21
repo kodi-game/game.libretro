@@ -37,7 +37,13 @@ void CLibretroSettings::Initialize(CGameLibRetro* addon)
 
 void CLibretroSettings::Deinitialize()
 {
+  std::unique_lock<std::mutex> lock(m_mutex);
+
   m_addon = nullptr;
+  m_profileDirectory.clear();
+  m_settings.clear();
+  m_bChanged = true;
+  m_bGenerated = false;
 }
 
 bool CLibretroSettings::Changed()
