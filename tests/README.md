@@ -14,7 +14,7 @@ cmake --build /tmp/game-libretro-memory-tests
 ctest --test-dir /tmp/game-libretro-memory-tests --output-on-failure
 ```
 
-To also run `cheevos_memory`, point to the **already-built pinned v12.3.0**
+To also run `cheevos_memory`, point to the **already-built pinned v12.5.0**
 dependency used by the addon. No dependency is downloaded by this test project:
 
 ```sh
