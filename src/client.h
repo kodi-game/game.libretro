@@ -9,6 +9,7 @@
 
 #include "libretro/ClientBridge.h"
 #include "libretro/LibretroDLL.h"
+#include "memory/LibretroMemory.h"
 #include "utils/Timer.h"
 
 #include <kodi/addon-instance/Game.h>
@@ -102,13 +103,20 @@ public:
   std::string GetImagePath(unsigned int imageIndex) override;
   std::string GetImageLabel(unsigned int imageIndex) override;
 
+  LIBRETRO::CLibretroMemory& Memory() { return m_memory; }
+  const LIBRETRO::CLibretroMemory& Memory() const { return m_memory; }
+
 private:
   bool LoadGameInternal(const retro_game_info* gameInfo);
 
   LIBRETRO::Timer                         m_timer;
   LIBRETRO::CLibretroDLL                  m_client;
+  // The DLL must outlive the memory component's borrowed core functions.
+  LIBRETRO::CLibretroMemory               m_memory;
   LIBRETRO::CClientBridge                 m_clientBridge;
   std::vector<LIBRETRO::CGameInfoLoader*> m_gameInfo;
   bool                                    m_supportsVFS = false; // TODO
   int64_t                                 m_frameTimeLast = 0;
+  bool                                    m_coreInitialized = false;
+  bool                                    m_contentLoaded = false;
 };

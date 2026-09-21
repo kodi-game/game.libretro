@@ -6,17 +6,18 @@
  */
 #pragma once
 
+#include "memory/CheevosMemory.h"
+
 #include <atomic>
 #include <chrono>
-#include <functional>
 #include <future>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <vector>
 
 #define RC_CLIENT_SUPPORTS_HASH
 #include <rcheevos/rc_client.h>
-#include <rcheevos/rc_libretro.h>
 
 namespace kodi
 {
@@ -29,9 +30,6 @@ class CInstanceGame;
 namespace LIBRETRO
 {
 
-/// @brief Callback to read core memory: (type) -> (data_ptr, size)
-using MemoryAccessCallback = std::function<bool(unsigned int type, uint8_t*& data, size_t& size)>;
-
 class CCheevos
 {
 public:
@@ -41,7 +39,7 @@ public:
   /// @brief Initialize rc_client and begin login + game identification
   void Initialize(kodi::addon::CInstanceGame* gameInstance,
                   const std::string& gamePath,
-                  MemoryAccessCallback memoryCallback);
+                  const CLibretroMemory& memory);
   void Deinitialize();
 
   /// @brief Store credentials from Kodi (called before LoadGame)
@@ -139,7 +137,7 @@ private:
   void DispatchServerResponses();
   void UpdateRichPresence();
 
-  // rc_client C callbacks (static — use s_instance to get back to instance)
+  // rc_client C callbacks recover this instance through rc_client userdata.
   static void RcheevosEventHandler(const rc_client_event_t* event, rc_client_t* client);
   static void RcheevosServerCall(const rc_api_request_t* request,
                                  rc_client_server_callback_t callback,
@@ -147,8 +145,6 @@ private:
                                  rc_client_t* client);
   static uint32_t RcheevosReadMemory(uint32_t address, uint8_t* buffer,
                                      uint32_t num_bytes, rc_client_t* client);
-  static void RcheevosGetCoreMemoryInfo(unsigned int id,
-                                         rc_libretro_core_memory_info_t* info);
   static void RcheevosLoginCallback(int result, const char* errorMessage, rc_client_t* client,
                                     void* userdata);
   static void RcheevosGameLoadCallback(int result, const char* errorMessage, rc_client_t* client,
@@ -177,8 +173,7 @@ private:
   std::chrono::steady_clock::time_point m_nextGameLoadAttempt;
 
   // Memory access
-  MemoryAccessCallback m_memoryCallback;
-  rc_libretro_memory_regions_t m_memoryRegions{};
+  std::unique_ptr<CCheevosMemory> m_memory;
   /*!
    * @brief Rebuild the achievement list for progress roughly once a second
    *
@@ -193,9 +188,6 @@ private:
 
   /// @brief Whether the "progress doesn't fit" warning has been issued
   bool m_progressTooLargeWarned{false};
-
-  std::atomic<bool> m_memoryInitialized{false};
-  std::mutex m_memoryMutex;
 
   // Progress handed over before the game was identified, applied once it is.
   // Empty with the flag set means a reset was asked for.

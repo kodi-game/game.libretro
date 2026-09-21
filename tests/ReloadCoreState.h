@@ -32,4 +32,18 @@ struct ReloadCoreState
   unsigned memoryAttempts{};
   bool emitFailureFrame{};
   unsigned failedCallbacks{};
+  bool memoryMaps{};
+  bool publishLoadMap{};
+  bool replaceMapOnRun{};
+  bool invalidMapOnRun{};
+  unsigned memoryMapCalls{};
+  unsigned acceptedMemoryMaps{};
+  unsigned rejectedMemoryMaps{};
+  unsigned runtimeReplacements{};
+  unsigned memoryBuffer{};
+  unsigned memoryQueriesAfterUnload{};
+  unsigned initializations{};
+  unsigned deinitializations{};
+  unsigned unloads{};
+  bool deinitializedWithContent{};
 };
