@@ -56,3 +56,23 @@ configuring both the wrapper and these tests.
 
 The test driver and fixture core use `dlopen`, so this harness supports POSIX
 platforms. Their architecture must match the wrapper.
+
+## GitHub Actions
+
+[Regression tests](../.github/workflows/tests.yml) runs every registered CTest on
+pull requests and pushes to `Piers` and `retroplayer-piers`, using one native
+`ubuntu-latest` job. The temporary paired Kodi repository and branch are defined
+in the workflow's top-level environment variables.
+
+The job generates a fresh SDK with Kodi's `PrepareEnv.cmake`, then builds this
+checkout with Kodi's `build_addon()` helper and the internal libretro-common and
+rcheevos dependencies. Both the wrapper and harness use that SDK's CMake package
+and the paired checkout's headers. Ninja builds the wrapper once under
+`$RUNNER_TEMP/build-addon`; the harness loads its `game.libretro.so` symlink and
+uses the staged `build/depends/include/libretro-common` headers from that same
+build. Tests are built separately under `$RUNNER_TEMP/build-tests` and are never
+installed or packaged with the addon.
+
+CTest lists the discovered cases, fails if none are found, and prints individual
+failures. Each run also uploads `game-libretro-test-results`, including JUnit XML,
+the discovery listing, and CTest logs, even when a regression fails.
