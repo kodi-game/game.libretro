@@ -58,6 +58,7 @@ GAME_ERROR CClientBridge::HwContextReset(void)
   if (!m_retro_hw_context_reset)
     return GAME_ERROR_FAILED;
 
+  m_hwContextReset = true;
   m_retro_hw_context_reset();
 
   return GAME_ERROR_NO_ERROR;
@@ -65,12 +66,22 @@ GAME_ERROR CClientBridge::HwContextReset(void)
 
 GAME_ERROR CClientBridge::HwContextDestroy(void)
 {
+  if (!m_hwContextReset)
+    return GAME_ERROR_NO_ERROR;
+  m_hwContextReset = false;
   if (!m_retro_hw_context_destroy)
     return GAME_ERROR_FAILED;
 
   m_retro_hw_context_destroy();
 
   return GAME_ERROR_NO_ERROR;
+}
+
+void CClientBridge::ResetHardwareRendering()
+{
+  m_retro_hw_context_reset = nullptr;
+  m_retro_hw_context_destroy = nullptr;
+  m_hwContextReset = false;
 }
 
 GAME_ERROR CClientBridge::AudioEnable(bool enabled)
