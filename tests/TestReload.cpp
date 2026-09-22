@@ -33,6 +33,8 @@ struct StreamState
 
 std::map<KODI_GAME_STREAM_HANDLE, StreamState> streams;
 unsigned videoPackets = 0;
+std::vector<GAME_PIXEL_FORMAT> videoFormats;
+std::vector<GAME_VIDEO_ROTATION> videoRotations;
 unsigned audioPackets = 0;
 unsigned hardwarePackets = 0;
 unsigned hardwareOpens = 0;
@@ -65,6 +67,8 @@ void Require(bool condition, const char* message)
 
 KODI_GAME_STREAM_HANDLE OpenStream(KODI_HANDLE, const game_stream_properties* properties)
 {
+  if (properties->type == GAME_STREAM_VIDEO)
+    videoFormats.push_back(properties->video.format);
   if (properties->type == GAME_STREAM_HW_FRAMEBUFFER)
   {
     Require(negotiated.context_type != GAME_HW_CONTEXT_NONE,
@@ -181,6 +185,7 @@ void AddStreamData(KODI_HANDLE, KODI_GAME_STREAM_HANDLE handle, const game_strea
     Require(packet->video.width == 2 && packet->video.height == 2, "incorrect frame geometry");
     Require(packet->video.size == sizeof(expected), "incorrect video packet size");
     Require(std::memcmp(packet->video.data, expected, sizeof(expected)) == 0, "incorrect pixels");
+    videoRotations.push_back(packet->video.rotation);
     ++videoPackets;
   }
   else if (packet->type == GAME_STREAM_AUDIO)
@@ -215,6 +220,7 @@ int main(int argc, char** argv)
           "usage: test_reload <wrapper library> <fixture core library> [scenario]");
   const char* scenario = argc == 4 ? argv[3] : "software";
   const bool testSettings = std::strcmp(scenario, "settings_core_switch") == 0;
+  const bool testVideo = std::strcmp(scenario, "video_core_switch") == 0;
   const bool testHardware = std::strcmp(scenario, "hardware") == 0;
   const bool testPreference = std::strncmp(scenario, "preferred_", 10) == 0;
   const bool testHandoff = std::strcmp(scenario, "retained_hardware_software") == 0;
@@ -325,7 +331,51 @@ int main(int argc, char** argv)
   const ADDON_STATUS status = create(&interface);
   Require(status == ADDON_STATUS_OK || status == ADDON_STATUS_NEED_SETTINGS, "addon creation failed");
 
-  if (testSettings)
+  if (testVideo)
+  {
+    retro_pixel_format format = RETRO_PIXEL_FORMAT_RGB565;
+    unsigned rotation = 1;
+    Require(environment(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &format),
+            "core A pixel format registration failed");
+    Require(environment(RETRO_ENVIRONMENT_SET_ROTATION, &rotation),
+            "core A rotation registration failed");
+    for (unsigned cycle = 0; cycle < 2; ++cycle)
+    {
+      if (cycle != 0)
+      {
+        functions.destroy(interface.addonBase);
+        Require(streams.empty(), "core A teardown left streams open");
+        Require(core.deinitializations == 1 && core.unloads == 1 &&
+                    !core.deinitializedWithContent, "core A teardown failed");
+        interface.addonBase = nullptr;
+        interface.globalSingleInstance = nullptr;
+        const ADDON_STATUS nextStatus = create(&interface);
+        Require(nextStatus == ADDON_STATUS_OK || nextStatus == ADDON_STATUS_NEED_SETTINGS,
+                "core B creation failed");
+      }
+      Require(core.initializations == cycle + 1, "core initialization missing");
+      Require(gameFunctions.LoadGame(&game, "reload.test") == GAME_ERROR_NO_ERROR,
+              "video core load failed");
+      game_system_timing timing{};
+      Require(gameFunctions.GetGameTiming(&game, &timing) == GAME_ERROR_NO_ERROR,
+              "video core timing failed");
+      Require(timing.fps == 70.0 && timing.sample_rate == 48000.0, "incorrect timing");
+      Require(gameFunctions.RunFrame(&game) == GAME_ERROR_NO_ERROR, "video core frame failed");
+      Require(videoFormats.size() == cycle + 1 && videoRotations.size() == cycle + 1 &&
+                  videoPackets == cycle + 1, "video stream or frame missing");
+      const GAME_PIXEL_FORMAT expectedFormat =
+          cycle == 0 ? GAME_PIXEL_FORMAT_RGB565 : GAME_PIXEL_FORMAT_0RGB1555;
+      const GAME_VIDEO_ROTATION expectedRotation =
+          cycle == 0 ? GAME_VIDEO_ROTATION_90_CCW : GAME_VIDEO_ROTATION_0;
+      std::printf("Core %c: format=%d (expected %d), rotation=%d (expected %d)\n",
+                  'A' + cycle, videoFormats.back(), expectedFormat,
+                  videoRotations.back(), expectedRotation);
+      Require(videoFormats.back() == expectedFormat, "core video format leaked or was reset early");
+      Require(videoRotations.back() == expectedRotation, "core rotation leaked or was reset early");
+    }
+    std::puts("PASS: video format and rotation reset across retained-wrapper core lifetimes");
+  }
+  else if (testSettings)
   {
     const char* keys[] = {"core_a_option", "core_b_option", "core_c_option"};
     const char* profiles[] = {"/unused-reload-test", "/unused-core-b", "/unused-core-c"};
