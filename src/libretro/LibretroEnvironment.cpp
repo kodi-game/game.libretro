@@ -93,6 +93,9 @@ void CLibretroEnvironment::Deinitialize()
 {
   CloseStreams();
 
+  m_videoFormat = GAME_PIXEL_FORMAT_0RGB1555;
+  m_videoRotation = GAME_VIDEO_ROTATION_0;
+
   m_resources.Deinitialize();
   m_settings.Deinitialize();
   m_addon = nullptr;
