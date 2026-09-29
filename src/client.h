@@ -45,6 +45,7 @@ public:
   GAME_REGION GetRegion() override;
   bool RequiresGameLoop() override { return true; }
   GAME_ERROR RunFrame() override;
+  GAME_ERROR RunFrameSpeculative() override;
   GAME_ERROR Reset() override;
 
   // --- Hardware rendering operations -------------------------------------------
@@ -118,6 +119,7 @@ private:
   std::vector<LIBRETRO::CGameInfoLoader*> m_gameInfo;
   bool                                    m_supportsVFS = false; // TODO
   int64_t                                 m_frameTimeLast = 0;
+  int64_t                                 m_frameTimeDelta = 0;
   bool                                    m_coreInitialized = false;
   bool                                    m_contentLoaded = false;
 };

@@ -322,6 +322,7 @@ GAME_ERROR CGameLibRetro::RunFrame()
     delta = current - m_frameTimeLast;
 
   m_frameTimeLast = current;
+  m_frameTimeDelta = delta;
   m_clientBridge.FrameTime(delta);
 
   CLibretroEnvironment::Get().OnFrameBegin();
@@ -338,6 +339,21 @@ GAME_ERROR CGameLibRetro::RunFrame()
   m_client.retro_run();
 
   CCheevos::Get().DoFrame();
+
+  CLibretroEnvironment::Get().OnFrameEnd();
+
+  return GAME_ERROR_NO_ERROR;
+}
+
+GAME_ERROR CGameLibRetro::RunFrameSpeculative()
+{
+  // The frontend rolls this frame back, so achievements are left to the real
+  // frames, and the core is given the real frame's time step
+  m_clientBridge.FrameTime(m_frameTimeDelta);
+
+  CLibretroEnvironment::Get().OnFrameBegin();
+
+  m_client.retro_run();
 
   CLibretroEnvironment::Get().OnFrameEnd();
 
