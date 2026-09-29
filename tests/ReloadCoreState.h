@@ -49,4 +49,6 @@ struct ReloadCoreState
   bool audioThread{};
   bool keepGameInfo{};
   bool resetFoundGameInfo{};
+  bool shutdownOnRun{};
+  bool messageOnRun{};
 };

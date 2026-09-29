@@ -373,6 +373,7 @@ GAME_ERROR CGameLibRetro::RunFrame()
     delta = current - m_frameTimeLast;
 
   m_frameTimeLast = current;
+  m_frameTimeDelta = delta;
   m_clientBridge.FrameTime(delta);
 
   CLibretroEnvironment::Get().OnFrameBegin();
@@ -389,6 +390,24 @@ GAME_ERROR CGameLibRetro::RunFrame()
   m_client.retro_run();
 
   CCheevos::Get().DoFrame();
+
+  CLibretroEnvironment::Get().OnFrameEnd();
+
+  return GAME_ERROR_NO_ERROR;
+}
+
+GAME_ERROR CGameLibRetro::RunFrameSpeculative()
+{
+  if (CLibretroEnvironment::Get().IsSerializationIncomplete())
+    return GAME_ERROR_NOT_IMPLEMENTED;
+
+  // The frontend rolls this frame back, so achievements are left to the real
+  // frames, and the core is given the real frame's time step
+  m_clientBridge.FrameTime(m_frameTimeDelta);
+
+  CLibretroEnvironment::Get().OnFrameBegin(true);
+
+  m_client.retro_run();
 
   CLibretroEnvironment::Get().OnFrameEnd();
 
@@ -573,6 +592,24 @@ GAME_ERROR CGameLibRetro::Deserialize(const uint8_t* data, size_t size)
   bool result = m_client.retro_unserialize(data, size);
 
   return result ? GAME_ERROR_NO_ERROR : GAME_ERROR_FAILED;
+}
+
+GAME_ERROR CGameLibRetro::SerializeSpeculative(uint8_t* data, size_t size)
+{
+  CLibretroEnvironment::Get().SetRunaheadState(true);
+  const GAME_ERROR error = Serialize(data, size);
+  CLibretroEnvironment::Get().SetRunaheadState(false);
+
+  return error;
+}
+
+GAME_ERROR CGameLibRetro::DeserializeSpeculative(const uint8_t* data, size_t size)
+{
+  CLibretroEnvironment::Get().SetRunaheadState(true);
+  const GAME_ERROR error = Deserialize(data, size);
+  CLibretroEnvironment::Get().SetRunaheadState(false);
+
+  return error;
 }
 
 size_t CGameLibRetro::AchievementStateSize()
