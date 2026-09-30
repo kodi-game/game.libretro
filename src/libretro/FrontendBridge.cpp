@@ -534,14 +534,10 @@ int64_t CFrontendBridge::Seek(retro_vfs_file_handle *stream, int64_t offset, int
   if (whence == -1)
     return -1;
 
-  const int64_t newOffset = fileHandle->file->Seek(offset, whence);
-
-  if (newOffset < 0)
+  if (fileHandle->file->Seek(offset, whence) < 0)
     return -1;
 
-  // Return the resulting offset location as measured in bytes from the
-  // beginning of the file
-  return newOffset;
+  return 0;
 }
 
 int64_t CFrontendBridge::ReadFile(retro_vfs_file_handle *stream, void *s, uint64_t len)
