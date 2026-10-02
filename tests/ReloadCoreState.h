@@ -50,4 +50,5 @@ struct ReloadCoreState
   bool keepGameInfo{};
   bool resetFoundGameInfo{};
   bool shutdownOnRun{};
+  bool messageOnRun{};
 };
