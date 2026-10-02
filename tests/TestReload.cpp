@@ -13,6 +13,7 @@
 
 #include "ReloadCoreState.h"
 
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -56,6 +57,7 @@ bool hardwareRefused = false;
 unsigned negotiations = 0;
 // game.libretro's own settings, which Kodi never hands a core
 std::string addonSettingsFile;
+std::vector<std::string> logLines;
 
 void Require(bool condition, const char* message)
 {
@@ -231,6 +233,9 @@ int main(int argc, char** argv)
   const bool testMemoryMap = std::strncmp(scenario, "memory_map_", 11) == 0;
   const bool memoryRetry = std::strcmp(scenario, "failed_load_memory_retry") == 0;
   const bool standaloneFailure = std::strcmp(scenario, "failed_load_standalone") == 0;
+  const bool testCoreName = std::strncmp(scenario, "core_name", 9) == 0;
+  // Kodi has passed the core's name since game API 8.2.1
+  const bool olderKodi = std::strcmp(scenario, "core_name_older_kodi") == 0;
   if (std::strcmp(scenario, "preferred_gles") == 0)
     backend = HardwareBackend::OpenGLES;
   else if (std::strcmp(scenario, "preferred_none") == 0)
@@ -299,7 +304,8 @@ int main(int argc, char** argv)
   networkCallbacks.get_user_agent = [](void*) { return strdup("reload-test"); };
   AddonToKodiFuncTable_Addon callbacks{};
   callbacks.free_string = [](KODI_ADDON_BACKEND_HDL, char* value) { std::free(value); };
-  callbacks.addon_log_msg = [](KODI_ADDON_BACKEND_HDL, int, const char*) {};
+  callbacks.addon_log_msg = [](KODI_ADDON_BACKEND_HDL, int, const char* message)
+  { logLines.emplace_back(message); };
   callbacks.kodi_addon = &addonCallbacks;
   callbacks.kodi_filesystem = &filesystemCallbacks;
   callbacks.kodi_network = &networkCallbacks;
@@ -308,6 +314,8 @@ int main(int argc, char** argv)
   properties.supports_vfs = memoryRetry;
   properties.game_client_dll_path = argv[2];
   properties.profile_directory = "/unused-reload-test";
+  if (testCoreName)
+    properties.libretro_core = "reload_libretro";
   AddonToKodiFuncTable_Game gameCallbacks{};
   gameCallbacks.OpenStream = OpenStream;
   gameCallbacks.CloseStream = CloseStream;
@@ -331,7 +339,7 @@ int main(int argc, char** argv)
   currentGame = &game;
   KODI_ADDON_INSTANCE_INFO info{};
   info.type = ADDON_INSTANCE_GAME;
-  info.version = ADDON_INSTANCE_VERSION_GAME;
+  info.version = olderKodi ? "8.2.0" : ADDON_INSTANCE_VERSION_GAME;
   KODI_ADDON_INSTANCE_FUNC instanceFunctions{};
   KODI_ADDON_INSTANCE_STRUCT instance{};
   instance.info = &info;
@@ -353,7 +361,17 @@ int main(int argc, char** argv)
     Require(answered && !overscan, "game.libretro's crop overscan setting must reach the core");
   }
 
-  if (testVideo)
+  if (testCoreName)
+  {
+    const bool named = std::any_of(logLines.begin(), logLines.end(), [](const std::string& line)
+                                   { return line.find("Libretro core:   reload_libretro") !=
+                                            std::string::npos; });
+    // An older Kodi's properties end before the name, so it isn't read
+    Require(named != olderKodi, olderKodi ? "the name was read from an older Kodi"
+                                          : "the libretro core name Kodi passed was not used");
+    std::printf("PASS: %s\n", scenario);
+  }
+  else if (testVideo)
   {
     retro_pixel_format format = RETRO_PIXEL_FORMAT_RGB565;
     unsigned rotation = 1;

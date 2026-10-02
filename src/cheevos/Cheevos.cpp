@@ -37,8 +37,8 @@ constexpr const char* RA_CLIENT_NAME = "KodiRetroPlayer";
 /*!
  * @brief Reduce a name to something a User-Agent token can hold
  *
- * Cores name themselves freely -- "Beetle PSX", "Nestopia UE" -- and a space
- * would split the token in two for whoever reads it.
+ * Cores word their versions freely -- "1.53.2 (SVN)" -- and a space would
+ * split the token in two for whoever reads it.
  */
 std::string UserAgentToken(const std::string& value)
 {
@@ -118,7 +118,7 @@ void CCheevos::Initialize(kodi::addon::CInstanceGame* gameInstance,
 
     // Then the emulator, as RetroArch reports its core, because
     // RetroAchievements approves emulators and needs to know which one earned
-    // an unlock. Absent only if the core declined to name itself.
+    // an unlock. Absent if the core's add-on doesn't name it.
     if (!m_coreName.empty())
     {
       userAgent += " " + UserAgentToken(m_coreName);
