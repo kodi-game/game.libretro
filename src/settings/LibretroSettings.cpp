@@ -6,44 +6,26 @@
  */
 
 #include "LibretroSettings.h"
-#include "LanguageGenerator.h"
-#include "SettingsGenerator.h"
 #include "libretro-common/libretro.h"
 #include "log/Log.h"
 #include "client.h"
 
-#include <kodi/Filesystem.h>
-
 #include <algorithm>
-#include <assert.h>
 #include <utility>
 
 using namespace LIBRETRO;
 
 CLibretroSettings::CLibretroSettings() :
-  m_addon(nullptr),
-  m_bChanged(true),
-  m_bGenerated(false)
+  m_bChanged(true)
 {
-}
-
-void CLibretroSettings::Initialize(CGameLibRetro* addon)
-{
-  m_addon = addon;
-  assert(m_addon != nullptr);
-
-  m_profileDirectory = m_addon->ProfileDirectory();
 }
 
 void CLibretroSettings::Deinitialize()
 {
   std::unique_lock<std::mutex> lock(m_mutex);
 
-  m_addon = nullptr;
-  m_profileDirectory.clear();
   m_settings.clear();
   m_bChanged = true;
-  m_bGenerated = false;
 }
 
 bool CLibretroSettings::Changed()
@@ -60,9 +42,6 @@ void CLibretroSettings::SetUnchanged()
 
 void CLibretroSettings::SetAllSettings(const retro_variable* libretroVariables)
 {
-  // Keep track of whether Kodi has the correct settings
-  bool bValid = true;
-
   std::unique_lock<std::mutex> lock(m_mutex);
 
   if (m_settings.empty())
@@ -89,13 +68,11 @@ void CLibretroSettings::SetAllSettings(const retro_variable* libretroVariables)
         else
         {
           esyslog("Setting %s: invalid value \"%s\" (values are: %s)", setting.Key().c_str(), valueBuf.c_str(), variable->value);
-          bValid = false;
         }
       }
       else
       {
         esyslog("Setting %s not found by Kodi", setting.Key().c_str());
-        bValid = false;
       }
 
       m_settings.insert(std::make_pair(setting.Key(), std::move(setting)));
@@ -103,9 +80,6 @@ void CLibretroSettings::SetAllSettings(const retro_variable* libretroVariables)
 
     m_bChanged = true;
   }
-
-  if (!bValid)
-    GenerateSettings();
 }
 
 namespace
@@ -128,7 +102,7 @@ std::vector<std::string> GetOptionValues(const retro_core_option_value* values)
 }
 } // namespace
 
-void CLibretroSettings::AddSetting(CLibretroSetting setting, bool& bValid)
+void CLibretroSettings::AddSetting(CLibretroSetting setting)
 {
   if (setting.Values().empty())
   {
@@ -149,13 +123,11 @@ void CLibretroSettings::AddSetting(CLibretroSetting setting, bool& bValid)
     {
       esyslog("Setting %s: invalid value \"%s\" (values are: %s)", setting.Key().c_str(),
               valueBuf.c_str(), setting.ValuesStr().c_str());
-      bValid = false;
     }
   }
   else
   {
     esyslog("Setting %s not found by Kodi", setting.Key().c_str());
-    bValid = false;
   }
 
   m_settings.insert(std::make_pair(setting.Key(), std::move(setting)));
@@ -163,8 +135,6 @@ void CLibretroSettings::AddSetting(CLibretroSetting setting, bool& bValid)
 
 void CLibretroSettings::SetAllSettings(const retro_core_option_definition* definitions)
 {
-  bool bValid = true;
-
   std::unique_lock<std::mutex> lock(m_mutex);
 
   if (m_settings.empty())
@@ -173,21 +143,15 @@ void CLibretroSettings::SetAllSettings(const retro_core_option_definition* defin
          definition != nullptr && definition->key != nullptr; definition++)
     {
       AddSetting(CLibretroSetting(definition->key, definition->desc,
-                                  GetOptionValues(definition->values), definition->default_value),
-                 bValid);
+                                  GetOptionValues(definition->values), definition->default_value));
     }
 
     m_bChanged = true;
   }
-
-  if (!bValid)
-    GenerateSettings();
 }
 
 void CLibretroSettings::SetAllSettings(const retro_core_option_v2_definition* definitions)
 {
-  bool bValid = true;
-
   std::unique_lock<std::mutex> lock(m_mutex);
 
   if (m_settings.empty())
@@ -196,15 +160,11 @@ void CLibretroSettings::SetAllSettings(const retro_core_option_v2_definition* de
          definition != nullptr && definition->key != nullptr; definition++)
     {
       AddSetting(CLibretroSetting(definition->key, definition->desc,
-                                  GetOptionValues(definition->values), definition->default_value),
-                 bValid);
+                                  GetOptionValues(definition->values), definition->default_value));
     }
 
     m_bChanged = true;
   }
-
-  if (!bValid)
-    GenerateSettings();
 }
 
 const char* CLibretroSettings::GetCurrentValue(const std::string& settingName)
@@ -233,80 +193,15 @@ void CLibretroSettings::SetCurrentValue(const std::string& name, const std::stri
     return;
   }
 
-  // Keep track of whether Kodi has the correct settings
-  bool bValid = true;
-
   // Check to make sure value is a valid value reported by libretro
   auto it = m_settings.find(name);
   if (it == m_settings.end())
   {
     esyslog("Kodi setting %s unknown to libretro!", name.c_str());
-    bValid = false;
   }
   else if (it->second.CurrentValue() != value)
   {
     it->second.SetCurrentValue(value);
     m_bChanged = true;
-  }
-
-  if (!bValid)
-    GenerateSettings();
-}
-
-void CLibretroSettings::GenerateSettings()
-{
-  if (!m_bGenerated && !m_settings.empty())
-  {
-    isyslog("Invalid settings detected, generating new settings and language files");
-
-    std::string generatedPath = m_profileDirectory;
-
-    std::string addonId = kodi::vfs::GetFileName(generatedPath);
-
-    generatedPath += "/" SETTINGS_GENERATED_DIRECTORY_NAME;
-
-    // Ensure folder exists
-    if (!kodi::vfs::DirectoryExists(generatedPath))
-    {
-      dsyslog("Creating directory for settings and language files: %s", generatedPath.c_str());
-      kodi::vfs::CreateDirectory(generatedPath);
-    }
-
-    bool bSuccess = false;
-
-    CSettingsGenerator settingsGen(generatedPath);
-    if (!settingsGen.GenerateSettings(m_settings))
-      esyslog("Failed to generate %s", SETTINGS_GENERATED_SETTINGS_NAME);
-    else
-      bSuccess = true;
-
-    generatedPath += "/" SETTINGS_GENERATED_LANGUAGE_SUBDIR;
-
-    // Ensure language folder exists
-    if (!kodi::vfs::DirectoryExists(generatedPath))
-    {
-      dsyslog("Creating directory for settings and language files: %s", generatedPath.c_str());
-      kodi::vfs::CreateDirectory(generatedPath);
-    }
-
-    generatedPath += "/" SETTINGS_GENERATED_LANGUAGE_ENGLISH_SUBDIR;
-
-    // Ensure English folder exists
-    if (!kodi::vfs::DirectoryExists(generatedPath))
-    {
-      dsyslog("Creating directory for settings and language files: %s", generatedPath.c_str());
-      kodi::vfs::CreateDirectory(generatedPath);
-    }
-
-    CLanguageGenerator languageGen(addonId, generatedPath);
-    if (!languageGen.GenerateLanguage(m_settings))
-      esyslog("Failed to generate %s", SETTINGS_GENERATED_LANGUAGE_NAME);
-    else
-      bSuccess = true;
-
-    if (bSuccess)
-      isyslog("Settings and language files have been placed in %s", generatedPath.c_str());
-
-    m_bGenerated = true;
   }
 }

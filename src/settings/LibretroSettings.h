@@ -14,7 +14,6 @@
 #include <map>
 #include <string>
 
-class CGameLibRetro;
 struct retro_variable;
 struct retro_core_option_definition;
 struct retro_core_option_v2_definition;
@@ -26,7 +25,6 @@ namespace LIBRETRO
   public:
     CLibretroSettings();
 
-    void Initialize(CGameLibRetro* addon);
     void Deinitialize();
 
     bool Changed();
@@ -53,21 +51,10 @@ namespace LIBRETRO
     /*!
      * \brief Register one setting, checking it against what Kodi has
      */
-    void AddSetting(CLibretroSetting setting, bool& bValid);
+    void AddSetting(CLibretroSetting setting);
 
-    /*!
-     * \brief Generate settings and language files for Kodi
-     */
-    void GenerateSettings();
-
-    // Frontend variables
-    CGameLibRetro*                m_addon;
-    std::string                   m_profileDirectory;
-
-    // Settings variables
     LibretroSettings   m_settings;
     bool               m_bChanged;
-    bool               m_bGenerated; // True if settings and language files have been generated
     std::mutex         m_mutex;
   };
 } // namespace LIBRETRO
