@@ -8,6 +8,21 @@
           <control type="toggle" />
         </setting>
       </group>
+      <group id="2" label="30002">
+        <setting id="sharesystemdirectory" type="boolean" label="30003" help="30004">
+          <default>false</default>
+          <control type="toggle" />
+        </setting>
+        <setting id="sharedsystemdirectory" type="path" label="30005" help="30006">
+          <default>special://profile/addon_data/game.libretro/resources/system/</default>
+          <dependencies>
+            <dependency type="enable" setting="sharesystemdirectory">true</dependency>
+          </dependencies>
+          <control type="button" format="path">
+            <heading>30005</heading>
+          </control>
+        </setting>
+      </group>
     </category>
   </section>
 </settings>

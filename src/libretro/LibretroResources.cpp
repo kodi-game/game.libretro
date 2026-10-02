@@ -8,6 +8,7 @@
 #include "LibretroResources.h"
 #include "LibretroDefines.h"
 #include "log/Log.h"
+#include "settings/Settings.h"
 
 #include "client.h"
 
@@ -32,24 +33,24 @@ void CLibretroResources::Initialize(CGameLibRetro* addon)
   m_addon->ResourceDirectories(dirs);
   for (const auto& dir : dirs)
   {
-    if (dir.empty())
-      continue;
+    if (!dir.empty())
+      m_resourceDirectories.push_back(dir);
+  }
 
-    // Set system path to first resource path discovered
-    if (m_systemDirectory.empty())
-    {
-      m_systemDirectory = dir + "/" LIBRETRO_SYSTEM_DIRECTORY_NAME;
+  // With sharing on, every emulator uses the shared folder, so a BIOS needs
+  // putting there only once
+  m_systemDirectory = CSettings::Get().SharedSystemDirectory();
 
-      // Ensure folder exists
-      if (!kodi::vfs::DirectoryExists(m_systemDirectory))
-      {
-        dsyslog("Creating system directory: %s", m_systemDirectory.c_str());
-        kodi::vfs::CreateDirectory(m_systemDirectory);
-      }
-    }
+  // Set system path to first resource path discovered
+  if (m_systemDirectory.empty() && !m_resourceDirectories.empty())
+    m_systemDirectory = m_resourceDirectories.front() + "/" LIBRETRO_SYSTEM_DIRECTORY_NAME;
 
-  m_resourceDirectories.push_back(std::move(dir));
-}
+  // Ensure folder exists
+  if (!m_systemDirectory.empty() && !kodi::vfs::DirectoryExists(m_systemDirectory))
+  {
+    dsyslog("Creating system directory: %s", m_systemDirectory.c_str());
+    kodi::vfs::CreateDirectory(m_systemDirectory);
+  }
 
   m_saveDirectory = m_addon->ProfileDirectory() + "/" LIBRETRO_SAVE_DIRECTORY_NAME;
 
