@@ -72,7 +72,6 @@ void CLibretroEnvironment::InitializeEnvironment(CGameLibRetro* addon,
 
   InitializeStreams();
 
-  m_settings.Initialize(m_addon);
   m_resources.Initialize(m_addon);
 
   // Install environment callback

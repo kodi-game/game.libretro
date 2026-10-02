@@ -54,7 +54,6 @@ HardwareBackend backend = HardwareBackend::OpenGL;
 game_hw_rendering_properties negotiated{};
 bool hardwareRefused = false;
 unsigned negotiations = 0;
-std::vector<std::string> settingsDirectories;
 
 void Require(bool condition, const char* message)
 {
@@ -266,11 +265,6 @@ int main(int argc, char** argv)
   {
     addonCallbacks.get_setting_string = [](KODI_ADDON_BACKEND_HDL, const char*, char**)
     { return false; };
-    filesystemCallbacks.directory_exists = [](void*, const char* path)
-    {
-      settingsDirectories.emplace_back(path);
-      return true;
-    };
   }
   if (memoryRetry)
   {
@@ -394,7 +388,6 @@ int main(int argc, char** argv)
       bool changed = false;
       Require(environment(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &changed) && changed,
               "new core must start with changed settings");
-      settingsDirectories.clear();
       if (cycle == 0)
       {
         retro_variable options[] = {{keys[cycle], "Core A option; first|second"}, {nullptr, nullptr}};
@@ -434,11 +427,8 @@ int main(int argc, char** argv)
         Require(environment(RETRO_ENVIRONMENT_GET_VARIABLE, &value) && value.value &&
                     value.value[0] == '\0', "previous core option survived teardown");
       }
-      Require(settingsDirectories.size() == 3 &&
-                  settingsDirectories.front() == std::string(profiles[cycle]) + "/generated",
-              "each core must attempt settings generation in its own profile");
     }
-    std::puts("PASS: core settings, change notification, and generation reset across three lifetimes");
+    std::puts("PASS: core settings and change notification across three lifetimes");
   }
   else if (testMemoryMap)
   {

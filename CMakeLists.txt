@@ -56,11 +56,9 @@ set(LIBRETRO_SOURCES src/client.cpp
                      src/memory/CheevosMemory.cpp
                      src/memory/LibretroMemory.cpp
                      src/memory/MemoryMap.cpp
-                     src/settings/LanguageGenerator.cpp
                      src/settings/LibretroSetting.cpp
                      src/settings/LibretroSettings.cpp
                      src/settings/Settings.cpp
-                     src/settings/SettingsGenerator.cpp
                      src/utils/Base64.cpp
                      src/utils/Timer.cpp
                      src/video/VideoGeometry.cpp
@@ -101,10 +99,8 @@ set(LIBRETRO_HEADERS src/GameInfoLoader.h
                      src/memory/CheevosMemory.h
                      src/memory/LibretroMemory.h
                      src/memory/MemoryMap.h
-                     src/settings/LanguageGenerator.h
                      src/settings/LibretroSetting.h
                      src/settings/LibretroSettings.h
-                     src/settings/SettingsGenerator.h
                      src/settings/Settings.h
                      src/settings/SettingsTypes.h
                      src/utils/Base64.h
