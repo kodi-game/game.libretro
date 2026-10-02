@@ -8,6 +8,7 @@
 #include <kodi/c-api/addon_base.h>
 #include <kodi/c-api/addon-instance/game.h>
 #include <kodi/c-api/filesystem.h>
+#include <kodi/c-api/general.h>
 #include <kodi/c-api/network.h>
 #include <kodi/versions.h>
 
@@ -57,6 +58,7 @@ unsigned negotiations = 0;
 // game.libretro's own settings, which Kodi never hands a core
 std::string addonSettingsFile;
 unsigned gameCloses = 0;
+unsigned notifications = 0;
 
 void Require(bool condition, const char* message)
 {
@@ -233,6 +235,7 @@ int main(int argc, char** argv)
   const bool memoryRetry = std::strcmp(scenario, "failed_load_memory_retry") == 0;
   const bool standaloneFailure = std::strcmp(scenario, "failed_load_standalone") == 0;
   const bool testShutdown = std::strcmp(scenario, "speculative_shutdown") == 0;
+  const bool testMessage = std::strcmp(scenario, "speculative_message") == 0;
   if (std::strcmp(scenario, "preferred_gles") == 0)
     backend = HardwareBackend::OpenGLES;
   else if (std::strcmp(scenario, "preferred_none") == 0)
@@ -305,6 +308,14 @@ int main(int argc, char** argv)
   callbacks.kodi_addon = &addonCallbacks;
   callbacks.kodi_filesystem = &filesystemCallbacks;
   callbacks.kodi_network = &networkCallbacks;
+  AddonToKodiFuncTable_kodi kodiCallbacks{};
+  kodiCallbacks.queue_notification = [](void*, int, const char*, const char*, const char*,
+                                        unsigned int, bool, unsigned int)
+  {
+    ++notifications;
+    return true;
+  };
+  callbacks.kodi = &kodiCallbacks;
 
   AddonProps_Game properties{};
   properties.supports_vfs = memoryRetry;
@@ -817,6 +828,22 @@ int main(int argc, char** argv)
     Require(gameFunctions.RunFrame(&game) == GAME_ERROR_NO_ERROR, "shutdown frame failed");
     Require(gameCloses == 1, "real frame did not close the game");
     Require(gameFunctions.UnloadGame(&game) == GAME_ERROR_NO_ERROR, "shutdown unload failed");
+    std::printf("PASS: %s\n", scenario);
+  }
+  else if (testMessage)
+  {
+    Require(gameFunctions.LoadGame(&game, "reload.test") == GAME_ERROR_NO_ERROR,
+            "message load failed");
+    game_system_timing timing{};
+    Require(gameFunctions.GetGameTiming(&game, &timing) == GAME_ERROR_NO_ERROR,
+            "message timing failed");
+    core.messageOnRun = true;
+    Require(gameFunctions.RunFrameSpeculative(&game) == GAME_ERROR_NO_ERROR,
+            "speculative frame failed");
+    Require(notifications == 0, "speculative frame showed a message");
+    Require(gameFunctions.RunFrame(&game) == GAME_ERROR_NO_ERROR, "message frame failed");
+    Require(notifications == 1, "real frame did not show the message");
+    Require(gameFunctions.UnloadGame(&game) == GAME_ERROR_NO_ERROR, "message unload failed");
     std::printf("PASS: %s\n", scenario);
   }
   else

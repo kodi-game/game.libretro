@@ -53,7 +53,7 @@ if(GAME_LIBRETRO_LIBRARY)
                    hardware_geometry_growth failed_load_content failed_load_standalone
                    failed_load_memory_retry memory_map_reload memory_map_runtime_replace
                    memory_map_failed_load settings_core_switch video_core_switch
-                   crop_overscan speculative_shutdown)
+                   crop_overscan speculative_shutdown speculative_message)
     add_test(NAME ${scenario}
              COMMAND test_reload "${GAME_LIBRETRO_LIBRARY}" $<TARGET_FILE:reload_core> ${scenario})
     set_tests_properties(${scenario} PROPERTIES TIMEOUT 10)
