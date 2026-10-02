@@ -87,6 +87,11 @@ void retro_run()
   {
     if (state.shutdownOnRun)
       environment(RETRO_ENVIRONMENT_SHUTDOWN, nullptr);
+    if (state.messageOnRun)
+    {
+      retro_message message{"Reload test", 60};
+      environment(RETRO_ENVIRONMENT_SET_MESSAGE, &message);
+    }
     if (state.replaceMapOnRun)
     {
       state.replaceMapOnRun = false;

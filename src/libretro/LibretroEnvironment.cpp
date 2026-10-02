@@ -197,7 +197,9 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     {
       // Sets a message to be displayed. Generally not for trivial messages.
       const retro_message* typedData = static_cast<const retro_message*>(data);
-      if (typedData)
+      // A rolled-back frame can't show one. The real frame shows it when it
+      // gets there.
+      if (typedData && !m_speculativeFrame)
       {
         const char* msg = typedData->msg;
         kodi::QueueFormattedNotification(QUEUE_INFO, msg);

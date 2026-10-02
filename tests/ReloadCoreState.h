@@ -48,4 +48,5 @@ struct ReloadCoreState
   bool deinitializedWithContent{};
   bool audioThread{};
   bool shutdownOnRun{};
+  bool messageOnRun{};
 };
