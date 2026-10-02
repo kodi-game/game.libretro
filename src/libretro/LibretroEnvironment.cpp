@@ -153,14 +153,16 @@ std::string CLibretroEnvironment::GetResourcePath(const char* relPath)
   return m_resources.GetFullPath(relPath);
 }
 
-void CLibretroEnvironment::OnFrameBegin()
+void CLibretroEnvironment::OnFrameBegin(bool speculative)
 {
+  m_speculativeFrame = speculative;
   m_videoStream.OnFrameBegin();
 }
 
 void CLibretroEnvironment::OnFrameEnd()
 {
   m_videoStream.OnFrameEnd();
+  m_speculativeFrame = false;
 }
 
 bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
@@ -204,7 +206,10 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     }
   case RETRO_ENVIRONMENT_SHUTDOWN:
     {
-      m_addon->CloseGame();
+      // A rolled-back frame can't end the game. If the game really ends, the
+      // real frame asks again.
+      if (!m_speculativeFrame)
+        m_addon->CloseGame();
       break;
     }
   case RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL:
