@@ -236,8 +236,16 @@ void CCheevos::Deinitialize()
   m_gameInstance = nullptr;
 }
 
-void CCheevos::SetHardcoreEnabled(bool enabled)
+bool CCheevos::SetHardcoreEnabled(bool enabled)
 {
+  const bool refused = enabled && m_coreName.empty();
+  if (refused)
+  {
+    kodi::Log(ADDON_LOG_WARNING,
+              "CCheevos: hardcore refused, the core's add-on doesn't give its libretro name");
+    enabled = false;
+  }
+
   m_hardcoreEnabled = enabled;
 
   kodi::Log(ADDON_LOG_INFO, "CCheevos: hardcore mode %s", enabled ? "enabled" : "disabled");
@@ -247,6 +255,8 @@ void CCheevos::SetHardcoreEnabled(bool enabled)
   // this call, which is forwarded to the frontend.
   if (m_rcClient != nullptr)
     rc_client_set_hardcore_enabled(m_rcClient, enabled ? 1 : 0);
+
+  return !refused;
 }
 
 void CCheevos::SetEncoreModeEnabled(bool enabled)

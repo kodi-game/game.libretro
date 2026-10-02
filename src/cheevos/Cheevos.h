@@ -64,8 +64,12 @@ public:
    * The frontend enforces the restrictions hardcore requires; this tells the
    * runtime, which will not let a session begun in casual mode carry on into
    * hardcore and asks for a reset instead.
+   *
+   * \return False if hardcore was asked for and refused, which it is for a
+   *         core with no libretro name: RetroAchievements restricts hardcore
+   *         per core by that name, so it couldn't hold the core to them
    */
-  void SetHardcoreEnabled(bool enabled);
+  bool SetHardcoreEnabled(bool enabled);
 
   /*!
    * \brief Play for achievements the user has already earned
