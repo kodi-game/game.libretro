@@ -594,8 +594,7 @@ GAME_ERROR CGameLibRetro::SetRetroAchievementsCredentials(const std::string& use
 
 GAME_ERROR CGameLibRetro::RCSetHardcoreEnabled(bool enabled)
 {
-  CCheevos::Get().SetHardcoreEnabled(enabled);
-  return GAME_ERROR_NO_ERROR;
+  return CCheevos::Get().SetHardcoreEnabled(enabled) ? GAME_ERROR_NO_ERROR : GAME_ERROR_REJECTED;
 }
 
 GAME_ERROR CGameLibRetro::RCSetEncoreModeEnabled(bool enabled)
