@@ -70,6 +70,8 @@ void CLibretroEnvironment::InitializeEnvironment(CGameLibRetro* addon,
   m_client = client;
   m_clientBridge = clientBridge;
 
+  CSettings::Get().ReadAddonSettings();
+
   InitializeStreams();
 
   m_resources.Initialize(m_addon);

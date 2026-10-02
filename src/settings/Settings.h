@@ -25,6 +25,11 @@ namespace LIBRETRO
     void SetSetting(const std::string& strName, const kodi::addon::CSettingValue& value);
 
     /*!
+     * \brief Read the settings that belong to game.libretro rather than the core
+     */
+    void ReadAddonSettings();
+
+    /*!
      * \brief True if the libretro core should crop overscan
      */
     bool CropOverscan(void) const { return m_bCropOverscan; }

@@ -59,6 +59,7 @@ set(LIBRETRO_SOURCES src/client.cpp
                      src/settings/LibretroSetting.cpp
                      src/settings/LibretroSettings.cpp
                      src/settings/Settings.cpp
+                     src/settings/SettingsXML.cpp
                      src/utils/Base64.cpp
                      src/utils/Timer.cpp
                      src/video/VideoGeometry.cpp
@@ -102,6 +103,7 @@ set(LIBRETRO_HEADERS src/GameInfoLoader.h
                      src/settings/LibretroSetting.h
                      src/settings/LibretroSettings.h
                      src/settings/Settings.h
+                     src/settings/SettingsXML.h
                      src/settings/SettingsTypes.h
                      src/utils/Base64.h
                      src/utils/Timer.h

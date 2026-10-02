@@ -6,6 +6,7 @@
  */
 
 #include "Settings.h"
+#include "SettingsXML.h"
 
 using namespace LIBRETRO;
 
@@ -32,4 +33,12 @@ void CSettings::SetSetting(const std::string& strName, const kodi::addon::CSetti
   }
 
   m_bInitialized = true;
+}
+
+void CSettings::ReadAddonSettings()
+{
+  CSettingsXML settings;
+  settings.Load();
+
+  m_bCropOverscan = settings.GetBool(SETTING_CROP_OVERSCAN, m_bCropOverscan);
 }
