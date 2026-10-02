@@ -46,4 +46,5 @@ struct ReloadCoreState
   unsigned deinitializations{};
   unsigned unloads{};
   bool deinitializedWithContent{};
+  bool shutdownOnRun{};
 };

@@ -56,6 +56,7 @@ bool hardwareRefused = false;
 unsigned negotiations = 0;
 // game.libretro's own settings, which Kodi never hands a core
 std::string addonSettingsFile;
+unsigned gameCloses = 0;
 
 void Require(bool condition, const char* message)
 {
@@ -231,6 +232,7 @@ int main(int argc, char** argv)
   const bool testMemoryMap = std::strncmp(scenario, "memory_map_", 11) == 0;
   const bool memoryRetry = std::strcmp(scenario, "failed_load_memory_retry") == 0;
   const bool standaloneFailure = std::strcmp(scenario, "failed_load_standalone") == 0;
+  const bool testShutdown = std::strcmp(scenario, "speculative_shutdown") == 0;
   if (std::strcmp(scenario, "preferred_gles") == 0)
     backend = HardwareBackend::OpenGLES;
   else if (std::strcmp(scenario, "preferred_none") == 0)
@@ -319,6 +321,7 @@ int main(int argc, char** argv)
             "SET_SYSTEM_AV_INFO lost timing");
   };
   gameCallbacks.StartStream = StartStream;
+  gameCallbacks.CloseGame = [](KODI_HANDLE) { ++gameCloses; };
   gameCallbacks.GetStreamBuffer = GetStreamBuffer;
   gameCallbacks.ReleaseStreamBuffer = [](KODI_HANDLE, KODI_GAME_STREAM_HANDLE handle,
                                         game_stream_buffer* buffer)
@@ -798,6 +801,23 @@ int main(int argc, char** argv)
     }
     std::puts("PASS: hardware reset, framebuffer, restoration, DAR, rotation, "
               "failures, and reload");
+  }
+  else if (testShutdown)
+  {
+    Require(gameFunctions.LoadGame(&game, "reload.test") == GAME_ERROR_NO_ERROR,
+            "shutdown load failed");
+    game_system_timing timing{};
+    Require(gameFunctions.GetGameTiming(&game, &timing) == GAME_ERROR_NO_ERROR,
+            "shutdown timing failed");
+    Require(gameFunctions.RunFrame(&game) == GAME_ERROR_NO_ERROR, "frame before shutdown failed");
+    core.shutdownOnRun = true;
+    Require(gameFunctions.RunFrameSpeculative(&game) == GAME_ERROR_NO_ERROR,
+            "speculative frame failed");
+    Require(gameCloses == 0, "speculative frame closed the game");
+    Require(gameFunctions.RunFrame(&game) == GAME_ERROR_NO_ERROR, "shutdown frame failed");
+    Require(gameCloses == 1, "real frame did not close the game");
+    Require(gameFunctions.UnloadGame(&game) == GAME_ERROR_NO_ERROR, "shutdown unload failed");
+    std::printf("PASS: %s\n", scenario);
   }
   else
   {

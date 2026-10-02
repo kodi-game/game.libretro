@@ -75,6 +75,8 @@ void retro_run()
 {
   if (loaded)
   {
+    if (state.shutdownOnRun)
+      environment(RETRO_ENVIRONMENT_SHUTDOWN, nullptr);
     if (state.replaceMapOnRun)
     {
       state.replaceMapOnRun = false;

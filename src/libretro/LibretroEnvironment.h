@@ -81,8 +81,10 @@ namespace LIBRETRO
 
     /*!
      * \brief Called before a game is run for a frame
+     *
+     * \param speculative True if the frontend rolls the frame back
      */
-    void OnFrameBegin();
+    void OnFrameBegin(bool speculative = false);
 
     /*!
      * \brief Called after game has been run for a frame
@@ -104,6 +106,7 @@ namespace LIBRETRO
 
     GAME_PIXEL_FORMAT m_videoFormat;
     GAME_VIDEO_ROTATION m_videoRotation;
+    bool m_speculativeFrame = false;
 
     CLibretroSettings m_settings;
     CLibretroResources m_resources;
