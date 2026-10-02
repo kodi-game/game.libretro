@@ -46,8 +46,10 @@ public:
    * @brief Name the emulator the achievements will be earned on
    *
    * RetroAchievements approves emulators, not just frontends, and reads which
-   * one produced an unlock from the User-Agent. Taken from the core's own
-   * `retro_get_system_info()`, so it is the emulator's account of itself.
+   * one produced an unlock from the User-Agent. The name is the one RetroArch
+   * reports, such as "fceumm_libretro", which is the only form its per-core
+   * restrictions recognise; the version is the core's own. An empty name
+   * leaves the emulator out.
    *
    * Called as the core is loaded, which is before the client is built.
    */

@@ -53,6 +53,10 @@ CGameLibRetro::~CGameLibRetro()
   else
     CCheevos::Get().Deinitialize();
 
+  // The next instance may be another core. Not done in Deinitialize(), which
+  // also runs as each game starts, after Create() named this one.
+  CCheevos::Get().SetCoreIdentity("", "");
+
   CLibretroEnvironment::Get().CloseStreams();
   if (m_coreInitialized)
     m_client.retro_deinit();
@@ -119,11 +123,13 @@ ADDON_STATUS CGameLibRetro::Create()
     std::string libraryVersion = systemInfo.library_version ? systemInfo.library_version : "";
     std::string extensions = systemInfo.valid_extensions ? systemInfo.valid_extensions : "";
 
-    // RetroAchievements is told which emulator this is, from the same source
-    CCheevos::Get().SetCoreIdentity(libraryName, libraryVersion);
+    // RetroAchievements is told which emulator this is
+    const std::string libretroCore = LibretroCore();
+    CCheevos::Get().SetCoreIdentity(libretroCore, libraryVersion);
 
     dsyslog("CORE: ----------------------------------");
     dsyslog("CORE: Library name:    %s", libraryName.c_str());
+    dsyslog("CORE: Libretro core:   %s", libretroCore.c_str());
     dsyslog("CORE: Library version: %s", libraryVersion.c_str());
     dsyslog("CORE: Extensions:      %s", extensions.c_str());
     dsyslog("CORE: Supports VFS:    %s", m_supportsVFS ? "true" : "false");
