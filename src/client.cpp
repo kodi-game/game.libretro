@@ -351,7 +351,7 @@ GAME_ERROR CGameLibRetro::RunFrameSpeculative()
   // frames, and the core is given the real frame's time step
   m_clientBridge.FrameTime(m_frameTimeDelta);
 
-  CLibretroEnvironment::Get().OnFrameBegin();
+  CLibretroEnvironment::Get().OnFrameBegin(true);
 
   m_client.retro_run();
 
