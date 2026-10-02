@@ -956,9 +956,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     if (typedData == nullptr || typedData->definitions == nullptr)
       return false;
 
-    // Categories are for grouping in a frontend's own settings UI, which this
-    // add-on does not build -- the settings are Kodi's
-    m_settings.SetAllSettings(typedData->definitions);
+    m_settings.SetAllSettings(typedData->definitions, typedData->categories);
     break;
   }
   case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2_INTL:
@@ -969,7 +967,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
         typedData->us->definitions == nullptr)
       return false;
 
-    m_settings.SetAllSettings(typedData->us->definitions);
+    m_settings.SetAllSettings(typedData->us->definitions, typedData->us->categories);
     break;
   }
   case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK:

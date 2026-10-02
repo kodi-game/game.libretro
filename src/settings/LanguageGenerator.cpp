@@ -11,13 +11,38 @@
 
 using namespace LIBRETRO;
 
+namespace
+{
+// Help text runs to several lines and quotes things, and a raw newline or
+// quote would end the msgid early
+std::string EscapePo(const std::string& text)
+{
+  std::string result;
+
+  for (char c : text)
+  {
+    switch (c)
+    {
+      case '\\': result += "\\\\"; break;
+      case '"': result += "\\\""; break;
+      case '\t': result += "\\t"; break;
+      case '\n': result += "\\n"; break;
+      case '\r': break;
+      default: result += c; break;
+    }
+  }
+
+  return result;
+}
+} // namespace
+
 CLanguageGenerator::CLanguageGenerator(const std::string& addonId, const std::string& generatedDir) :
   m_strAddonId(addonId)
 {
   m_strFilePath = generatedDir + "/" SETTINGS_GENERATED_LANGUAGE_NAME;
 }
 
-bool CLanguageGenerator::GenerateLanguage(const LibretroSettings& settings)
+bool CLanguageGenerator::GenerateLanguage(const std::vector<std::string>& strings)
 {
   if (m_strAddonId.empty())
     return false;
@@ -47,19 +72,10 @@ bool CLanguageGenerator::GenerateLanguage(const LibretroSettings& settings)
 
   unsigned int settingId = SETTING_ID_START;
 
-  // Category name
-  file << "msgctxt \"#" << settingId++ << "\"" << std::endl;
-  file << "msgid \"Settings\"" << std::endl;
-  file << "msgstr \"\"" << std::endl;
-  file << std::endl;
-
-  for (const auto& setting : settings)
+  for (const std::string& text : strings)
   {
-    // TODO: xml-encode description
-    const std::string& description = setting.second.Description();
-
     file << "msgctxt \"#" << settingId++ << "\"" << std::endl;
-    file << "msgid \"" << description << "\"" << std::endl;
+    file << "msgid \"" << EscapePo(text) << "\"" << std::endl;
     file << "msgstr \"\"" << std::endl;
     file << std::endl;
   }

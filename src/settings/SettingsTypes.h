@@ -26,7 +26,7 @@
  * \brief File name and subdirectory of the generated language file
  */
 #define SETTINGS_GENERATED_LANGUAGE_SUBDIR          "language"
-#define SETTINGS_GENERATED_LANGUAGE_ENGLISH_SUBDIR  "English"
+#define SETTINGS_GENERATED_LANGUAGE_ENGLISH_SUBDIR  "resource.language.en_gb"
 #define SETTINGS_GENERATED_LANGUAGE_NAME            "strings.po"
 
 #define SETTING_ID_START  30000
@@ -35,4 +35,11 @@ namespace LIBRETRO
 {
   typedef std::string SettingKey;
   typedef std::map<SettingKey, CLibretroSetting> LibretroSettings;
+
+  struct LibretroSettingCategory
+  {
+    std::string key;
+    std::string description;
+    std::string info;
+  };
 }

@@ -13,10 +13,12 @@
 
 #include <map>
 #include <string>
+#include <vector>
 
 class CGameLibRetro;
 struct retro_variable;
 struct retro_core_option_definition;
+struct retro_core_option_v2_category;
 struct retro_core_option_v2_definition;
 
 namespace LIBRETRO
@@ -43,7 +45,8 @@ namespace LIBRETRO
      * asks for comes back empty.
      */
     void SetAllSettings(const retro_core_option_definition* definitions);
-    void SetAllSettings(const retro_core_option_v2_definition* definitions);
+    void SetAllSettings(const retro_core_option_v2_definition* definitions,
+                        const retro_core_option_v2_category* categories);
 
     const char* GetCurrentValue(const std::string& settingName);
 
@@ -66,6 +69,8 @@ namespace LIBRETRO
 
     // Settings variables
     LibretroSettings   m_settings;
+    std::vector<SettingKey> m_order; // The order the core declared its settings in
+    std::vector<LibretroSettingCategory> m_categories;
     bool               m_bChanged;
     bool               m_bGenerated; // True if settings and language files have been generated
     std::mutex         m_mutex;

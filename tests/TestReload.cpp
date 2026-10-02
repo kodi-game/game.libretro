@@ -17,8 +17,12 @@
 #include <cstdlib>
 #include <cstring>
 #include <dlfcn.h>
+#include <fstream>
 #include <map>
+#include <sstream>
 #include <string>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <utility>
 #include <vector>
 
@@ -63,6 +67,14 @@ void Require(bool condition, const char* message)
     std::fprintf(stderr, "FAIL: %s\n", message);
     std::exit(EXIT_FAILURE);
   }
+}
+
+std::string ReadFile(const std::string& path)
+{
+  std::ifstream file(path);
+  std::stringstream content;
+  content << file.rdbuf();
+  return content.str();
 }
 
 KODI_GAME_STREAM_HANDLE OpenStream(KODI_HANDLE, const game_stream_properties* properties)
@@ -220,6 +232,7 @@ int main(int argc, char** argv)
           "usage: test_reload <wrapper library> <fixture core library> [scenario]");
   const char* scenario = argc == 4 ? argv[3] : "software";
   const bool testSettings = std::strcmp(scenario, "settings_core_switch") == 0;
+  const bool testGenerated = std::strcmp(scenario, "settings_generated") == 0;
   const bool testVideo = std::strcmp(scenario, "video_core_switch") == 0;
   const bool testHardware = std::strcmp(scenario, "hardware") == 0;
   const bool testPreference = std::strncmp(scenario, "preferred_", 10) == 0;
@@ -272,6 +285,18 @@ int main(int argc, char** argv)
       return true;
     };
   }
+  std::string profile = "/unused-reload-test";
+  if (testGenerated)
+  {
+    addonCallbacks.get_setting_string = [](KODI_ADDON_BACKEND_HDL, const char*, char**)
+    { return false; };
+    char parent[] = "/tmp/game.libretro-test-XXXXXX";
+    Require(mkdtemp(parent) != nullptr, "temporary profile unavailable");
+    profile = std::string(parent) + "/game.libretro.fixture";
+    for (const char* directory : {"", "/generated", "/generated/language",
+                                  "/generated/language/resource.language.en_gb"})
+      Require(mkdir((profile + directory).c_str(), 0700) == 0, "temporary profile unavailable");
+  }
   if (memoryRetry)
   {
     filesystemCallbacks.file_exists = [](void*, const char*, bool) { return true; };
@@ -293,7 +318,7 @@ int main(int argc, char** argv)
   AddonProps_Game properties{};
   properties.supports_vfs = memoryRetry;
   properties.game_client_dll_path = argv[2];
-  properties.profile_directory = "/unused-reload-test";
+  properties.profile_directory = profile.c_str();
   AddonToKodiFuncTable_Game gameCallbacks{};
   gameCallbacks.OpenStream = OpenStream;
   gameCallbacks.CloseStream = CloseStream;
@@ -439,6 +464,65 @@ int main(int argc, char** argv)
               "each core must attempt settings generation in its own profile");
     }
     std::puts("PASS: core settings, change notification, and generation reset across three lifetimes");
+  }
+  else if (testGenerated)
+  {
+    retro_core_option_v2_category categories[] = {{"video", "Video", "How the picture is drawn"},
+                                                   {nullptr, nullptr, nullptr}};
+    retro_core_option_v2_definition options[4]{};
+    options[0].key = "fixture_region";
+    options[0].desc = "Region";
+    options[0].values[0].value = "auto";
+    options[0].values[1].value = "PAL & NTSC";
+    options[0].default_value = "PAL & NTSC";
+    options[1].key = "fixture_filter";
+    options[1].desc = "Filter";
+    options[1].info = "Smooths the picture.\n\"Sharp\" keeps pixels square.";
+    options[1].category_key = "video";
+    options[1].values[0].value = "sharp";
+    options[1].values[0].label = "Sharp";
+    options[1].values[1].value = "smooth";
+    options[1].default_value = "smooth";
+    options[2].key = "fixture_stray";
+    options[2].desc = "Stray";
+    options[2].category_key = "undeclared";
+    options[2].values[0].value = "on";
+    retro_core_options_v2 definitions{categories, options};
+    Require(environment(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2, &definitions),
+            "v2 registration failed");
+
+    const std::string xml = ReadFile(profile + "/generated/settings.xml");
+    const std::string po =
+        ReadFile(profile + "/generated/language/resource.language.en_gb/strings.po");
+    const size_t general = xml.find("<category id=\"general\" label=\"128\">");
+    const size_t stray = xml.find("<setting id=\"fixture_stray\" type=\"string\" label=\"30001\">");
+    const size_t video = xml.find("<category id=\"video\" label=\"30002\" help=\"30003\">");
+    Require(xml.find("<settings version=\"1\">") != std::string::npos &&
+                xml.find("<section id=\"game.libretro.fixture\">") != std::string::npos,
+            "generated settings are not in the add-ons' form");
+    Require(general < stray && stray < video && video != std::string::npos,
+            "uncategorised options must come first, in the core's order");
+    Require(xml.find("<default>PAL &amp; NTSC</default>") != std::string::npos &&
+                xml.find("<option>PAL &amp; NTSC</option>") != std::string::npos,
+            "named default or escaping lost");
+    Require(xml.find("<setting id=\"fixture_filter\" type=\"string\" label=\"30004\" "
+                     "help=\"30005\">") != std::string::npos &&
+                xml.find("<option label=\"30006\">sharp</option>") != std::string::npos &&
+                xml.find("<option label=\"30007\">smooth</option>") != std::string::npos,
+            "help or value labels lost");
+    Require(po.find("msgctxt \"#30002\"\nmsgid \"Video\"\n") != std::string::npos &&
+                po.find("msgctxt \"#30005\"\nmsgid \"Smooths the picture.\\n\\\"Sharp\\\" "
+                        "keeps pixels square.\"\n") != std::string::npos,
+            "strings missing or not escaped");
+
+    for (const char* file : {"/generated/language/resource.language.en_gb/strings.po",
+                             "/generated/settings.xml"})
+      std::remove((profile + file).c_str());
+    for (const char* directory : {"/generated/language/resource.language.en_gb",
+                                  "/generated/language", "/generated", ""})
+      rmdir((profile + directory).c_str());
+    rmdir(profile.substr(0, profile.rfind('/')).c_str());
+    std::puts("PASS: generated settings keep the core's categories, help, labels and default");
   }
   else if (testMemoryMap)
   {

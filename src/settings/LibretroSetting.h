@@ -29,15 +29,22 @@ namespace LIBRETRO
     CLibretroSetting(const char* key,
                      const char* description,
                      std::vector<std::string> values,
-                     const char* defaultValue);
+                     const char* defaultValue,
+                     const char* info = nullptr,
+                     const char* category = nullptr,
+                     std::vector<std::string> labels = {});
 
     const std::string&              Key() const          { return m_key; }
     const std::string&              Description() const  { return m_description; }
+    const std::string&              Info() const         { return m_info; }
+    const std::string&              Category() const     { return m_category; }
     const std::vector<std::string>& Values() const       { return m_values; }
+    const std::vector<std::string>& Labels() const       { return m_labels; } // Display text by value, where the core gave any
     const std::string&              ValuesStr() const    { return m_valuesStr; } // Original pipe-deliminated values string
     const std::string&              CurrentValue() const { return m_currentValue; }
 
-    // The libretro API defaults the setting to its first value
+    // The value the core names as its default, or else its first value, which
+    // is the default a retro_variable implies
     const std::string& DefaultValue() const;
 
     void SetCurrentValue(const std::string& newValue) { m_currentValue = newValue; }
@@ -47,8 +54,12 @@ namespace LIBRETRO
 
     std::string              m_key;
     std::string              m_description;
+    std::string              m_info;
+    std::string              m_category;
     std::vector<std::string> m_values;
+    std::vector<std::string> m_labels;
     std::string              m_valuesStr;
+    std::string              m_defaultValue;
     std::string              m_currentValue;
   };
 } // namespace LIBRETRO

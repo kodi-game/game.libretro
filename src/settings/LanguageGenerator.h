@@ -10,6 +10,7 @@
 #include "SettingsTypes.h"
 
 #include <string>
+#include <vector>
 
 namespace LIBRETRO
 {
@@ -18,7 +19,12 @@ namespace LIBRETRO
   public:
     CLanguageGenerator(const std::string& addonId, const std::string& generatedDir);
 
-    bool GenerateLanguage(const LibretroSettings& settings);
+    /*!
+     * \brief Write strings.po
+     *
+     * \param strings The text of each string ID, counting up from SETTING_ID_START
+     */
+    bool GenerateLanguage(const std::vector<std::string>& strings);
 
   private:
     std::string m_strAddonId;

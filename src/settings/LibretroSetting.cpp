@@ -23,13 +23,18 @@ CLibretroSetting::CLibretroSetting(const retro_variable* libretroVariable) :
 CLibretroSetting::CLibretroSetting(const char* key,
                                    const char* description,
                                    std::vector<std::string> values,
-                                   const char* defaultValue)
+                                   const char* defaultValue,
+                                   const char* info,
+                                   const char* category,
+                                   std::vector<std::string> labels)
   : m_key(key != nullptr ? key : ""),
     m_description(description != nullptr ? description : ""),
-    m_values(std::move(values))
+    m_info(info != nullptr ? info : ""),
+    m_category(category != nullptr ? category : ""),
+    m_values(std::move(values)),
+    m_labels(std::move(labels))
 {
-  // Kept for the add-on's generated settings, which are written in the older
-  // pipe-delimited form whichever API the core used to declare them
+  // Kept for log messages, which list the values in the older pipe-delimited form
   for (const std::string& value : m_values)
   {
     if (!m_valuesStr.empty())
@@ -42,14 +47,17 @@ CLibretroSetting::CLibretroSetting(const char* key,
   // among them.
   if (defaultValue != nullptr &&
       std::find(m_values.begin(), m_values.end(), defaultValue) != m_values.end())
-    SetCurrentValue(defaultValue);
-  else
-    SetCurrentValue(DefaultValue());
+    m_defaultValue = defaultValue;
+
+  SetCurrentValue(DefaultValue());
 }
 
 const std::string& CLibretroSetting::DefaultValue() const
 {
   static std::string empty;
+
+  if (!m_defaultValue.empty())
+    return m_defaultValue;
 
   if (!m_values.empty())
     return m_values[0];

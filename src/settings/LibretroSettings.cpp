@@ -42,6 +42,8 @@ void CLibretroSettings::Deinitialize()
   m_addon = nullptr;
   m_profileDirectory.clear();
   m_settings.clear();
+  m_order.clear();
+  m_categories.clear();
   m_bChanged = true;
   m_bGenerated = false;
 }
@@ -98,7 +100,9 @@ void CLibretroSettings::SetAllSettings(const retro_variable* libretroVariables)
         bValid = false;
       }
 
-      m_settings.insert(std::make_pair(setting.Key(), std::move(setting)));
+      const SettingKey key = setting.Key();
+      if (m_settings.insert(std::make_pair(key, std::move(setting))).second)
+        m_order.push_back(key);
     }
 
     m_bChanged = true;
@@ -123,6 +127,20 @@ std::vector<std::string> GetOptionValues(const retro_core_option_value* values)
   for (const retro_core_option_value* value = values; value != nullptr && value->value != nullptr;
        value++)
     result.emplace_back(value->value);
+
+  return result;
+}
+
+/*!
+ * \brief Collect the display text of each value, empty where it has none
+ */
+std::vector<std::string> GetOptionLabels(const retro_core_option_value* values)
+{
+  std::vector<std::string> result;
+
+  for (const retro_core_option_value* value = values; value != nullptr && value->value != nullptr;
+       value++)
+    result.emplace_back(value->label != nullptr ? value->label : "");
 
   return result;
 }
@@ -158,7 +176,9 @@ void CLibretroSettings::AddSetting(CLibretroSetting setting, bool& bValid)
     bValid = false;
   }
 
-  m_settings.insert(std::make_pair(setting.Key(), std::move(setting)));
+  const SettingKey key = setting.Key();
+  if (m_settings.insert(std::make_pair(key, std::move(setting))).second)
+    m_order.push_back(key);
 }
 
 void CLibretroSettings::SetAllSettings(const retro_core_option_definition* definitions)
@@ -173,7 +193,8 @@ void CLibretroSettings::SetAllSettings(const retro_core_option_definition* defin
          definition != nullptr && definition->key != nullptr; definition++)
     {
       AddSetting(CLibretroSetting(definition->key, definition->desc,
-                                  GetOptionValues(definition->values), definition->default_value),
+                                  GetOptionValues(definition->values), definition->default_value,
+                                  definition->info, nullptr, GetOptionLabels(definition->values)),
                  bValid);
     }
 
@@ -184,7 +205,8 @@ void CLibretroSettings::SetAllSettings(const retro_core_option_definition* defin
     GenerateSettings();
 }
 
-void CLibretroSettings::SetAllSettings(const retro_core_option_v2_definition* definitions)
+void CLibretroSettings::SetAllSettings(const retro_core_option_v2_definition* definitions,
+                                       const retro_core_option_v2_category* categories)
 {
   bool bValid = true;
 
@@ -192,11 +214,20 @@ void CLibretroSettings::SetAllSettings(const retro_core_option_v2_definition* de
 
   if (m_settings.empty())
   {
+    for (const retro_core_option_v2_category* category = categories;
+         category != nullptr && category->key != nullptr; category++)
+    {
+      m_categories.push_back({category->key, category->desc != nullptr ? category->desc : "",
+                              category->info != nullptr ? category->info : ""});
+    }
+
     for (const retro_core_option_v2_definition* definition = definitions;
          definition != nullptr && definition->key != nullptr; definition++)
     {
       AddSetting(CLibretroSetting(definition->key, definition->desc,
-                                  GetOptionValues(definition->values), definition->default_value),
+                                  GetOptionValues(definition->values), definition->default_value,
+                                  definition->info, definition->category_key,
+                                  GetOptionLabels(definition->values)),
                  bValid);
     }
 
@@ -274,8 +305,13 @@ void CLibretroSettings::GenerateSettings()
 
     bool bSuccess = false;
 
+    std::vector<const CLibretroSetting*> settings;
+    for (const SettingKey& key : m_order)
+      settings.push_back(&m_settings.at(key));
+
+    std::vector<std::string> strings;
     CSettingsGenerator settingsGen(generatedPath);
-    if (!settingsGen.GenerateSettings(m_settings))
+    if (!settingsGen.GenerateSettings(addonId, m_categories, settings, strings))
       esyslog("Failed to generate %s", SETTINGS_GENERATED_SETTINGS_NAME);
     else
       bSuccess = true;
@@ -299,7 +335,7 @@ void CLibretroSettings::GenerateSettings()
     }
 
     CLanguageGenerator languageGen(addonId, generatedPath);
-    if (!languageGen.GenerateLanguage(m_settings))
+    if (!languageGen.GenerateLanguage(strings))
       esyslog("Failed to generate %s", SETTINGS_GENERATED_LANGUAGE_NAME);
     else
       bSuccess = true;
