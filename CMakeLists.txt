@@ -114,6 +114,12 @@ set(LIBRETRO_HEADERS src/GameInfoLoader.h
 
 build_addon(${PROJECT_NAME} LIBRETRO DEPLIBS)
 
+# RetroAchievements identifies an integration by the client name and version in
+# the User-Agent, and gates hardcore on it. That version has to be this add-on's,
+# so it is taken from the addon.xml build_addon() has just read rather than asked
+# for at runtime, where the answer is whichever game client instance is loaded.
+target_compile_definitions(${PROJECT_NAME} PRIVATE GAME_LIBRETRO_VERSION="${LIBRETRO_VERSION}")
+
 if(ENABLE_INTERNAL_LIBRETROCOMMON)
   add_dependencies(${PROJECT_NAME} libretro-common)
 endif()

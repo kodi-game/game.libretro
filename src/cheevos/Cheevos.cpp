@@ -33,6 +33,23 @@ namespace
 // this add-on and its version rather than a hardcoded string, and carry
 // rcheevos' own clause as that library documents.
 constexpr const char* RA_CLIENT_NAME = "KodiRetroPlayer";
+
+/*!
+ * @brief Reduce a name to something a User-Agent token can hold
+ *
+ * Cores word their versions freely -- "1.53.2 (SVN)" -- and a space would
+ * split the token in two for whoever reads it.
+ */
+std::string UserAgentToken(const std::string& value)
+{
+  std::string token;
+  token.reserve(value.size());
+
+  for (const char c : value)
+    token += (c == ' ' || c == '\t') ? '_' : c;
+
+  return token;
+}
 constexpr size_t RA_USER_AGENT_CLAUSE_SIZE = 64;
 constexpr unsigned int GAME_LOAD_RETRY_MAX_DELAY_SECONDS = 120;
 constexpr unsigned int LOGIN_RETRY_MAX_DELAY_SECONDS = 120;
@@ -86,15 +103,28 @@ void CCheevos::Initialize(kodi::addon::CInstanceGame* gameInstance,
     char clause[RA_USER_AGENT_CLAUSE_SIZE]{};
     rc_client_get_user_agent_clause(m_rcClient, clause, sizeof(clause));
 
-    // RetroAchievements identifies the integration by the leading client
-    // name and version, so those stay ours. Everything after describes the
-    // host, and that comes from Kodi rather than being assembled here, so it
-    // stays right when Kodi's own reporting changes.
-    std::string userAgent = std::string(RA_CLIENT_NAME) + "/" + kodi::addon::GetAddonInfo("version");
+    // RetroAchievements identifies the integration by the leading client name
+    // and version, and gates hardcore on it, so those stay ours. This add-on's
+    // version is the one that means anything here: asking the runtime would
+    // answer with the game client instance's, which is the emulator add-on's
+    // and changes from one core to the next.
+    std::string userAgent = std::string(RA_CLIENT_NAME) + "/" + GAME_LIBRETRO_VERSION;
 
+    // Then the host, from Kodi rather than assembled here, so it stays right
+    // when Kodi's own reporting changes
     const std::string kodiUserAgent = kodi::network::GetUserAgent();
     if (!kodiUserAgent.empty())
       userAgent += " (" + kodiUserAgent + ")";
+
+    // Then the emulator, as RetroArch reports its core, because
+    // RetroAchievements approves emulators and needs to know which one earned
+    // an unlock. Absent if the core's add-on doesn't name it.
+    if (!m_coreName.empty())
+    {
+      userAgent += " " + UserAgentToken(m_coreName);
+      if (!m_coreVersion.empty())
+        userAgent += "/" + UserAgentToken(m_coreVersion);
+    }
 
     if (clause[0] != '\0')
       userAgent += " " + std::string(clause);
@@ -215,6 +245,12 @@ void CCheevos::SetEncoreModeEnabled(bool enabled)
   // part of loading a game, and the client is created once that game is up
   if (m_rcClient != nullptr)
     rc_client_set_encore_mode_enabled(m_rcClient, enabled ? 1 : 0);
+}
+
+void CCheevos::SetCoreIdentity(const std::string& name, const std::string& version)
+{
+  m_coreName = name;
+  m_coreVersion = version;
 }
 
 void CCheevos::SetCredentials(const std::string& username, const std::string& token)
