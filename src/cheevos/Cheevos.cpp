@@ -33,6 +33,23 @@ namespace
 // this add-on and its version rather than a hardcoded string, and carry
 // rcheevos' own clause as that library documents.
 constexpr const char* RA_CLIENT_NAME = "KodiRetroPlayer";
+
+/*!
+ * @brief Reduce a name to something a User-Agent token can hold
+ *
+ * Cores word their versions freely -- "1.53.2 (SVN)" -- and a space would
+ * split the token in two for whoever reads it.
+ */
+std::string UserAgentToken(const std::string& value)
+{
+  std::string token;
+  token.reserve(value.size());
+
+  for (const char c : value)
+    token += (c == ' ' || c == '\t') ? '_' : c;
+
+  return token;
+}
 constexpr size_t RA_USER_AGENT_CLAUSE_SIZE = 64;
 constexpr unsigned int GAME_LOAD_RETRY_MAX_DELAY_SECONDS = 120;
 constexpr unsigned int LOGIN_RETRY_MAX_DELAY_SECONDS = 120;
@@ -80,21 +97,33 @@ void CCheevos::Initialize(kodi::addon::CInstanceGame* gameInstance,
   rc_client_set_userdata(m_rcClient, this);
 
   rc_client_set_event_handler(m_rcClient, RcheevosEventHandler);
-  rc_client_set_hardcore_enabled(m_rcClient, 0);
 
   {
     char clause[RA_USER_AGENT_CLAUSE_SIZE]{};
     rc_client_get_user_agent_clause(m_rcClient, clause, sizeof(clause));
 
-    // RetroAchievements identifies the integration by the leading client
-    // name and version, so those stay ours. Everything after describes the
-    // host, and that comes from Kodi rather than being assembled here, so it
-    // stays right when Kodi's own reporting changes.
-    std::string userAgent = std::string(RA_CLIENT_NAME) + "/" + kodi::addon::GetAddonInfo("version");
+    // RetroAchievements identifies the integration by the leading client name
+    // and version, and gates hardcore on it, so those stay ours. This add-on's
+    // version is the one that means anything here: asking the runtime would
+    // answer with the game client instance's, which is the emulator add-on's
+    // and changes from one core to the next.
+    std::string userAgent = std::string(RA_CLIENT_NAME) + "/" + GAME_LIBRETRO_VERSION;
 
+    // Then the host, from Kodi rather than assembled here, so it stays right
+    // when Kodi's own reporting changes
     const std::string kodiUserAgent = kodi::network::GetUserAgent();
     if (!kodiUserAgent.empty())
       userAgent += " (" + kodiUserAgent + ")";
+
+    // Then the emulator, as RetroArch reports its core, because
+    // RetroAchievements approves emulators and needs to know which one earned
+    // an unlock. Absent if the core's add-on doesn't name it.
+    if (!m_coreName.empty())
+    {
+      userAgent += " " + UserAgentToken(m_coreName);
+      if (!m_coreVersion.empty())
+        userAgent += "/" + UserAgentToken(m_coreVersion);
+    }
 
     if (clause[0] != '\0')
       userAgent += " " + std::string(clause);
@@ -110,9 +139,11 @@ void CCheevos::Initialize(kodi::addon::CInstanceGame* gameInstance,
       kodi::Log(ADDON_LOG_DEBUG, "rc_client: %s", message);
     });
 
-  // After logging is enabled, so the client reports the mode it starts in.
-  // Applied here as well as when it is set, because the frontend sends it once
-  // per game while the client is built per game.
+  // After logging is enabled, so the client reports the modes it starts in.
+  // Applied here as well as when they are set, because the frontend sends them
+  // once per game while the client is built per game. Before the game is
+  // identified, so that what it unlocks is credited to the right mode.
+  rc_client_set_hardcore_enabled(m_rcClient, m_hardcoreEnabled ? 1 : 0);
   rc_client_set_encore_mode_enabled(m_rcClient, m_encoreModeEnabled ? 1 : 0);
 
   // The frontend may not have supplied credentials yet, in which case
@@ -205,6 +236,29 @@ void CCheevos::Deinitialize()
   m_gameInstance = nullptr;
 }
 
+bool CCheevos::SetHardcoreEnabled(bool enabled)
+{
+  const bool refused = enabled && m_coreName.empty();
+  if (refused)
+  {
+    kodi::Log(ADDON_LOG_WARNING,
+              "CCheevos: hardcore refused, the core's add-on doesn't give its libretro name");
+    enabled = false;
+  }
+
+  m_hardcoreEnabled = enabled;
+
+  kodi::Log(ADDON_LOG_INFO, "CCheevos: hardcore mode %s", enabled ? "enabled" : "disabled");
+
+  // As for encore, this usually arrives before there is a client to tell.
+  // Switching it on with a game up raises RC_CLIENT_EVENT_RESET from inside
+  // this call, which is forwarded to the frontend.
+  if (m_rcClient != nullptr)
+    rc_client_set_hardcore_enabled(m_rcClient, enabled ? 1 : 0);
+
+  return !refused;
+}
+
 void CCheevos::SetEncoreModeEnabled(bool enabled)
 {
   m_encoreModeEnabled = enabled;
@@ -215,6 +269,12 @@ void CCheevos::SetEncoreModeEnabled(bool enabled)
   // part of loading a game, and the client is created once that game is up
   if (m_rcClient != nullptr)
     rc_client_set_encore_mode_enabled(m_rcClient, enabled ? 1 : 0);
+}
+
+void CCheevos::SetCoreIdentity(const std::string& name, const std::string& version)
+{
+  m_coreName = name;
+  m_coreVersion = version;
 }
 
 void CCheevos::SetCredentials(const std::string& username, const std::string& token)

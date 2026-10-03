@@ -53,6 +53,10 @@ CGameLibRetro::~CGameLibRetro()
   else
     CCheevos::Get().Deinitialize();
 
+  // The next instance may be another core. Not done in Deinitialize(), which
+  // also runs as each game starts, after Create() named this one.
+  CCheevos::Get().SetCoreIdentity("", "");
+
   CLibretroEnvironment::Get().CloseStreams();
   if (m_coreInitialized)
     m_client.retro_deinit();
@@ -119,8 +123,13 @@ ADDON_STATUS CGameLibRetro::Create()
     std::string libraryVersion = systemInfo.library_version ? systemInfo.library_version : "";
     std::string extensions = systemInfo.valid_extensions ? systemInfo.valid_extensions : "";
 
+    // RetroAchievements is told which emulator this is
+    const std::string libretroCore = LibretroCore();
+    CCheevos::Get().SetCoreIdentity(libretroCore, libraryVersion);
+
     dsyslog("CORE: ----------------------------------");
     dsyslog("CORE: Library name:    %s", libraryName.c_str());
+    dsyslog("CORE: Libretro core:   %s", libretroCore.c_str());
     dsyslog("CORE: Library version: %s", libraryVersion.c_str());
     dsyslog("CORE: Extensions:      %s", extensions.c_str());
     dsyslog("CORE: Supports VFS:    %s", m_supportsVFS ? "true" : "false");
@@ -564,6 +573,14 @@ GAME_ERROR CGameLibRetro::GetMemory(GAME_MEMORY type, uint8_t*& data, size_t& si
 
 GAME_ERROR CGameLibRetro::SetCheat(unsigned int index, bool enabled, const std::string& code)
 {
+  // Refused here as well as in the frontend: this is the last point before the
+  // core, and RetroAchievements forbids cheats in hardcore
+  if (CCheevos::Get().IsHardcoreEnabled())
+  {
+    kodi::Log(ADDON_LOG_INFO, "Refusing to set a cheat in hardcore mode");
+    return GAME_ERROR_REJECTED;
+  }
+
   m_client.retro_cheat_set(index, enabled, code.c_str());
 
   return GAME_ERROR_NO_ERROR;
@@ -573,6 +590,11 @@ GAME_ERROR CGameLibRetro::SetRetroAchievementsCredentials(const std::string& use
 {
   CCheevos::Get().SetCredentials(username, token);
   return GAME_ERROR_NO_ERROR;
+}
+
+GAME_ERROR CGameLibRetro::RCSetHardcoreEnabled(bool enabled)
+{
+  return CCheevos::Get().SetHardcoreEnabled(enabled) ? GAME_ERROR_NO_ERROR : GAME_ERROR_REJECTED;
 }
 
 GAME_ERROR CGameLibRetro::RCSetEncoreModeEnabled(bool enabled)
