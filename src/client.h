@@ -10,6 +10,7 @@
 #include "libretro/ClientBridge.h"
 #include "libretro/LibretroDLL.h"
 #include "memory/LibretroMemory.h"
+#include "settings/Settings.h"
 #include "utils/Timer.h"
 
 #include <kodi/addon-instance/Game.h>
@@ -107,6 +108,9 @@ public:
   LIBRETRO::CLibretroMemory& Memory() { return m_memory; }
   const LIBRETRO::CLibretroMemory& Memory() const { return m_memory; }
 
+  LIBRETRO::CSettings& Settings() { return m_settings; }
+  const LIBRETRO::CSettings& Settings() const { return m_settings; }
+
 private:
   bool LoadGameInternal(const retro_game_info* gameInfo);
 
@@ -115,6 +119,7 @@ private:
   // The DLL must outlive the memory component's borrowed core functions.
   LIBRETRO::CLibretroMemory               m_memory;
   LIBRETRO::CClientBridge                 m_clientBridge;
+  LIBRETRO::CSettings                     m_settings;
   std::vector<LIBRETRO::CGameInfoLoader*> m_gameInfo;
   bool                                    m_supportsVFS = false; // TODO
   int64_t                                 m_frameTimeLast = 0;

@@ -13,12 +13,7 @@ namespace LIBRETRO
 {
   class CSettings
   {
-  private:
-    CSettings(void);
-
   public:
-    static CSettings& Get(void);
-
     /*!
      * \brief Read the settings that belong to game.libretro rather than the core
      */
@@ -35,7 +30,7 @@ namespace LIBRETRO
     const std::string& SharedSystemDirectory() const { return m_sharedSystemDirectory; }
 
   private:
-    bool  m_bCropOverscan;
+    bool  m_bCropOverscan = false;
     std::string m_sharedSystemDirectory;
   };
 }

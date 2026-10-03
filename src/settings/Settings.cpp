@@ -23,17 +23,6 @@ constexpr auto DEFAULT_SHARED_SYSTEM_PATH =
     "special://profile/addon_data/game.libretro/resources/system";
 } // namespace
 
-CSettings::CSettings(void)
-  : m_bCropOverscan(false)
-{
-}
-
-CSettings& CSettings::Get(void)
-{
-  static CSettings _instance;
-  return _instance;
-}
-
 void CSettings::ReadAddonSettings()
 {
   CSettingsXML settings;
