@@ -6,14 +6,14 @@
  */
 
 #include "Settings.h"
+#include "SettingsXML.h"
 
 using namespace LIBRETRO;
 
 #define SETTING_CROP_OVERSCAN  "cropoverscan"
 
 CSettings::CSettings(void)
-  : m_bInitialized(false),
-    m_bCropOverscan(false)
+  : m_bCropOverscan(false)
 {
 }
 
@@ -23,13 +23,10 @@ CSettings& CSettings::Get(void)
   return _instance;
 }
 
-void CSettings::SetSetting(const std::string& strName, const kodi::addon::CSettingValue& value)
+void CSettings::ReadAddonSettings()
 {
-  if (strName == SETTING_CROP_OVERSCAN)
-  {
-    m_bCropOverscan = value.GetBoolean();
-    //dsyslog("Setting \"%s\" set to %f", SETTING_CROP_OVERSCAN, m_bCropOverscan ? "true" : "false");
-  }
+  CSettingsXML settings;
+  settings.Load();
 
-  m_bInitialized = true;
+  m_bCropOverscan = settings.GetBool(SETTING_CROP_OVERSCAN, m_bCropOverscan);
 }

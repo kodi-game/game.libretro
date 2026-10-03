@@ -54,6 +54,8 @@ HardwareBackend backend = HardwareBackend::OpenGL;
 game_hw_rendering_properties negotiated{};
 bool hardwareRefused = false;
 unsigned negotiations = 0;
+// game.libretro's own settings, which Kodi never hands a core
+std::string addonSettingsFile;
 
 void Require(bool condition, const char* message)
 {
@@ -220,6 +222,7 @@ int main(int argc, char** argv)
   const char* scenario = argc == 4 ? argv[3] : "software";
   const bool testSettings = std::strcmp(scenario, "settings_core_switch") == 0;
   const bool testVideo = std::strcmp(scenario, "video_core_switch") == 0;
+  const bool testCropOverscan = std::strcmp(scenario, "crop_overscan") == 0;
   const bool testHardware = std::strcmp(scenario, "hardware") == 0;
   const bool testPreference = std::strncmp(scenario, "preferred_", 10) == 0;
   const bool testHandoff = std::strcmp(scenario, "retained_hardware_software") == 0;
@@ -261,10 +264,27 @@ int main(int argc, char** argv)
   filesystemCallbacks.directory_exists = [](void*, const char*) { return true; };
   filesystemCallbacks.file_exists = [](void*, const char*, bool) { return false; };
   filesystemCallbacks.stat_file = [](void*, const char*, STAT_STRUCTURE*) { return false; };
+  filesystemCallbacks.translate_special_protocol = [](void*, const char* path)
+  { return strdup(path); };
   if (testSettings)
   {
     addonCallbacks.get_setting_string = [](KODI_ADDON_BACKEND_HDL, const char*, char**)
     { return false; };
+  }
+  if (testCropOverscan)
+  {
+    addonSettingsFile = "crop_overscan_settings.xml";
+    std::FILE* file = std::fopen(addonSettingsFile.c_str(), "w");
+    Require(file != nullptr, "settings file must be writable");
+    std::fputs("<settings version=\"2\"><setting id=\"cropoverscan\">true</setting></settings>",
+               file);
+    std::fclose(file);
+    filesystemCallbacks.translate_special_protocol = [](void*, const char* path)
+    {
+      return strdup(std::strstr(path, "game.libretro/settings.xml") != nullptr
+                        ? addonSettingsFile.c_str()
+                        : path);
+    };
   }
   if (memoryRetry)
   {
@@ -324,6 +344,14 @@ int main(int argc, char** argv)
   interface.toAddon = &functions;
   const ADDON_STATUS status = create(&interface);
   Require(status == ADDON_STATUS_OK || status == ADDON_STATUS_NEED_SETTINGS, "addon creation failed");
+
+  if (testCropOverscan)
+  {
+    bool overscan = true;
+    const bool answered = environment(RETRO_ENVIRONMENT_GET_OVERSCAN, &overscan);
+    std::remove(addonSettingsFile.c_str());
+    Require(answered && !overscan, "game.libretro's crop overscan setting must reach the core");
+  }
 
   if (testVideo)
   {
