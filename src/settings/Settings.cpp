@@ -13,8 +13,7 @@ using namespace LIBRETRO;
 #define SETTING_CROP_OVERSCAN  "cropoverscan"
 
 CSettings::CSettings(void)
-  : m_bInitialized(false),
-    m_bCropOverscan(false)
+  : m_bCropOverscan(false)
 {
 }
 
@@ -22,17 +21,6 @@ CSettings& CSettings::Get(void)
 {
   static CSettings _instance;
   return _instance;
-}
-
-void CSettings::SetSetting(const std::string& strName, const kodi::addon::CSettingValue& value)
-{
-  if (strName == SETTING_CROP_OVERSCAN)
-  {
-    m_bCropOverscan = value.GetBoolean();
-    //dsyslog("Setting \"%s\" set to %f", SETTING_CROP_OVERSCAN, m_bCropOverscan ? "true" : "false");
-  }
-
-  m_bInitialized = true;
 }
 
 void CSettings::ReadAddonSettings()

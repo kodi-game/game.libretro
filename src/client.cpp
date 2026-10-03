@@ -14,7 +14,6 @@
 #include "libretro/LibretroEnvironment.h"
 #include "log/Log.h"
 #include "log/LogAddon.h"
-#include "settings/Settings.h"
 #include "GameInfoLoader.h"
 
 #include "client.h"
@@ -154,10 +153,8 @@ ADDON_STATUS CGameLibRetro::Create()
     return status;
   }
 
-  if (!CSettings::Get().IsInitialized())
-    return ADDON_STATUS_NEED_SETTINGS;
-
-  return ADDON_STATUS_OK;
+  // Kodi only hands over the core's settings when they are asked for
+  return ADDON_STATUS_NEED_SETTINGS;
 }
 
 ADDON_STATUS CGameLibRetro::SetSetting(const std::string& settingName, const kodi::addon::CSettingValue& settingValue)
@@ -165,7 +162,6 @@ ADDON_STATUS CGameLibRetro::SetSetting(const std::string& settingName, const kod
   if (settingName == "" || settingValue.empty())
     return ADDON_STATUS_UNKNOWN;
 
-  CSettings::Get().SetSetting(settingName, settingValue);
   CLibretroEnvironment::Get().SetSetting(settingName, settingValue.GetString());
 
   return ADDON_STATUS_OK;

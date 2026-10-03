@@ -7,9 +7,6 @@
 
 #pragma once
 
-#include <kodi/AddonBase.h>
-#include <string>
-
 namespace LIBRETRO
 {
   class CSettings
@@ -19,10 +16,6 @@ namespace LIBRETRO
 
   public:
     static CSettings& Get(void);
-
-    bool IsInitialized(void) const { return m_bInitialized; }
-
-    void SetSetting(const std::string& strName, const kodi::addon::CSettingValue& value);
 
     /*!
      * \brief Read the settings that belong to game.libretro rather than the core
@@ -35,7 +28,6 @@ namespace LIBRETRO
     bool CropOverscan(void) const { return m_bCropOverscan; }
 
   private:
-    bool  m_bInitialized;
     bool  m_bCropOverscan;
   };
 }
