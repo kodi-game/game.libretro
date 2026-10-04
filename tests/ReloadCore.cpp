@@ -9,6 +9,9 @@
 
 #include "ReloadCoreState.h"
 
+#include <atomic>
+#include <thread>
+
 namespace
 {
 retro_video_refresh_t video;
@@ -18,6 +21,8 @@ retro_hw_render_callback hardware{};
 ReloadCoreState state;
 bool loaded = false;
 uint8_t memoryBuffers[3][16]{{0x11}, {0x22}, {0x33}};
+std::thread audioThread;
+std::atomic<bool> stopAudio{false};
 
 void PublishMemoryMap(bool invalid = false)
 {
@@ -56,6 +61,11 @@ void retro_init()
 }
 void retro_deinit()
 {
+  if (audioThread.joinable())
+  {
+    stopAudio = true;
+    audioThread.join();
+  }
   ++state.deinitializations;
   state.deinitializedWithContent = loaded;
 }
@@ -203,6 +213,22 @@ bool retro_load_game(const retro_game_info* info)
     if (state.softwareAfterFailure)
       state.hardware = false;
     return false;
+  }
+  if (state.audioThread)
+  {
+    // Like LRPS2, deliver audio from the core's own thread, which keeps running
+    // after the content is unloaded
+    stopAudio = false;
+    audioThread = std::thread(
+        []
+        {
+          static const int16_t samples[] = {100, -100, 200, -200};
+          while (!stopAudio)
+          {
+            audio(samples, 2);
+            std::this_thread::yield();
+          }
+        });
   }
   loaded = true;
   return true;

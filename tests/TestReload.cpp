@@ -14,12 +14,16 @@
 #include "ReloadCoreState.h"
 
 #include <algorithm>
+#include <atomic>
+#include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <dlfcn.h>
 #include <map>
+#include <mutex>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -30,13 +34,17 @@ struct StreamState
   GAME_STREAM_TYPE type;
   bool resetAttempted{false};
   bool destroyNotified{false};
+  bool closing{false};
 };
 
 std::map<KODI_GAME_STREAM_HANDLE, StreamState> streams;
+// A core may deliver audio from its own thread
+std::mutex streamsMutex;
+bool slowAudioClose = false;
 unsigned videoPackets = 0;
 std::vector<GAME_PIXEL_FORMAT> videoFormats;
 std::vector<GAME_VIDEO_ROTATION> videoRotations;
-unsigned audioPackets = 0;
+std::atomic<unsigned> audioPackets{0};
 unsigned hardwarePackets = 0;
 unsigned hardwareOpens = 0;
 unsigned hardwareStarts = 0;
@@ -64,12 +72,15 @@ void Require(bool condition, const char* message)
   if (!condition)
   {
     std::fprintf(stderr, "FAIL: %s\n", message);
-    std::exit(EXIT_FAILURE);
+    // A check can fail on a core's own thread, where exit() would wait on the others
+    std::fflush(nullptr);
+    std::_Exit(EXIT_FAILURE);
   }
 }
 
 KODI_GAME_STREAM_HANDLE OpenStream(KODI_HANDLE, const game_stream_properties* properties)
 {
+  std::lock_guard<std::mutex> lock(streamsMutex);
   if (properties->type == GAME_STREAM_VIDEO)
     videoFormats.push_back(properties->video.format);
   if (properties->type == GAME_STREAM_HW_FRAMEBUFFER)
@@ -144,6 +155,16 @@ void DestroyHardwareContexts()
 
 void CloseStream(KODI_HANDLE, KODI_GAME_STREAM_HANDLE handle)
 {
+  if (slowAudioClose)
+  {
+    {
+      std::lock_guard<std::mutex> lock(streamsMutex);
+      streams.at(handle).closing = true;
+    }
+    // Long enough for a core's audio thread to reach the stream while it closes
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  }
+  std::lock_guard<std::mutex> lock(streamsMutex);
   if (streams.at(handle).type == GAME_STREAM_HW_FRAMEBUFFER)
     ++hardwareCloses;
   DestroyHardwareContext(handle);
@@ -180,7 +201,9 @@ bool GetStreamBuffer(KODI_HANDLE, KODI_GAME_STREAM_HANDLE handle,
 
 void AddStreamData(KODI_HANDLE, KODI_GAME_STREAM_HANDLE handle, const game_stream_packet* packet)
 {
+  std::lock_guard<std::mutex> lock(streamsMutex);
   Require(streams.count(handle) == 1, "packet sent to a closed stream");
+  Require(!streams.at(handle).closing, "packet sent to a stream while it was closing");
   Require(streams.at(handle).type == packet->type, "packet type differs from stream type");
   if (packet->type == GAME_STREAM_VIDEO)
   {
@@ -237,6 +260,7 @@ int main(int argc, char** argv)
   // Kodi has passed the core's name since game API 8.2.1
   const bool olderKodi = std::strcmp(scenario, "core_name_older_kodi") == 0;
   const bool testUnnamedHardcore = std::strcmp(scenario, "hardcore_unnamed_core") == 0;
+  const bool testAudioThread = std::strcmp(scenario, "audio_core_thread") == 0;
   if (std::strcmp(scenario, "preferred_gles") == 0)
     backend = HardwareBackend::OpenGLES;
   else if (std::strcmp(scenario, "preferred_none") == 0)
@@ -255,6 +279,8 @@ int main(int argc, char** argv)
   core.hardware = testHardware || testGrowth;
   core.growGeometry = testGrowth;
   geometryGrowth = testGrowth;
+  core.audioThread = testAudioThread;
+  slowAudioClose = testAudioThread;
   void* library = dlopen(argv[1], RTLD_NOW | RTLD_LOCAL);
   if (!library)
   {
@@ -829,6 +855,20 @@ int main(int argc, char** argv)
     }
     std::puts("PASS: hardware reset, framebuffer, restoration, DAR, rotation, "
               "failures, and reload");
+  }
+  else if (testAudioThread)
+  {
+    Require(gameFunctions.LoadGame(&game, "reload.test") == GAME_ERROR_NO_ERROR,
+            "audio thread content load failed");
+    while (audioPackets < 10)
+      std::this_thread::yield();
+    Require(gameFunctions.UnloadGame(&game) == GAME_ERROR_NO_ERROR, "unloading failed");
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    {
+      std::lock_guard<std::mutex> lock(streamsMutex);
+      Require(streams.empty(), "audio after unload reopened a stream");
+    }
+    std::puts("PASS: audio from a core's own thread stays out of a closing stream");
   }
   else
   {
