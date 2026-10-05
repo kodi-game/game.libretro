@@ -22,6 +22,27 @@
 
 using namespace LIBRETRO;
 
+namespace
+{
+// SetFastForwarding() arrived in game API 8.4.0
+template<typename Instance>
+bool RequestFastForward(Instance& instance, const retro_fastforwarding_override* request)
+{
+  if constexpr (requires { instance.SetFastForwarding(true, 1.0); })
+  {
+    if (!instance.IsInstanceAPIVersionAtLeast(8, 4, 0))
+      return false;
+
+    // A core passes no request to ask whether this is supported
+    if (request != nullptr)
+      instance.SetFastForwarding(request->fastforward, request->ratio);
+    return true;
+  }
+  else
+    return false;
+}
+} // namespace
+
 namespace LIBRETRO
 {
   bool EnvCallback(unsigned cmd, void* data)
@@ -940,9 +961,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   {
     const retro_fastforwarding_override* typedData = static_cast<const retro_fastforwarding_override*>(data);
 
-    // Not implemented
-    (void)typedData;
-    return false;
+    return RequestFastForward(*m_addon, typedData);
   }
   case RETRO_ENVIRONMENT_SET_CONTENT_INFO_OVERRIDE:
   {
