@@ -347,6 +347,9 @@ GAME_ERROR CGameLibRetro::RunFrame()
 
 GAME_ERROR CGameLibRetro::RunFrameSpeculative()
 {
+  if (CLibretroEnvironment::Get().IsSerializationIncomplete())
+    return GAME_ERROR_NOT_IMPLEMENTED;
+
   // The frontend rolls this frame back, so achievements are left to the real
   // frames, and the core is given the real frame's time step
   m_clientBridge.FrameTime(m_frameTimeDelta);
