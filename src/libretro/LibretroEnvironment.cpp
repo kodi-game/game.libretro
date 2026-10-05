@@ -70,6 +70,7 @@ void CLibretroEnvironment::InitializeEnvironment(CGameLibRetro* addon,
   m_addon = addon;
   m_client = client;
   m_clientBridge = clientBridge;
+  m_serializationIncomplete = false;
 
   m_addon->Settings().ReadAddonSettings();
 
@@ -169,6 +170,12 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
 {
   if (!m_addon || !m_clientBridge)
     return false;
+
+  // libretro.h moved SET_SERIALIZATION_QUIRKS from 44 to 87 in July 2026. A core
+  // built against an older header still sends 44, which nothing uses now without
+  // the experimental flag.
+  if (cmd == 44)
+    cmd = RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS;
 
   switch (cmd)
   {
@@ -649,6 +656,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
 
       if (quirks & RETRO_SERIALIZATION_QUIRK_INCOMPLETE)
         kodi::Log(ADDON_LOG_INFO, "  INCOMPLETE - Serialized state is incomplete in some way");
+      m_serializationIncomplete = (quirks & RETRO_SERIALIZATION_QUIRK_INCOMPLETE) != 0;
 
       if (quirks & RETRO_SERIALIZATION_QUIRK_MUST_INITIALIZE)
         kodi::Log(ADDON_LOG_INFO, "  MUST_INITIALIZE - Some initialization time is required");
