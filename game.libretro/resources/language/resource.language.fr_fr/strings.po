@@ -32,3 +32,23 @@ msgstr "Recadrage écran"
 msgctxt "#30001"
 msgid "Crop away invisible edges of the screen, if the game is aware of any."
 msgstr "Couper les bords invisibles de l'écran, si le jeu en a connaissance."
+
+msgctxt "#30002"
+msgid "BIOS and system files"
+msgstr ""
+
+msgctxt "#30003"
+msgid "Use shared System/BIOS folder"
+msgstr ""
+
+msgctxt "#30004"
+msgid "Use a shared System/BIOS folder for all libretro cores, instead of a folder for each core. A core's own system folder is not used, so any system files from it have to be copied to the shared folder."
+msgstr ""
+
+msgctxt "#30005"
+msgid "Shared folder"
+msgstr ""
+
+msgctxt "#30006"
+msgid "The folder every emulator looks in for BIOS and other system files."
+msgstr ""
