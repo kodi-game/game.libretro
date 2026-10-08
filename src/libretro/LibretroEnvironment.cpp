@@ -11,6 +11,7 @@
 #include "libretro-common/libretro.h"
 #include "LibretroDLL.h"
 #include "LibretroTranslator.h"
+#include "filesystem/FrontendVFS.h"
 #include "input/InputManager.h"
 #include "log/Log.h"
 #include "settings/Settings.h"
@@ -704,25 +705,25 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
       if (typedData->required_interface_version <= supported_vfs_version)
       {
         static retro_vfs_interface vfsInterface = {
-          CFrontendBridge::GetPath,
-          CFrontendBridge::OpenFile,
-          CFrontendBridge::CloseFile,
-          CFrontendBridge::FileSize,
-          CFrontendBridge::GetPosition,
-          CFrontendBridge::Seek,
-          CFrontendBridge::ReadFile,
-          CFrontendBridge::WriteFile,
-          CFrontendBridge::FlushFile,
-          CFrontendBridge::RemoveFile,
-          CFrontendBridge::RenameFile,
-          CFrontendBridge::Truncate,
-          CFrontendBridge::Stat,
-          CFrontendBridge::MakeDirectory,
-          CFrontendBridge::OpenDirectory,
-          CFrontendBridge::ReadDirectory,
-          CFrontendBridge::GetDirectoryName,
-          CFrontendBridge::IsDirectory,
-          CFrontendBridge::CloseDirectory,
+          CFrontendVFS::GetPath,
+          CFrontendVFS::OpenFile,
+          CFrontendVFS::CloseFile,
+          CFrontendVFS::FileSize,
+          CFrontendVFS::GetPosition,
+          CFrontendVFS::Seek,
+          CFrontendVFS::ReadFile,
+          CFrontendVFS::WriteFile,
+          CFrontendVFS::FlushFile,
+          CFrontendVFS::RemoveFile,
+          CFrontendVFS::RenameFile,
+          CFrontendVFS::Truncate,
+          CFrontendVFS::Stat,
+          CFrontendVFS::MakeDirectory,
+          CFrontendVFS::OpenDirectory,
+          CFrontendVFS::ReadDirectory,
+          CFrontendVFS::GetDirectoryName,
+          CFrontendVFS::IsDirectory,
+          CFrontendVFS::CloseDirectory,
         };
 
         typedData->required_interface_version = supported_vfs_version;
