@@ -57,7 +57,8 @@ if(GAME_LIBRETRO_LIBRARY)
                    failed_load_memory_retry memory_map_reload memory_map_runtime_replace
                    memory_map_failed_load settings_core_switch video_core_switch
                    crop_overscan core_name core_name_older_kodi hardcore_unnamed_core
-                   audio_core_thread)
+                   audio_core_thread shared_system_directory shared_system_root
+                   shared_system_drive_root)
     add_test(NAME ${scenario}
              COMMAND test_reload "${GAME_LIBRETRO_LIBRARY}" $<TARGET_FILE:reload_core> ${scenario})
     set_tests_properties(${scenario} PROPERTIES TIMEOUT 10)

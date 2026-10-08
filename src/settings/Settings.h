@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <string>
+
 namespace LIBRETRO
 {
   class CSettings
@@ -27,7 +29,13 @@ namespace LIBRETRO
      */
     bool CropOverscan(void) const { return m_bCropOverscan; }
 
+    /*!
+     * \brief The system folder shared by every emulator, or empty if sharing is off
+     */
+    const std::string& SharedSystemDirectory() const { return m_sharedSystemDirectory; }
+
   private:
     bool  m_bCropOverscan;
+    std::string m_sharedSystemDirectory;
   };
 }
