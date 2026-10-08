@@ -6,7 +6,7 @@
  */
 
 #include "LibretroResources.h"
-#include "LibretroDefines.h"
+#include "filesystem/FilesystemDefines.h"
 #include "log/Log.h"
 #include "settings/Settings.h"
 

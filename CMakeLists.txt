@@ -75,6 +75,7 @@ set(LIBRETRO_HEADERS src/GameInfoLoader.h
                      src/input/ButtonMapper.h
                      src/cheevos/Cheevos.h
                      src/cheevos/CheevosUtils.h
+                     src/filesystem/FilesystemDefines.h
                      src/filesystem/FilesystemUtils.h
                      src/input/ControllerLayout.h
                      src/input/ControllerTopology.h
@@ -90,7 +91,6 @@ set(LIBRETRO_HEADERS src/GameInfoLoader.h
                      src/input/LibretroDeviceInput.h
                      src/libretro/ClientBridge.h
                      src/libretro/FrontendBridge.h
-                     src/libretro/LibretroDefines.h
                      src/libretro/LibretroDLL.h
                      src/libretro/LibretroEnvironment.h
                      src/libretro/LibretroResources.h
