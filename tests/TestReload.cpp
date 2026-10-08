@@ -236,6 +236,7 @@ int main(int argc, char** argv)
   const bool testCoreName = std::strncmp(scenario, "core_name", 9) == 0;
   // Kodi has passed the core's name since game API 8.2.1
   const bool olderKodi = std::strcmp(scenario, "core_name_older_kodi") == 0;
+  const bool testUnnamedHardcore = std::strcmp(scenario, "hardcore_unnamed_core") == 0;
   if (std::strcmp(scenario, "preferred_gles") == 0)
     backend = HardwareBackend::OpenGLES;
   else if (std::strcmp(scenario, "preferred_none") == 0)
@@ -369,7 +370,19 @@ int main(int argc, char** argv)
     // An older Kodi's properties end before the name, so it isn't read
     Require(named != olderKodi, olderKodi ? "the name was read from an older Kodi"
                                           : "the libretro core name Kodi passed was not used");
+    Require(gameFunctions.RCSetHardcoreEnabled(&game, true) ==
+                (olderKodi ? GAME_ERROR_REJECTED : GAME_ERROR_NO_ERROR),
+            olderKodi ? "hardcore must be refused without a libretro name"
+                      : "hardcore must be accepted for a named core");
     std::printf("PASS: %s\n", scenario);
+  }
+  else if (testUnnamedHardcore)
+  {
+    Require(gameFunctions.RCSetHardcoreEnabled(&game, true) == GAME_ERROR_REJECTED,
+            "hardcore must be refused for a core with no libretro name");
+    Require(gameFunctions.RCSetHardcoreEnabled(&game, false) == GAME_ERROR_NO_ERROR,
+            "turning hardcore off must always succeed");
+    std::puts("PASS: hardcore refused for a core with no libretro name");
   }
   else if (testVideo)
   {

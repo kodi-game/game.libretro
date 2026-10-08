@@ -59,12 +59,28 @@ public:
   void SetCredentials(const std::string& username, const std::string& token);
 
   /*!
+   * \brief Set whether achievements are earned in hardcore mode
+   *
+   * The frontend enforces the restrictions hardcore requires; this tells the
+   * runtime, which will not let a session begun in casual mode carry on into
+   * hardcore and asks for a reset instead.
+   *
+   * \return False if hardcore was asked for and refused, which it is for a
+   *         core with no libretro name: RetroAchievements restricts hardcore
+   *         per core by that name, so it couldn't hold the core to them
+   */
+  bool SetHardcoreEnabled(bool enabled);
+
+  /*!
    * \brief Play for achievements the user has already earned
    *
    * Kept as well as applied, because rc_client only reads it when a game is
    * loaded and the frontend sends it before the load.
    */
   void SetEncoreModeEnabled(bool enabled);
+
+  //! \brief Whether hardcore is on, for callers that must refuse what it forbids
+  bool IsHardcoreEnabled() const { return m_hardcoreEnabled; }
 
   /// @brief Called every emulated frame from RunFrame()
   void DoFrame();
@@ -181,6 +197,7 @@ private:
   std::string m_coreName;
   std::string m_coreVersion;
 
+  std::atomic<bool> m_hardcoreEnabled{false};
   std::atomic<bool> m_encoreModeEnabled{false};
   std::atomic<bool> m_loginStarted{false};
   bool m_loginRetryScheduled{false};
