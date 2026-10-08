@@ -34,6 +34,7 @@ set(LIBRETRO_SOURCES src/client.cpp
                      src/cheevos/CheevosEnvironment.cpp
                      src/cheevos/CheevosFrontendBridge.cpp
                      src/cheevos/CheevosUtils.cpp
+                     src/filesystem/FilesystemUtils.cpp
                      src/GameInfoLoader.cpp
                      src/input/ButtonMapper.cpp
                      src/input/ControllerLayout.cpp
@@ -74,6 +75,7 @@ set(LIBRETRO_HEADERS src/GameInfoLoader.h
                      src/input/ButtonMapper.h
                      src/cheevos/Cheevos.h
                      src/cheevos/CheevosUtils.h
+                     src/filesystem/FilesystemUtils.h
                      src/input/ControllerLayout.h
                      src/input/ControllerTopology.h
                      src/input/DefaultControllerDefines.h

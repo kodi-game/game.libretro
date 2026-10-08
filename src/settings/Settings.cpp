@@ -7,6 +7,7 @@
 
 #include "Settings.h"
 #include "SettingsXML.h"
+#include "filesystem/FilesystemUtils.h"
 
 #include <kodi/Filesystem.h>
 
@@ -44,12 +45,6 @@ void CSettings::ReadAddonSettings()
   if (!settings.GetBool(SETTING_SHARE_SYSTEM, false))
     return;
 
-  std::string path = kodi::vfs::TranslateSpecialProtocol(
-      settings.GetString(SETTING_SHARED_SYSTEM_PATH, DEFAULT_SHARED_SYSTEM_PATH));
-  // Drop trailing separators, but not the one that makes "/" or "D:\" a root
-  while (path.size() > 1 && (path.back() == '/' || path.back() == '\\') &&
-         !(path.size() == 3 && path[1] == ':'))
-    path.pop_back();
-
-  m_sharedSystemDirectory = path;
+  m_sharedSystemDirectory = CFilesystemUtils::CoreDirectory(kodi::vfs::TranslateSpecialProtocol(
+      settings.GetString(SETTING_SHARED_SYSTEM_PATH, DEFAULT_SHARED_SYSTEM_PATH)));
 }
