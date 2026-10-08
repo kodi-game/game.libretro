@@ -21,12 +21,14 @@ CAudioStream::CAudioStream() :
 
 void CAudioStream::Initialize(CGameLibRetro* addon)
 {
+  std::lock_guard<std::recursive_mutex> lock(m_mutex);
   m_bLoggedOpenFailure = false;
   m_addon = addon;
 }
 
 void CAudioStream::Deinitialize()
 {
+  std::lock_guard<std::recursive_mutex> lock(m_mutex);
   CloseStream();
   m_bLoggedOpenFailure = false;
   m_addon = nullptr;
@@ -34,12 +36,20 @@ void CAudioStream::Deinitialize()
 
 void CAudioStream::CloseStream()
 {
+  std::lock_guard<std::recursive_mutex> lock(m_mutex);
   m_singleFrameAudio.Clear();
   m_stream.Close();
 }
 
+void CAudioStream::AddFrame_S16NE(int16_t left, int16_t right)
+{
+  std::lock_guard<std::recursive_mutex> lock(m_mutex);
+  m_singleFrameAudio.AddFrame(left, right);
+}
+
 void CAudioStream::AddFrames_S16NE(const uint8_t* data, unsigned int size)
 {
+  std::lock_guard<std::recursive_mutex> lock(m_mutex);
   if (m_addon && !m_stream.IsOpen())
   {
     static const GAME_AUDIO_CHANNEL channelMap[] = { GAME_CH_FL, GAME_CH_FR, GAME_CH_NULL };
