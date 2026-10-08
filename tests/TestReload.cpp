@@ -248,7 +248,14 @@ int main(int argc, char** argv)
   const bool testSettings = std::strcmp(scenario, "settings_core_switch") == 0;
   const bool testVideo = std::strcmp(scenario, "video_core_switch") == 0;
   const bool testCropOverscan = std::strcmp(scenario, "crop_overscan") == 0;
-  const bool testSharedSystem = std::strcmp(scenario, "shared_system_directory") == 0;
+  const bool testSharedSystem = std::strncmp(scenario, "shared_system_", 14) == 0;
+  // The shared folder as it is set, and as a core should be given it
+  std::string sharedSystemSet = "/shared/system/";
+  std::string sharedSystemExpected = "/shared/system";
+  if (std::strcmp(scenario, "shared_system_root") == 0)
+    sharedSystemSet = sharedSystemExpected = "/";
+  else if (std::strcmp(scenario, "shared_system_drive_root") == 0)
+    sharedSystemSet = sharedSystemExpected = "D:\\";
   const bool testHardware = std::strcmp(scenario, "hardware") == 0;
   const bool testPreference = std::strncmp(scenario, "preferred_", 10) == 0;
   const bool testHandoff = std::strcmp(scenario, "retained_hardware_software") == 0;
@@ -309,11 +316,13 @@ int main(int argc, char** argv)
     addonSettingsFile = std::string(scenario) + "_settings.xml";
     std::FILE* file = std::fopen(addonSettingsFile.c_str(), "w");
     Require(file != nullptr, "settings file must be writable");
-    std::fputs(testCropOverscan
-                   ? "<settings version=\"2\"><setting id=\"cropoverscan\">true</setting></settings>"
-                   : "<settings version=\"2\"><setting id=\"sharesystemdirectory\">true</setting>"
-                     "<setting id=\"sharedsystemdirectory\">/shared/system/</setting></settings>",
-               file);
+    const std::string contents =
+        testCropOverscan
+            ? "<settings version=\"2\"><setting id=\"cropoverscan\">true</setting></settings>"
+            : "<settings version=\"2\"><setting id=\"sharesystemdirectory\">true</setting>"
+              "<setting id=\"sharedsystemdirectory\">" +
+                  sharedSystemSet + "</setting></settings>";
+    std::fputs(contents.c_str(), file);
     std::fclose(file);
     filesystemCallbacks.translate_special_protocol = [](void*, const char* path)
     {
@@ -396,7 +405,7 @@ int main(int argc, char** argv)
     const char* directory = nullptr;
     const bool answered = environment(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &directory);
     std::remove(addonSettingsFile.c_str());
-    Require(answered && directory != nullptr && std::strcmp(directory, "/shared/system") == 0,
+    Require(answered && directory != nullptr && directory == sharedSystemExpected,
             "every emulator must be given the shared system folder");
   }
 

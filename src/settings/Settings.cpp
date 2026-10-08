@@ -46,7 +46,9 @@ void CSettings::ReadAddonSettings()
 
   std::string path = kodi::vfs::TranslateSpecialProtocol(
       settings.GetString(SETTING_SHARED_SYSTEM_PATH, DEFAULT_SHARED_SYSTEM_PATH));
-  while (!path.empty() && (path.back() == '/' || path.back() == '\\'))
+  // Drop trailing separators, but not the one that makes "/" or "D:\" a root
+  while (path.size() > 1 && (path.back() == '/' || path.back() == '\\') &&
+         !(path.size() == 3 && path[1] == ':'))
     path.pop_back();
 
   m_sharedSystemDirectory = path;
