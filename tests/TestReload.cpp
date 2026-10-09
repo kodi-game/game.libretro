@@ -19,6 +19,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <dirent.h>
 #include <dlfcn.h>
 #include <map>
 #include <mutex>
@@ -26,6 +27,9 @@
 #include <thread>
 #include <utility>
 #include <vector>
+
+#include <sys/stat.h>
+#include <unistd.h>
 
 namespace
 {
@@ -240,6 +244,100 @@ void AddStreamData(KODI_HANDLE, KODI_GAME_STREAM_HANDLE handle, const game_strea
 }
 }
 
+// The vfs_v5 scenario's stand-in for Kodi's filesystem: real files under vfsRoot
+std::string vfsRoot;
+
+bool UnderVfsRoot(const char* path)
+{
+  return !vfsRoot.empty() && std::strncmp(path, vfsRoot.c_str(), vfsRoot.size()) == 0;
+}
+
+bool VfsStat(void*, const char* path, STAT_STRUCTURE* buffer)
+{
+  struct stat info{};
+  if (::stat(path, &info) != 0)
+    return false;
+  *buffer = STAT_STRUCTURE{};
+  buffer->size = static_cast<uint64_t>(info.st_size);
+  buffer->modificationTime = info.st_mtime;
+  buffer->isDirectory = S_ISDIR(info.st_mode);
+  buffer->isRegular = S_ISREG(info.st_mode);
+  buffer->isCharacter = S_ISCHR(info.st_mode);
+  return true;
+}
+
+bool VfsDirectoryExists(void*, const char* path)
+{
+  // Outside the test folder, answer as the other scenarios do
+  if (!UnderVfsRoot(path))
+    return true;
+  struct stat info{};
+  return ::stat(path, &info) == 0 && S_ISDIR(info.st_mode);
+}
+
+bool VfsGetDirectory(void*, const char* path, const char*, VFSDirEntry** items, unsigned int* count)
+{
+  DIR* directory = opendir(path);
+  if (directory == nullptr)
+    return false;
+  std::vector<VFSDirEntry> entries;
+  while (const dirent* entry = readdir(directory))
+  {
+    if (std::strcmp(entry->d_name, ".") == 0 || std::strcmp(entry->d_name, "..") == 0)
+      continue;
+    const std::string full = std::string(path) + "/" + entry->d_name;
+    struct stat info{};
+    if (::stat(full.c_str(), &info) != 0)
+      continue;
+    VFSDirEntry item{};
+    item.label = strdup(entry->d_name);
+    item.title = strdup("");
+    item.path = strdup(full.c_str());
+    item.folder = S_ISDIR(info.st_mode);
+    item.size = item.folder ? 0 : static_cast<uint64_t>(info.st_size);
+    item.date_time = info.st_mtime;
+    entries.push_back(item);
+  }
+  closedir(directory);
+  *count = static_cast<unsigned int>(entries.size());
+  *items = new VFSDirEntry[entries.size()];
+  std::copy(entries.begin(), entries.end(), *items);
+  return true;
+}
+
+void VfsFreeDirectory(void*, VFSDirEntry* items, unsigned int count)
+{
+  for (unsigned int i = 0; i < count; ++i)
+  {
+    std::free(items[i].label);
+    std::free(items[i].title);
+    std::free(items[i].path);
+  }
+  delete[] items;
+}
+
+void* VfsOpenForWrite(void*, const char* path, bool overwrite)
+{
+  struct stat info{};
+  if (!overwrite && ::stat(path, &info) == 0)
+    return nullptr;
+  return std::fopen(path, "wb");
+}
+
+std::vector<char> ReadWholeFile(const std::string& path)
+{
+  std::vector<char> contents;
+  if (std::FILE* file = std::fopen(path.c_str(), "rb"))
+  {
+    char buffer[4096];
+    size_t bytes;
+    while ((bytes = std::fread(buffer, 1, sizeof(buffer), file)) > 0)
+      contents.insert(contents.end(), buffer, buffer + bytes);
+    std::fclose(file);
+  }
+  return contents;
+}
+
 int main(int argc, char** argv)
 {
   Require(argc == 3 || argc == 4,
@@ -269,6 +367,7 @@ int main(int argc, char** argv)
   const bool olderKodi = std::strcmp(scenario, "core_name_older_kodi") == 0;
   const bool testUnnamedHardcore = std::strcmp(scenario, "hardcore_unnamed_core") == 0;
   const bool testAudioThread = std::strcmp(scenario, "audio_core_thread") == 0;
+  const bool testVfs = std::strcmp(scenario, "vfs_v5") == 0;
   if (std::strcmp(scenario, "preferred_gles") == 0)
     backend = HardwareBackend::OpenGLES;
   else if (std::strcmp(scenario, "preferred_none") == 0)
@@ -339,6 +438,28 @@ int main(int argc, char** argv)
     filesystemCallbacks.read_file = [](void*, void*, void* buffer, size_t) -> ssize_t
     { *static_cast<char*>(buffer) = 0; return 1; };
     filesystemCallbacks.close_file = [](void*, void* file) { delete static_cast<int*>(file); };
+  }
+  if (testVfs)
+  {
+    char folder[] = "/tmp/game-libretro-vfs-XXXXXX";
+    Require(mkdtemp(folder) != nullptr, "test folder must be creatable");
+    vfsRoot = folder;
+    filesystemCallbacks.stat_file = VfsStat;
+    filesystemCallbacks.directory_exists = VfsDirectoryExists;
+    filesystemCallbacks.create_directory = [](void*, const char* path)
+    { return ::mkdir(path, 0755) == 0; };
+    filesystemCallbacks.delete_file = [](void*, const char* path) { return std::remove(path) == 0; };
+    filesystemCallbacks.get_directory = VfsGetDirectory;
+    filesystemCallbacks.free_directory = VfsFreeDirectory;
+    // A file that can be found but not read, as one without read permission
+    filesystemCallbacks.open_file = [](void*, const char* path, unsigned int) -> void*
+    { return std::strstr(path, "unreadable") != nullptr ? nullptr : std::fopen(path, "rb"); };
+    filesystemCallbacks.open_file_for_write = VfsOpenForWrite;
+    filesystemCallbacks.read_file = [](void*, void* file, void* buffer, size_t size) -> ssize_t
+    { return static_cast<ssize_t>(std::fread(buffer, 1, size, static_cast<std::FILE*>(file))); };
+    filesystemCallbacks.write_file = [](void*, void* file, const void* buffer, size_t size) -> ssize_t
+    { return static_cast<ssize_t>(std::fwrite(buffer, 1, size, static_cast<std::FILE*>(file))); };
+    filesystemCallbacks.close_file = [](void*, void* file) { std::fclose(static_cast<std::FILE*>(file)); };
   }
   AddonToKodiFuncTable_kodi_network networkCallbacks{};
   networkCallbacks.get_user_agent = [](void*) { return strdup("reload-test"); };
@@ -430,6 +551,129 @@ int main(int argc, char** argv)
     Require(gameFunctions.RCSetHardcoreEnabled(&game, false) == GAME_ERROR_NO_ERROR,
             "turning hardcore off must always succeed");
     std::puts("PASS: hardcore refused for a core with no libretro name");
+  }
+  else if (testVfs)
+  {
+    retro_vfs_interface_info vfsInfo{5, nullptr};
+    Require(environment(RETRO_ENVIRONMENT_GET_VFS_INTERFACE, &vfsInfo) && vfsInfo.iface != nullptr &&
+                vfsInfo.required_interface_version == 5, "VFS v5 must be offered");
+    const retro_vfs_interface* vfs = vfsInfo.iface;
+
+    const std::string source = vfsRoot + "/source.bin";
+    std::vector<char> contents(300 * 1024);
+    for (size_t i = 0; i < contents.size(); ++i)
+      contents[i] = static_cast<char>(i * 31 % 251);
+    std::FILE* file = std::fopen(source.c_str(), "wb");
+    Require(file != nullptr && std::fwrite(contents.data(), 1, contents.size(), file) == contents.size(),
+            "source file must be writable");
+    std::fclose(file);
+    struct stat sourceInfo{};
+    ::stat(source.c_str(), &sourceInfo);
+
+    int64_t size = 0;
+    Require(vfs->stat_64(source.c_str(), &size) == RETRO_VFS_STAT_IS_VALID &&
+                size == static_cast<int64_t>(contents.size()), "stat_64 must report the size");
+    int64_t mtime = 0;
+    Require(vfs->get_mtime(source.c_str(), &mtime) == 0 && mtime == sourceInfo.st_mtime,
+            "get_mtime must report the modification time");
+    Require(vfs->get_mtime((vfsRoot + "/missing").c_str(), &mtime) == -1,
+            "get_mtime must fail for a missing file");
+    Require(vfs->set_mtime(source.c_str(), 0) == -1 && vfs->set_readonly(source.c_str(), 1) == -1,
+            "what Kodi can't do must report failure");
+
+    // Copied in steps, into folders that don't exist yet
+    const std::string destination = vfsRoot + "/new/folder/copy.bin";
+    retro_vfs_copy_handle* copy = vfs->copy_begin(source.c_str(), destination.c_str(), 0);
+    Require(copy != nullptr, "a copy must start and create the missing folders");
+    int status;
+    int steps = 0;
+    int64_t done = 0;
+    int64_t total = 0;
+    while ((status = vfs->copy_step(copy, 100 * 1024, &done, &total)) == RETRO_VFS_COPY_RUNNING)
+      Require(++steps < 10, "a copy must finish");
+    Require(status == RETRO_VFS_COPY_DONE && steps >= 2 && done == total &&
+                total == static_cast<int64_t>(contents.size()), "a copy must move every byte in steps");
+    Require(vfs->copy_close(copy) == 0, "a finished copy must close cleanly");
+    Require(ReadWholeFile(destination) == contents, "the copy must match the source");
+
+    Require(vfs->copy_begin(source.c_str(), destination.c_str(), 0) == nullptr,
+            "an existing file must not be overwritten without the flag");
+    Require(vfs->copy_begin(source.c_str(), source.c_str(), RETRO_VFS_COPY_OVERWRITE) == nullptr,
+            "a file must not be copied onto itself");
+    Require(vfs->copy_begin(vfsRoot.c_str(), (vfsRoot + "/folder-copy").c_str(), 0) == nullptr,
+            "a folder must not be copied");
+
+    // Cancelled part way: the partial file goes
+    copy = vfs->copy_begin(source.c_str(), destination.c_str(), RETRO_VFS_COPY_OVERWRITE);
+    Require(copy != nullptr, "an overwrite must start with the flag");
+    Require(vfs->copy_step(copy, 1024, &done, &total) == RETRO_VFS_COPY_RUNNING && done == 1024,
+            "a step must move at most its budget");
+    Require(vfs->copy_close(copy) == -1, "a cancelled copy must report failure");
+    struct stat removed{};
+    Require(::stat(destination.c_str(), &removed) != 0, "a cancelled copy must be removed");
+
+    // A source that can't be read leaves the file it would have replaced
+    const std::string unreadable = vfsRoot + "/unreadable.bin";
+    file = std::fopen(unreadable.c_str(), "wb");
+    Require(file != nullptr && std::fputs("source", file) >= 0, "unreadable file must be writable");
+    std::fclose(file);
+    file = std::fopen(destination.c_str(), "wb");
+    Require(file != nullptr && std::fputs("kept", file) >= 0, "destination must be writable");
+    std::fclose(file);
+    Require(vfs->copy_begin(unreadable.c_str(), destination.c_str(), RETRO_VFS_COPY_OVERWRITE) ==
+                nullptr, "a copy must not start from a source that can't be read");
+    const std::vector<char> kept = ReadWholeFile(destination);
+    Require(std::string(kept.begin(), kept.end()) == "kept",
+            "a failed overwrite must leave the destination alone");
+    std::remove(unreadable.c_str());
+
+    // A source that ends early fails the copy and the partial file goes
+    const std::string shrinking = vfsRoot + "/shrinking.bin";
+    file = std::fopen(shrinking.c_str(), "wb");
+    Require(file != nullptr && std::fwrite(contents.data(), 1, contents.size(), file) == contents.size(),
+            "shrinking file must be writable");
+    std::fclose(file);
+    copy = vfs->copy_begin(shrinking.c_str(), destination.c_str(), RETRO_VFS_COPY_OVERWRITE);
+    Require(copy != nullptr, "an overwrite must start with the flag");
+    Require(::truncate(shrinking.c_str(), 1000) == 0, "shrinking file must be truncatable");
+    while ((status = vfs->copy_step(copy, 0, &done, &total)) == RETRO_VFS_COPY_RUNNING)
+      ;
+    Require(status == RETRO_VFS_COPY_FAILED && done == 1000,
+            "a source that ends before its size must fail the copy");
+    Require(vfs->copy_close(copy) == -1, "a failed copy must report failure");
+    Require(::stat(destination.c_str(), &removed) != 0, "a failed copy must be removed");
+    std::remove(shrinking.c_str());
+
+    // Entries described without opening them
+    retro_vfs_dir_handle* directory = vfs->opendir(vfsRoot.c_str(), false);
+    Require(directory != nullptr, "opendir must succeed");
+    bool sawSource = false;
+    bool sawFolder = false;
+    while (vfs->readdir(directory))
+    {
+      const std::string name = vfs->dirent_get_name(directory);
+      int64_t entrySize = -1;
+      int64_t entryTime = -1;
+      const int flags = vfs->dirent_stat(directory, &entrySize, &entryTime);
+      if (name == "source.bin")
+      {
+        sawSource = flags == RETRO_VFS_STAT_IS_VALID && entrySize == size &&
+                    entryTime == sourceInfo.st_mtime;
+      }
+      else if (name == "new")
+      {
+        sawFolder = flags == (RETRO_VFS_STAT_IS_VALID | RETRO_VFS_STAT_IS_DIRECTORY) &&
+                    entrySize == 0;
+      }
+    }
+    vfs->closedir(directory);
+    Require(sawSource && sawFolder, "dirent_stat must describe files and folders");
+
+    std::remove(source.c_str());
+    ::rmdir((vfsRoot + "/new/folder").c_str());
+    ::rmdir((vfsRoot + "/new").c_str());
+    ::rmdir(vfsRoot.c_str());
+    std::printf("PASS: %s\n", scenario);
   }
   else if (testVideo)
   {
