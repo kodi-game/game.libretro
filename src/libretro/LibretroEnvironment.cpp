@@ -70,6 +70,7 @@ void CLibretroEnvironment::InitializeEnvironment(CGameLibRetro* addon,
   m_addon = addon;
   m_client = client;
   m_clientBridge = clientBridge;
+  m_serializationIncomplete = false;
 
   m_addon->Settings().ReadAddonSettings();
 
@@ -153,20 +154,28 @@ std::string CLibretroEnvironment::GetResourcePath(const char* relPath)
   return m_resources.GetFullPath(relPath);
 }
 
-void CLibretroEnvironment::OnFrameBegin()
+void CLibretroEnvironment::OnFrameBegin(bool speculative)
 {
+  m_speculativeFrame = speculative;
   m_videoStream.OnFrameBegin();
 }
 
 void CLibretroEnvironment::OnFrameEnd()
 {
   m_videoStream.OnFrameEnd();
+  m_speculativeFrame = false;
 }
 
 bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
 {
   if (!m_addon || !m_clientBridge)
     return false;
+
+  // libretro.h moved SET_SERIALIZATION_QUIRKS from 44 to 87 in July 2026. A core
+  // built against an older header still sends 44, which nothing uses now without
+  // the experimental flag.
+  if (cmd == 44)
+    cmd = RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS;
 
   switch (cmd)
   {
@@ -195,7 +204,9 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     {
       // Sets a message to be displayed. Generally not for trivial messages.
       const retro_message* typedData = static_cast<const retro_message*>(data);
-      if (typedData)
+      // A rolled-back frame can't show one. The real frame shows it when it
+      // gets there.
+      if (typedData && !m_speculativeFrame)
       {
         const char* msg = typedData->msg;
         kodi::QueueFormattedNotification(QUEUE_INFO, msg);
@@ -204,7 +215,10 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     }
   case RETRO_ENVIRONMENT_SHUTDOWN:
     {
-      m_addon->CloseGame();
+      // A rolled-back frame can't end the game. If the game really ends, the
+      // real frame asks again.
+      if (!m_speculativeFrame)
+        m_addon->CloseGame();
       break;
     }
   case RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL:
@@ -642,6 +656,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
 
       if (quirks & RETRO_SERIALIZATION_QUIRK_INCOMPLETE)
         kodi::Log(ADDON_LOG_INFO, "  INCOMPLETE - Serialized state is incomplete in some way");
+      m_serializationIncomplete = (quirks & RETRO_SERIALIZATION_QUIRK_INCOMPLETE) != 0;
 
       if (quirks & RETRO_SERIALIZATION_QUIRK_MUST_INITIALIZE)
         kodi::Log(ADDON_LOG_INFO, "  MUST_INITIALIZE - Some initialization time is required");
