@@ -304,7 +304,10 @@ bool CFrontendBridge::SensorSetState(unsigned port, retro_sensor_action action, 
 
   CInputManager::Get().EnableAnalogSensors(port, bEnabled);
 
-  return true;
+  // No controller can deliver a sensor yet, so none is available. Saying
+  // otherwise makes a core read zeros as real data: Dolphin's Wii Remote
+  // loses gravity.
+  return false;
 }
 
 float CFrontendBridge::SensorGetInput(unsigned port, unsigned id)
