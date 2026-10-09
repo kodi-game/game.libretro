@@ -70,7 +70,7 @@ void CLibretroEnvironment::InitializeEnvironment(CGameLibRetro* addon,
   m_client = client;
   m_clientBridge = clientBridge;
 
-  CSettings::Get().ReadAddonSettings();
+  m_addon->Settings().ReadAddonSettings();
 
   InitializeStreams();
 
@@ -180,7 +180,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     {
       bool* typedData = static_cast<bool*>(data);
       if (typedData)
-        *typedData = !CSettings::Get().CropOverscan();
+        *typedData = !m_addon->Settings().CropOverscan();
       break;
     }
   case RETRO_ENVIRONMENT_GET_CAN_DUPE:

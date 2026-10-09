@@ -39,7 +39,7 @@ void CLibretroResources::Initialize(CGameLibRetro* addon)
 
   // With sharing on, every emulator uses the shared folder, so a BIOS needs
   // putting there only once
-  m_systemDirectory = CSettings::Get().SharedSystemDirectory();
+  m_systemDirectory = m_addon->Settings().SharedSystemDirectory();
 
   // Set system path to first resource path discovered
   if (m_systemDirectory.empty() && !m_resourceDirectories.empty())
