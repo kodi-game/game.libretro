@@ -35,6 +35,7 @@ set(LIBRETRO_SOURCES src/client.cpp
                      src/cheevos/CheevosFrontendBridge.cpp
                      src/cheevos/CheevosUtils.cpp
                      src/filesystem/FilesystemUtils.cpp
+                     src/filesystem/FrontendVFS.cpp
                      src/GameInfoLoader.cpp
                      src/input/ButtonMapper.cpp
                      src/input/ControllerLayout.cpp
@@ -75,7 +76,9 @@ set(LIBRETRO_HEADERS src/GameInfoLoader.h
                      src/input/ButtonMapper.h
                      src/cheevos/Cheevos.h
                      src/cheevos/CheevosUtils.h
+                     src/filesystem/FilesystemDefines.h
                      src/filesystem/FilesystemUtils.h
+                     src/filesystem/FrontendVFS.h
                      src/input/ControllerLayout.h
                      src/input/ControllerTopology.h
                      src/input/DefaultControllerDefines.h
@@ -90,7 +93,6 @@ set(LIBRETRO_HEADERS src/GameInfoLoader.h
                      src/input/LibretroDeviceInput.h
                      src/libretro/ClientBridge.h
                      src/libretro/FrontendBridge.h
-                     src/libretro/LibretroDefines.h
                      src/libretro/LibretroDLL.h
                      src/libretro/LibretroEnvironment.h
                      src/libretro/LibretroResources.h
