@@ -697,7 +697,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   }
   case RETRO_ENVIRONMENT_GET_VFS_INTERFACE:
   {
-    const uint32_t supported_vfs_version = 3;
+    const uint32_t supported_vfs_version = 5;
 
     retro_vfs_interface_info* typedData = static_cast<retro_vfs_interface_info*>(data);
     if (typedData)
@@ -724,6 +724,14 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
           CFrontendVFS::GetDirectoryName,
           CFrontendVFS::IsDirectory,
           CFrontendVFS::CloseDirectory,
+          CFrontendVFS::Stat64,
+          CFrontendVFS::SetReadOnly,
+          CFrontendVFS::GetModificationTime,
+          CFrontendVFS::SetModificationTime,
+          CFrontendVFS::CopyBegin,
+          CFrontendVFS::CopyStep,
+          CFrontendVFS::CopyClose,
+          CFrontendVFS::DirectoryEntryStat,
         };
 
         typedData->required_interface_version = supported_vfs_version;

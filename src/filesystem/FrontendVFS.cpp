@@ -8,9 +8,19 @@
 #include "FrontendVFS.h"
 
 #include <kodi/Filesystem.h>
+#include <algorithm>
+#include <cstring>
 #include <limits>
 
 using namespace LIBRETRO;
+
+namespace
+{
+  // A copy step's budget when the core leaves it to the frontend, as in RetroArch
+  constexpr int64_t DEFAULT_COPY_STEP = 4 * 1024 * 1024;
+
+  constexpr size_t COPY_BUFFER_SIZE = 64 * 1024;
+}
 
 const char *CFrontendVFS::GetPath(retro_vfs_file_handle *stream)
 {
@@ -242,6 +252,27 @@ int64_t CFrontendVFS::Truncate(retro_vfs_file_handle *stream, int64_t length)
 
 int CFrontendVFS::Stat(const char *path, int32_t *size)
 {
+  int64_t fileSize = 0;
+  const int returnBitmask = StatPath(path, &fileSize);
+
+  // Set file size
+  if (size != nullptr && (returnBitmask & RETRO_VFS_STAT_IS_VALID))
+  {
+    // What to return if size > 2 GiB?
+    if (fileSize <= std::numeric_limits<int32_t>::max())
+      *size = static_cast<int32_t>(fileSize);
+  }
+
+  return returnBitmask;
+}
+
+int CFrontendVFS::Stat64(const char *path, int64_t *size)
+{
+  return StatPath(path, size);
+}
+
+int CFrontendVFS::StatPath(const char *path, int64_t *size)
+{
   int returnBitmask = 0;
 
   // Return mask with no flags set if the path was not valid
@@ -261,16 +292,166 @@ int CFrontendVFS::Stat(const char *path, int32_t *size)
   if (statFile.GetIsCharacter())
     returnBitmask |= RETRO_VFS_STAT_IS_CHARACTER_SPECIAL;
 
-  // Set file size
   if (size != nullptr)
-  {
-    // What to return if size > 2 GiB?
-    if (statFile.GetSize() <= std::numeric_limits<int32_t>::max())
-      *size = static_cast<int32_t>(statFile.GetSize());
-  }
+    *size = static_cast<int64_t>(statFile.GetSize());
 
   // Return bitmask on success
   return returnBitmask;
+}
+
+int CFrontendVFS::SetReadOnly(const char *path, int readonly)
+{
+  // Kodi's VFS can't change a file's permissions
+  return -1;
+}
+
+int CFrontendVFS::GetModificationTime(const char *path, int64_t *mtime)
+{
+  if (path == nullptr)
+    return -1;
+
+  kodi::vfs::FileStatus statFile;
+  if (!kodi::vfs::StatFile(path, statFile))
+    return -1;
+
+  if (mtime != nullptr)
+    *mtime = static_cast<int64_t>(statFile.GetModificationTime());
+
+  return 0;
+}
+
+int CFrontendVFS::SetModificationTime(const char *path, int64_t mtime)
+{
+  // Kodi's VFS can't set a modification time
+  return -1;
+}
+
+retro_vfs_copy_handle *CFrontendVFS::CopyBegin(const char *src, const char *dst, unsigned flags)
+{
+  if (src == nullptr || dst == nullptr || *src == '\0' || *dst == '\0' || std::strcmp(src, dst) == 0)
+    return nullptr;
+
+  int64_t sourceSize = 0;
+  const int sourceBitmask = StatPath(src, &sourceSize);
+  if (!(sourceBitmask & RETRO_VFS_STAT_IS_VALID) ||
+      (sourceBitmask & (RETRO_VFS_STAT_IS_DIRECTORY | RETRO_VFS_STAT_IS_CHARACTER_SPECIAL)))
+    return nullptr;
+
+  std::unique_ptr<CopyHandle> copyHandle(new CopyHandle{ dst });
+  copyHandle->bytesTotal = sourceSize;
+  copyHandle->source.reset(new kodi::vfs::CFile);
+
+  // Opened before the destination is touched, so a failed copy can't cost
+  // the file it would have replaced
+  if (!copyHandle->source->OpenFile(src))
+    return nullptr;
+
+  const int destinationBitmask = StatPath(dst, nullptr);
+  if (destinationBitmask & RETRO_VFS_STAT_IS_VALID)
+  {
+    if ((destinationBitmask & RETRO_VFS_STAT_IS_DIRECTORY) || !(flags & RETRO_VFS_COPY_OVERWRITE))
+      return nullptr;
+
+    if (!kodi::vfs::DeleteFile(dst))
+      return nullptr;
+  }
+  else if (!CreateParentDirectories(dst))
+  {
+    return nullptr;
+  }
+
+  copyHandle->target.reset(new kodi::vfs::CFile);
+  if (!copyHandle->target->OpenFileForWrite(dst, true))
+  {
+    copyHandle.reset();
+    kodi::vfs::DeleteFile(dst);
+    return nullptr;
+  }
+
+  return reinterpret_cast<retro_vfs_copy_handle*>(copyHandle.release());
+}
+
+int CFrontendVFS::CopyStep(retro_vfs_copy_handle *handle, int64_t max_bytes, int64_t *bytes_done, int64_t *bytes_total)
+{
+  if (handle == nullptr)
+    return RETRO_VFS_COPY_FAILED;
+
+  CopyHandle *copyHandle = reinterpret_cast<CopyHandle*>(handle);
+
+  if (copyHandle->status == RETRO_VFS_COPY_RUNNING)
+  {
+    int64_t budget = max_bytes > 0 ? max_bytes : DEFAULT_COPY_STEP;
+    copyHandle->buffer.resize(COPY_BUFFER_SIZE);
+
+    while (budget > 0)
+    {
+      const size_t chunk = static_cast<size_t>(std::min<int64_t>(budget, copyHandle->buffer.size()));
+      const ssize_t bytesRead = copyHandle->source->Read(copyHandle->buffer.data(), chunk);
+      if (bytesRead == 0 && copyHandle->bytesDone >= copyHandle->bytesTotal)
+      {
+        copyHandle->source.reset();
+        copyHandle->target.reset();
+        copyHandle->status = RETRO_VFS_COPY_DONE;
+        break;
+      }
+
+      // A source that ends before its size was reached fails the copy too
+      if (bytesRead <= 0 || copyHandle->target->Write(copyHandle->buffer.data(), bytesRead) != bytesRead)
+      {
+        // Close both ends so the partial copy can be removed
+        copyHandle->source.reset();
+        copyHandle->target.reset();
+        kodi::vfs::DeleteFile(copyHandle->destination);
+        copyHandle->status = RETRO_VFS_COPY_FAILED;
+        break;
+      }
+
+      copyHandle->bytesDone += bytesRead;
+      budget -= bytesRead;
+    }
+  }
+
+  if (bytes_done != nullptr)
+    *bytes_done = copyHandle->bytesDone;
+  if (bytes_total != nullptr)
+    *bytes_total = copyHandle->bytesTotal;
+
+  return copyHandle->status;
+}
+
+int CFrontendVFS::CopyClose(retro_vfs_copy_handle *handle)
+{
+  if (handle == nullptr)
+    return -1;
+
+  std::unique_ptr<CopyHandle> copyHandle(reinterpret_cast<CopyHandle*>(handle));
+
+  if (copyHandle->status == RETRO_VFS_COPY_DONE)
+    return 0;
+
+  // A copy that is still running is cancelled
+  if (copyHandle->status == RETRO_VFS_COPY_RUNNING)
+  {
+    copyHandle->source.reset();
+    copyHandle->target.reset();
+    kodi::vfs::DeleteFile(copyHandle->destination);
+  }
+
+  return -1;
+}
+
+bool CFrontendVFS::CreateParentDirectories(const std::string &path)
+{
+  std::string parent = kodi::vfs::GetDirectoryName(path);
+  kodi::vfs::RemoveSlashAtEnd(parent);
+
+  if (parent.empty() || parent == path || kodi::vfs::DirectoryExists(parent))
+    return true;
+
+  if (!CreateParentDirectories(parent))
+    return false;
+
+  return kodi::vfs::CreateDirectory(parent) || kodi::vfs::DirectoryExists(parent);
 }
 
 int CFrontendVFS::MakeDirectory(const char *dir)
@@ -386,4 +567,29 @@ int CFrontendVFS::CloseDirectory(retro_vfs_dir_handle *dirstream)
 
   // Return 0 on success
   return 0;
+}
+
+int CFrontendVFS::DirectoryEntryStat(retro_vfs_dir_handle *dirstream, int64_t *size, int64_t *mtime)
+{
+  // Return 0 if there is no entry to report on
+  if (dirstream == nullptr)
+    return 0;
+
+  DirectoryHandle *directoryHandle = reinterpret_cast<DirectoryHandle*>(dirstream);
+  if (!directoryHandle->bOpen || directoryHandle->currentPosition == directoryHandle->items.end())
+    return 0;
+
+  // A copy, as CDirEntry::DateTime() isn't const
+  kodi::vfs::CDirEntry entry = *directoryHandle->currentPosition;
+
+  int returnBitmask = RETRO_VFS_STAT_IS_VALID;
+  if (entry.IsFolder())
+    returnBitmask |= RETRO_VFS_STAT_IS_DIRECTORY;
+
+  if (size != nullptr)
+    *size = entry.IsFolder() ? 0 : entry.Size();
+  if (mtime != nullptr)
+    *mtime = static_cast<int64_t>(entry.DateTime());
+
+  return returnBitmask;
 }
