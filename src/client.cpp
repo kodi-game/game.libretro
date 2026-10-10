@@ -27,6 +27,19 @@ using namespace LIBRETRO;
 #define GAME_CLIENT_NAME_UNKNOWN      "Unknown libretro core"
 #define GAME_CLIENT_VERSION_UNKNOWN   "0.0.0"
 
+namespace
+{
+// LibretroCore() arrived in game API 8.2.1, and Kodi 22 RC1 has 8.2.0
+template<typename Instance>
+std::string GetLibretroCore(const Instance& instance)
+{
+  if constexpr (requires { instance.LibretroCore(); })
+    return instance.LibretroCore();
+  else
+    return "";
+}
+} // namespace
+
 void SAFE_DELETE_GAME_INFO(std::vector<CGameInfoLoader*>& vec)
 {
   for (std::vector<CGameInfoLoader*>::iterator it = vec.begin(); it != vec.end(); ++it)
@@ -124,7 +137,7 @@ ADDON_STATUS CGameLibRetro::Create()
     std::string extensions = systemInfo.valid_extensions ? systemInfo.valid_extensions : "";
 
     // RetroAchievements is told which emulator this is
-    const std::string libretroCore = LibretroCore();
+    const std::string libretroCore = GetLibretroCore(*this);
     CCheevos::Get().SetCoreIdentity(libretroCore, libraryVersion);
 
     dsyslog("CORE: ----------------------------------");
