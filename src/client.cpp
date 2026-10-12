@@ -20,6 +20,7 @@
 
 #include <set>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 using namespace LIBRETRO;
@@ -37,6 +38,21 @@ std::string GetLibretroCore(const Instance& instance)
     return instance.LibretroCore();
   else
     return "";
+}
+
+// ReportMissingFile() and GAME_ERROR_MISSING_FILES arrived in game API 8.3.0
+template<typename Instance>
+GAME_ERROR ReportMissingFileToKodi(Instance& instance, const std::string& file)
+{
+  if constexpr (requires { instance.ReportMissingFile(file); })
+  {
+    instance.ReportMissingFile(file);
+    // Named through a type that depends on Instance, so older headers without it still compile
+    using Error = std::conditional_t<true, GAME_ERROR, Instance>;
+    return Error::GAME_ERROR_MISSING_FILES;
+  }
+  else
+    return GAME_ERROR_FAILED;
 }
 } // namespace
 
@@ -195,6 +211,8 @@ GAME_ERROR CGameLibRetro::LoadGame(const std::string& url)
   SAFE_DELETE_GAME_INFO(m_gameInfo);
   m_gameInfo.push_back(new CGameInfoLoader(url, m_supportsVFS));
 
+  m_missingFiles.Clear();
+
   bool bResult = false;
 
   // Try to load via memory
@@ -218,7 +236,7 @@ GAME_ERROR CGameLibRetro::LoadGame(const std::string& url)
     return GAME_ERROR_NO_ERROR;
   }
 
-  return GAME_ERROR_FAILED;
+  return LoadFailure();
 }
 
 GAME_ERROR CGameLibRetro::LoadGameSpecial(SPECIAL_GAME_TYPE type, const std::vector<std::string>& urls)
@@ -258,7 +276,8 @@ GAME_ERROR CGameLibRetro::LoadGameSpecial(SPECIAL_GAME_TYPE type, const std::vec
 
 GAME_ERROR CGameLibRetro::LoadStandalone()
 {
-  return LoadGameInternal(nullptr) ? GAME_ERROR_NO_ERROR : GAME_ERROR_FAILED;
+  m_missingFiles.Clear();
+  return LoadGameInternal(nullptr) ? GAME_ERROR_NO_ERROR : LoadFailure();
 }
 
 bool CGameLibRetro::LoadGameInternal(const retro_game_info* gameInfo)
@@ -267,7 +286,15 @@ bool CGameLibRetro::LoadGameInternal(const retro_game_info* gameInfo)
   CCheevos::Get().Deinitialize();
   environment.ResetLoadState();
   m_memory.BeginContent();
-  if (m_client.retro_load_game(gameInfo))
+
+  // A core missing its BIOS usually just fails to load, so watch what it looks for
+  bool loaded;
+  {
+    CMissingFileWatcher::Scope watch(m_missingFiles, environment.GetSystemDirectory());
+    loaded = m_client.retro_load_game(gameInfo);
+  }
+
+  if (loaded)
   {
     m_contentLoaded = true;
     return true;
@@ -276,6 +303,15 @@ bool CGameLibRetro::LoadGameInternal(const retro_game_info* gameInfo)
   environment.CloseStreams();
   m_memory.EndContent();
   return false;
+}
+
+GAME_ERROR CGameLibRetro::LoadFailure()
+{
+  const std::string& missingFile = m_missingFiles.MissingFile();
+  if (missingFile.empty())
+    return GAME_ERROR_FAILED;
+
+  return ReportMissingFileToKodi(*this, missingFile);
 }
 
 GAME_ERROR CGameLibRetro::UnloadGame()
