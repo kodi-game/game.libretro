@@ -44,6 +44,7 @@ if(ENABLE_INTERNAL_RCHEEVOS)
                       PATCH_COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/depends/common/rcheevos/CMakeLists.txt ${CMAKE_BINARY_DIR}/build/rcheevos/src/rcheevos/
                       COMMAND ${PATCH_EXECUTABLE} -p1 -i ${CMAKE_SOURCE_DIR}/depends/common/rcheevos/0001-preserve-encore-unlock-times.patch
                       COMMAND ${PATCH_EXECUTABLE} -p1 -i ${CMAKE_SOURCE_DIR}/depends/common/rcheevos/0002-expose-zero-achievement-progress.patch
+                      COMMAND ${PATCH_EXECUTABLE} -p1 -i ${CMAKE_SOURCE_DIR}/depends/common/rcheevos/0003-turn-a-subset-on-or-off.patch
                       CMAKE_ARGS
                         -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/build/depends
                         -DCMAKE_POSITION_INDEPENDENT_CODE=ON

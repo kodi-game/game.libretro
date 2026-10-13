@@ -88,6 +88,9 @@ public:
   GAME_ERROR SetRetroAchievementsCredentials(const std::string& username, const std::string& token) override;
   GAME_ERROR RCSetHardcoreEnabled(bool enabled) override;
   GAME_ERROR RCSetEncoreModeEnabled(bool enabled) override;
+#if defined(HAVE_GAME_RC_ACHIEVEMENT_SETS)
+  GAME_ERROR RCSetAchievementSetEnabled(unsigned int setId, bool enabled) override;
+#endif
   GAME_ERROR ActivateAchievement(unsigned cheevo_id, const std::string& memAddrExpression) override;
   GAME_ERROR GetCheevoUrlId(const std::function<void(const std::string& achievementUrl,
                                                      unsigned int cheevoId)>& callback) override;

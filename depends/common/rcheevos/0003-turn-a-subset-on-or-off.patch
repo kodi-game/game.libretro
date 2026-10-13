@@ -1,0 +1,195 @@
+From 5219f266f36e4a4e0e0efa1854c55aaa93e12746 Mon Sep 17 00:00:00 2001
+From: Chris <meischris39@hotmail.com>
+Date: Tue, 13 Oct 2026 14:12:28 +0100
+Subject: [PATCH] rc_client: Turn a subset on or off
+
+A player may want a game's bonus set left out without opting out of it on
+the website for every device. rc_client_set_subset_active() turns a
+subset of the loaded game on or off: its achievements and leaderboards
+stop being processed, and lists leave them out. Turned back on, its
+triggers start over, so one left half met can't fire straight away.
+---
+ include/rc_client.h   |  6 ++++
+ src/rc_client.c       | 60 +++++++++++++++++++++++++++++++++++++
+ test/test_rc_client.c | 70 +++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 136 insertions(+)
+
+diff --git a/include/rc_client.h b/include/rc_client.h
+index dd1538c..3995022 100644
+--- a/include/rc_client.h
++++ b/include/rc_client.h
+@@ -382,6 +382,12 @@ RC_EXPORT rc_client_subset_list_t* RC_CCONV rc_client_create_subset_list(rc_clie
+  */
+ RC_EXPORT void RC_CCONV rc_client_destroy_subset_list(rc_client_subset_list_t* list);
+ 
++/**
++ * Turns a subset of the loaded game on or off. The achievements and leaderboards
++ * of a subset that is off are not processed, and lists leave them out.
++ */
++RC_EXPORT void RC_CCONV rc_client_set_subset_active(rc_client_t* client, uint32_t subset_id, int active);
++
+ /*****************************************************************************\
+ | Fetch Game Hashes                                                           |
+ \*****************************************************************************/
+diff --git a/src/rc_client.c b/src/rc_client.c
+index 483b865..4325c19 100644
+--- a/src/rc_client.c
++++ b/src/rc_client.c
+@@ -3645,6 +3645,66 @@ void rc_client_destroy_subset_list(rc_client_subset_list_t* list)
+     free(list);
+ }
+ 
++void rc_client_set_subset_active(rc_client_t* client, uint32_t subset_id, int active)
++{
++  rc_client_subset_info_t* subset;
++  rc_client_achievement_info_t* achievement;
++  rc_client_achievement_info_t* achievement_stop;
++  rc_client_leaderboard_info_t* leaderboard;
++  rc_client_leaderboard_info_t* leaderboard_stop;
++  const uint8_t new_active = active ? 1 : 0;
++
++  if (!client)
++    return;
++
++  rc_mutex_lock(&client->state.mutex);
++
++  for (subset = client->game ? client->game->subsets : NULL; subset; subset = subset->next) {
++    if (subset->public_.id != subset_id)
++      continue;
++
++    if (subset->active != new_active) {
++      subset->active = new_active;
++
++      leaderboard = subset->leaderboards;
++      leaderboard_stop = leaderboard + subset->public_.num_leaderboards;
++      for (; leaderboard < leaderboard_stop; ++leaderboard) {
++        if (leaderboard->public_.state == RC_CLIENT_LEADERBOARD_STATE_DISABLED)
++          continue;
++
++        if (new_active) {
++          if (leaderboard->public_.state == RC_CLIENT_LEADERBOARD_STATE_INACTIVE &&
++              (client->state.hardcore || client->state.allow_leaderboards_in_softcore)) {
++            rc_reset_lboard(leaderboard->lboard);
++            leaderboard->public_.state = RC_CLIENT_LEADERBOARD_STATE_ACTIVE;
++          }
++        }
++        else {
++          if (leaderboard->public_.state == RC_CLIENT_LEADERBOARD_STATE_TRACKING)
++            rc_client_release_leaderboard_tracker(client->game, leaderboard);
++          leaderboard->public_.state = RC_CLIENT_LEADERBOARD_STATE_INACTIVE;
++        }
++      }
++
++      /* a trigger left half-met while the subset was off must not fire the moment it is back */
++      if (new_active) {
++        achievement = subset->achievements;
++        achievement_stop = achievement + subset->public_.num_achievements;
++        for (; achievement < achievement_stop; ++achievement) {
++          if (achievement->trigger)
++            rc_reset_trigger(achievement->trigger);
++        }
++      }
++
++      rc_client_update_active_achievements(client->game);
++      rc_client_update_active_leaderboards(client->game);
++    }
++    break;
++  }
++
++  rc_mutex_unlock(&client->state.mutex);
++}
++
+ /* ===== Fetch Game Hashes ===== */
+ 
+ typedef struct rc_client_fetch_hash_library_callback_data_t {
+diff --git a/test/test_rc_client.c b/test/test_rc_client.c
+index d6eac8e..f7cd7ef 100644
+--- a/test/test_rc_client.c
++++ b/test/test_rc_client.c
+@@ -7838,6 +7838,74 @@ static void test_do_frame_mastery_encore(void)
+   rc_client_destroy(g_client);
+ }
+ 
++static void test_set_subset_active(void)
++{
++  rc_client_subset_list_t* list;
++
++  g_client = mock_client_game_loaded(patchdata_subset, no_unlocks);
++
++  ASSERT_PTR_NOT_NULL(g_client->game);
++  if (g_client->game)
++  {
++    const uint32_t num_triggers = g_client->game->runtime.trigger_count;
++    const uint32_t num_lboards = g_client->game->runtime.lboard_count;
++
++    rc_client_set_subset_active(g_client, 2345, 0);
++    ASSERT_NUM_EQUALS(g_client->game->runtime.trigger_count, num_triggers - 3);
++    ASSERT_NUM_EQUALS(g_client->game->runtime.lboard_count, num_lboards - 2);
++
++    list = rc_client_create_subset_list(g_client);
++    ASSERT_NUM_EQUALS(list->num_subsets, 1);
++    ASSERT_NUM_EQUALS(list->subsets[0]->id, 1111);
++    rc_client_destroy_subset_list(list);
++
++    rc_client_set_subset_active(g_client, 2345, 1);
++    ASSERT_NUM_EQUALS(g_client->game->runtime.trigger_count, num_triggers);
++    ASSERT_NUM_EQUALS(g_client->game->runtime.lboard_count, num_lboards);
++
++    /* an unknown subset changes nothing */
++    rc_client_set_subset_active(g_client, 9999, 0);
++    ASSERT_NUM_EQUALS(g_client->game->runtime.trigger_count, num_triggers);
++  }
++
++  rc_client_destroy(g_client);
++}
++
++static void test_set_subset_active_stops_triggers(void)
++{
++  uint8_t memory[64];
++  memset(memory, 0, sizeof(memory));
++
++  g_client = mock_client_game_loaded(patchdata_subset, no_unlocks);
++  g_client->callbacks.server_call = rc_client_server_call_async;
++
++  ASSERT_PTR_NOT_NULL(g_client->game);
++  if (g_client->game)
++  {
++    mock_memory(memory, sizeof(memory));
++    rc_client_set_subset_active(g_client, 2345, 0);
++
++    event_count = 0;
++    rc_client_do_frame(g_client);
++    memory[0x19] = 9;
++    rc_client_do_frame(g_client);
++    ASSERT_PTR_NULL(find_event(RC_CLIENT_EVENT_ACHIEVEMENT_TRIGGERED, 5503));
++
++    /* back on, the condition has to become true again before it fires */
++    rc_client_set_subset_active(g_client, 2345, 1);
++    rc_client_do_frame(g_client);
++    ASSERT_PTR_NULL(find_event(RC_CLIENT_EVENT_ACHIEVEMENT_TRIGGERED, 5503));
++
++    memory[0x19] = 0;
++    rc_client_do_frame(g_client);
++    memory[0x19] = 9;
++    rc_client_do_frame(g_client);
++    ASSERT_PTR_NOT_NULL(find_event(RC_CLIENT_EVENT_ACHIEVEMENT_TRIGGERED, 5503));
++  }
++
++  rc_client_destroy(g_client);
++}
++
+ static void test_do_frame_mastery_subset(void)
+ {
+   rc_client_event_t* event;
+@@ -10660,6 +10728,8 @@ void test_client(void) {
+   /* subset */
+   TEST(test_load_subset);
+   TEST(test_subset_list);
++  TEST(test_set_subset_active);
++  TEST(test_set_subset_active_stops_triggers);
+ 
+   /* achievements */
+   TEST(test_achievement_list_simple);
+-- 
+2.53.0
+
