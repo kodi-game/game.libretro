@@ -259,6 +259,18 @@ bool CCheevos::SetHardcoreEnabled(bool enabled)
   return !refused;
 }
 
+bool CCheevos::SetAchievementSetEnabled(unsigned int setId, bool enabled)
+{
+  if (m_rcClient == nullptr || rc_client_get_subset_info(m_rcClient, setId) == nullptr)
+    return false;
+
+  rc_client_set_subset_active(m_rcClient, setId, enabled ? 1 : 0);
+
+  kodi::Log(ADDON_LOG_INFO, "CCheevos: achievement set %u turned %s", setId,
+            enabled ? "on" : "off");
+  return true;
+}
+
 void CCheevos::SetEncoreModeEnabled(bool enabled)
 {
   m_encoreModeEnabled = enabled;
@@ -1025,6 +1037,9 @@ void CCheevos::RcheevosGameLoadCallback(int result, const char* errorMessage,
   // Note: string pointers in these structs reference rc_client-owned memory,
   // which remains valid until rc_client_destroy_achievement_list() is called below.
   std::vector<game_rc_achievement> achievements;
+#if defined(HAVE_GAME_RC_ACHIEVEMENT_SETS)
+  std::vector<game_rc_achievement_details> details;
+#endif
   rc_client_achievement_list_t* achList = rc_client_create_achievement_list(
       client, RC_CLIENT_ACHIEVEMENT_CATEGORY_CORE,
       RC_CLIENT_ACHIEVEMENT_LIST_GROUPING_LOCK_STATE);
@@ -1058,6 +1073,10 @@ void CCheevos::RcheevosGameLoadCallback(int result, const char* errorMessage,
         gach.rarity = ach->rarity;
         gach.rarity_hardcore = ach->rarity_hardcore;
         achievements.push_back(gach);
+
+#if defined(HAVE_GAME_RC_ACHIEVEMENT_SETS)
+        details.push_back({ach->id, bucket.subset_id, TranslateAchievementType(ach->type)});
+#endif
       }
     }
     rc_client_destroy_achievement_list(achList);
@@ -1076,6 +1095,38 @@ void CCheevos::RcheevosGameLoadCallback(int result, const char* errorMessage,
             data.title != nullptr ? data.title : "", data.achievement_count);
 
   cheevos->m_gameInstance->RCOnGameLoaded(data);
+
+#if defined(HAVE_GAME_RC_ACHIEVEMENT_SETS)
+  // Every set is on when a game loads, so the list has them all. The game's
+  // own set comes first.
+  std::vector<game_rc_achievement_set> sets;
+  rc_client_subset_list_t* subsetList = rc_client_create_subset_list(client);
+  if (subsetList != nullptr)
+  {
+    for (uint32_t s = 0; s < subsetList->num_subsets; ++s)
+    {
+      const rc_client_subset_t* subset = subsetList->subsets[s];
+      sets.push_back({subset->id, subset->title, subset->badge_url});
+    }
+  }
+
+  // A list only names the set of its achievements when there is more than one
+  for (game_rc_achievement_details& entry : details)
+  {
+    if (entry.set_id == 0 && !sets.empty())
+      entry.set_id = sets.front().id;
+  }
+
+  game_rc_achievement_sets setData{};
+  setData.sets = sets.data();
+  setData.set_count = static_cast<unsigned int>(sets.size());
+  setData.achievements = details.data();
+  setData.achievement_count = static_cast<unsigned int>(details.size());
+  cheevos->m_gameInstance->RCOnAchievementSets(setData);
+
+  if (subsetList != nullptr)
+    rc_client_destroy_subset_list(subsetList);
+#endif
 
   cheevos->ApplyPendingProgress();
 

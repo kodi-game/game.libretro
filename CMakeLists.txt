@@ -10,6 +10,18 @@ find_package(TinyXML REQUIRED)
 
 add_definitions(${RCHEEVOS_DEFINITIONS})
 
+# Achievement sets arrived in game API 8.5.0. Checked for rather than required,
+# so the add-on still builds against an older Kodi.
+include(CheckCXXSourceCompiles)
+set(CMAKE_REQUIRED_INCLUDES ${KODI_INCLUDE_DIR} ${KODI_INCLUDE_DIR}/..)
+check_cxx_source_compiles("#include <kodi/c-api/addon-instance/game.h>
+int main() { game_rc_achievement_sets sets{}; return static_cast<int>(sets.set_count); }"
+                          HAVE_GAME_RC_ACHIEVEMENT_SETS)
+unset(CMAKE_REQUIRED_INCLUDES)
+if(HAVE_GAME_RC_ACHIEVEMENT_SETS)
+  add_definitions(-DHAVE_GAME_RC_ACHIEVEMENT_SETS)
+endif()
+
 include_directories(${KODI_INCLUDE_DIR}
                     ${KODI_INCLUDE_DIR}/..
                     ${PROJECT_SOURCE_DIR}/src
