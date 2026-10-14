@@ -7,6 +7,8 @@
 
 #include "FrontendVFS.h"
 
+#include "MissingFileWatcher.h"
+
 #include <kodi/Filesystem.h>
 #include <algorithm>
 #include <cstring>
@@ -53,7 +55,12 @@ retro_vfs_file_handle *CFrontendVFS::OpenFile(const char *path, unsigned mode, u
       flags |= ADDON_READ_CACHED;
 
     if (!fileHandle->file->OpenFile(fileHandle->path, flags))
+    {
+      if (!kodi::vfs::FileExists(fileHandle->path))
+        CMissingFileWatcher::NoteFile(path, false);
       return nullptr;
+    }
+    CMissingFileWatcher::NoteFile(path, true);
   }
   else
   {
@@ -281,7 +288,11 @@ int CFrontendVFS::StatPath(const char *path, int64_t *size)
 
   kodi::vfs::FileStatus statFile;
   if (!kodi::vfs::StatFile(path, statFile))
+  {
+    CMissingFileWatcher::NoteFile(path, false);
     return returnBitmask;
+  }
+  CMissingFileWatcher::NoteFile(path, true);
 
   // Set bitmask flags
   returnBitmask |= RETRO_VFS_STAT_IS_VALID;

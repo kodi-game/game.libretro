@@ -41,6 +41,7 @@ namespace LIBRETRO
     void Deinitialize(void);
 
     CGameLibRetro* GetAddon(void) { return m_addon; }
+    const char* GetSystemDirectory() const { return m_resources.GetSystemDir(); }
     CLibretroDLL* GetClient(void) { return m_client; }
     CClientBridge* GetClientBridge(void) { return m_clientBridge; }
 

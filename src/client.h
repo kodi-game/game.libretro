@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "filesystem/MissingFileWatcher.h"
 #include "libretro/ClientBridge.h"
 #include "libretro/LibretroDLL.h"
 #include "memory/LibretroMemory.h"
@@ -113,6 +114,7 @@ public:
 
 private:
   bool LoadGameInternal(const retro_game_info* gameInfo);
+  GAME_ERROR LoadFailure();
 
   LIBRETRO::Timer                         m_timer;
   LIBRETRO::CLibretroDLL                  m_client;
@@ -125,4 +127,5 @@ private:
   int64_t                                 m_frameTimeLast = 0;
   bool                                    m_coreInitialized = false;
   bool                                    m_contentLoaded = false;
+  LIBRETRO::CMissingFileWatcher           m_missingFiles; // Of the last game loaded
 };
