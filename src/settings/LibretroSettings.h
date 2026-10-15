@@ -12,6 +12,7 @@
 #include <mutex>
 
 #include <map>
+#include <optional>
 #include <string>
 
 struct retro_variable;
@@ -53,8 +54,17 @@ namespace LIBRETRO
      */
     void AddSetting(CLibretroSetting setting);
 
+    /*!
+     * \brief Whether the core's add-on has settings for Kodi to look options up in
+     *
+     * Cores that declare their options only once a game loads ship without
+     * any, and asking Kodi for each option then logs two errors per option.
+     */
+    bool HasAddonSettings();
+
     LibretroSettings   m_settings;
     bool               m_bChanged;
+    std::optional<bool> m_hasAddonSettings;
     std::mutex         m_mutex;
   };
 } // namespace LIBRETRO
