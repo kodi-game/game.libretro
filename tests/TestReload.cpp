@@ -70,6 +70,10 @@ unsigned negotiations = 0;
 // game.libretro's own settings, which Kodi never hands a core
 std::string addonSettingsFile;
 std::vector<std::string> logLines;
+// The settings_file scenario: whether the core's add-on has a settings file,
+// and how many options were looked up in it
+bool coreSettingsFile = false;
+unsigned settingLookups = 0;
 
 void Require(bool condition, const char* message)
 {
@@ -344,6 +348,7 @@ int main(int argc, char** argv)
           "usage: test_reload <wrapper library> <fixture core library> [scenario]");
   const char* scenario = argc == 4 ? argv[3] : "software";
   const bool testSettings = std::strcmp(scenario, "settings_core_switch") == 0;
+  const bool testSettingsFile = std::strcmp(scenario, "settings_file") == 0;
   const bool testVideo = std::strcmp(scenario, "video_core_switch") == 0;
   const bool testCropOverscan = std::strcmp(scenario, "crop_overscan") == 0;
   const bool testSharedSystem = std::strncmp(scenario, "shared_system_", 14) == 0;
@@ -399,6 +404,7 @@ int main(int argc, char** argv)
 
   AddonToKodiFuncTable_kodi_addon addonCallbacks{};
   addonCallbacks.get_addon_info = [](KODI_ADDON_BACKEND_HDL, const char*) { return strdup("test"); };
+  addonCallbacks.get_addon_path = [](KODI_ADDON_BACKEND_HDL) { return strdup("/test-core"); };
   AddonToKodiFuncTable_kodi_filesystem filesystemCallbacks{};
   filesystemCallbacks.directory_exists = [](void*, const char*) { return true; };
   filesystemCallbacks.file_exists = [](void*, const char*, bool) { return false; };
@@ -409,6 +415,18 @@ int main(int argc, char** argv)
   {
     addonCallbacks.get_setting_string = [](KODI_ADDON_BACKEND_HDL, const char*, char**)
     { return false; };
+  }
+  if (testSettingsFile)
+  {
+    filesystemCallbacks.file_exists = [](void*, const char* path, bool)
+    { return coreSettingsFile && std::strcmp(path, "/test-core/resources/settings.xml") == 0; };
+    // Kodi holds the value that isn't each option's default
+    addonCallbacks.get_setting_string = [](KODI_ADDON_BACKEND_HDL, const char* id, char** value)
+    {
+      ++settingLookups;
+      *value = strdup(std::strcmp(id, "core_v2_option") == 0 ? "first" : "second");
+      return true;
+    };
   }
   if (testCropOverscan || testSharedSystem)
   {
@@ -779,6 +797,60 @@ int main(int argc, char** argv)
       }
     }
     std::puts("PASS: core settings and change notification across three lifetimes");
+  }
+  else if (testSettingsFile)
+  {
+    // Without a settings file, then with one, then without again, using both
+    // ways a core registers its options
+    for (unsigned cycle = 0; cycle < 4; ++cycle)
+    {
+      coreSettingsFile = cycle == 1 || cycle == 2;
+      const bool legacy = cycle % 2 == 0;
+      if (cycle != 0)
+      {
+        functions.destroy(interface.addonBase);
+        interface.addonBase = nullptr;
+        interface.globalSingleInstance = nullptr;
+        const ADDON_STATUS nextStatus = create(&interface);
+        Require(nextStatus == ADDON_STATUS_OK || nextStatus == ADDON_STATUS_NEED_SETTINGS,
+                "next core creation failed");
+      }
+      const unsigned lookupsBefore = settingLookups;
+      const char* key = legacy ? "core_legacy_option" : "core_v2_option";
+      if (legacy)
+      {
+        retro_variable options[] = {{key, "Legacy option; first|second"}, {nullptr, nullptr}};
+        Require(environment(RETRO_ENVIRONMENT_SET_VARIABLES, options), "legacy registration failed");
+      }
+      else
+      {
+        retro_core_option_v2_definition options[2]{};
+        options[0].key = key;
+        options[0].desc = "V2 option";
+        options[0].values[0].value = "first";
+        options[0].values[1].value = "second";
+        options[0].default_value = "second";
+        retro_core_options_v2 definitions{nullptr, options};
+        Require(environment(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2, &definitions),
+                "v2 registration failed");
+      }
+      const char* expected = coreSettingsFile ? (legacy ? "second" : "first")
+                                              : (legacy ? "first" : "second");
+      retro_variable value{key, nullptr};
+      Require(environment(RETRO_ENVIRONMENT_GET_VARIABLE, &value) && value.value &&
+                  std::strcmp(value.value, expected) == 0,
+              "option must hold Kodi's value with a settings file and its default without");
+      Require(settingLookups - lookupsBefore == (coreSettingsFile ? 1u : 0u),
+              "Kodi must be asked only when the add-on has a settings file");
+    }
+    const auto count = [](const char* text)
+    {
+      return std::count_if(logLines.begin(), logLines.end(), [text](const std::string& line)
+                           { return line.find(text) != std::string::npos; });
+    };
+    Require(count("not found by Kodi") == 0, "a missing settings file must not log per option");
+    Require(count("has no settings") == 2, "a missing settings file must be logged once per core");
+    std::puts("PASS: options are looked up in Kodi only when the core's add-on has settings");
   }
   else if (testMemoryMap)
   {

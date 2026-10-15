@@ -10,6 +10,9 @@
 #include "log/Log.h"
 #include "client.h"
 
+#include <kodi/AddonBase.h>
+#include <kodi/Filesystem.h>
+
 #include <algorithm>
 #include <utility>
 
@@ -26,6 +29,7 @@ void CLibretroSettings::Deinitialize()
 
   m_settings.clear();
   m_bChanged = true;
+  m_hasAddonSettings.reset();
 }
 
 bool CLibretroSettings::Changed()
@@ -58,21 +62,24 @@ void CLibretroSettings::SetAllSettings(const retro_variable* libretroVariables)
 
       // Query current value for setting from the frontend
       std::string valueBuf;
-      if (kodi::addon::CheckSettingString(variable->key, valueBuf))
+      if (HasAddonSettings())
       {
-        if (std::find(setting.Values().begin(), setting.Values().end(), valueBuf) != setting.Values().end())
+        if (kodi::addon::CheckSettingString(variable->key, valueBuf))
         {
-          dsyslog("Setting %s has value \"%s\" in Kodi",  setting.Key().c_str(), valueBuf.c_str());
-          setting.SetCurrentValue(valueBuf);
+          if (std::find(setting.Values().begin(), setting.Values().end(), valueBuf) != setting.Values().end())
+          {
+            dsyslog("Setting %s has value \"%s\" in Kodi",  setting.Key().c_str(), valueBuf.c_str());
+            setting.SetCurrentValue(valueBuf);
+          }
+          else
+          {
+            esyslog("Setting %s: invalid value \"%s\" (values are: %s)", setting.Key().c_str(), valueBuf.c_str(), variable->value);
+          }
         }
         else
         {
-          esyslog("Setting %s: invalid value \"%s\" (values are: %s)", setting.Key().c_str(), valueBuf.c_str(), variable->value);
+          esyslog("Setting %s not found by Kodi", setting.Key().c_str());
         }
-      }
-      else
-      {
-        esyslog("Setting %s not found by Kodi", setting.Key().c_str());
       }
 
       m_settings.insert(std::make_pair(setting.Key(), std::move(setting)));
@@ -111,23 +118,26 @@ void CLibretroSettings::AddSetting(CLibretroSetting setting)
   }
 
   std::string valueBuf;
-  if (kodi::addon::CheckSettingString(setting.Key(), valueBuf))
+  if (HasAddonSettings())
   {
-    if (std::find(setting.Values().begin(), setting.Values().end(), valueBuf) !=
-        setting.Values().end())
+    if (kodi::addon::CheckSettingString(setting.Key(), valueBuf))
     {
-      dsyslog("Setting %s has value \"%s\" in Kodi", setting.Key().c_str(), valueBuf.c_str());
-      setting.SetCurrentValue(valueBuf);
+      if (std::find(setting.Values().begin(), setting.Values().end(), valueBuf) !=
+          setting.Values().end())
+      {
+        dsyslog("Setting %s has value \"%s\" in Kodi", setting.Key().c_str(), valueBuf.c_str());
+        setting.SetCurrentValue(valueBuf);
+      }
+      else
+      {
+        esyslog("Setting %s: invalid value \"%s\" (values are: %s)", setting.Key().c_str(),
+                valueBuf.c_str(), setting.ValuesStr().c_str());
+      }
     }
     else
     {
-      esyslog("Setting %s: invalid value \"%s\" (values are: %s)", setting.Key().c_str(),
-              valueBuf.c_str(), setting.ValuesStr().c_str());
+      esyslog("Setting %s not found by Kodi", setting.Key().c_str());
     }
-  }
-  else
-  {
-    esyslog("Setting %s not found by Kodi", setting.Key().c_str());
   }
 
   m_settings.insert(std::make_pair(setting.Key(), std::move(setting)));
@@ -165,6 +175,18 @@ void CLibretroSettings::SetAllSettings(const retro_core_option_v2_definition* de
 
     m_bChanged = true;
   }
+}
+
+bool CLibretroSettings::HasAddonSettings()
+{
+  if (!m_hasAddonSettings)
+  {
+    m_hasAddonSettings = kodi::vfs::FileExists(kodi::addon::GetAddonPath("resources/settings.xml"));
+    if (!*m_hasAddonSettings)
+      isyslog("The emulator's add-on has no settings, so its options keep their defaults");
+  }
+
+  return *m_hasAddonSettings;
 }
 
 const char* CLibretroSettings::GetCurrentValue(const std::string& settingName)
