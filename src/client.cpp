@@ -5,6 +5,7 @@
  *  See LICENSE.md for more information.
  */
 
+#include "audio/microphone/FrontendMicrophone.h"
 #include "cheevos/Cheevos.h"
 #include "cheevos/CheevosEnvironment.h"
 #include "input/ButtonMapper.h"
@@ -323,6 +324,7 @@ GAME_ERROR CGameLibRetro::UnloadGame()
   m_contentLoaded = false;
 
   CLibretroEnvironment::Get().CloseStreams();
+  CFrontendMicrophone::CloseAll();
   m_memory.EndContent();
 
   error = GAME_ERROR_NO_ERROR;
