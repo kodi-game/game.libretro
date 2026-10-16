@@ -11,6 +11,7 @@
 #include "libretro-common/libretro.h"
 #include "LibretroDLL.h"
 #include "LibretroTranslator.h"
+#include "audio/FrontendMicrophone.h"
 #include "filesystem/FrontendVFS.h"
 #include "input/InputManager.h"
 #include "log/Log.h"
@@ -94,6 +95,7 @@ void CLibretroEnvironment::InitializeCallbacks()
 void CLibretroEnvironment::Deinitialize()
 {
   CloseStreams();
+  CFrontendMicrophone::CloseAll();
 
   m_videoFormat = GAME_PIXEL_FORMAT_0RGB1555;
   m_videoRotation = GAME_VIDEO_ROTATION_0;
@@ -1042,10 +1044,10 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   case RETRO_ENVIRONMENT_GET_MICROPHONE_INTERFACE:
   {
     retro_microphone_interface* typedData = static_cast<retro_microphone_interface*>(data);
+    if (typedData == nullptr)
+      return false;
 
-    // Not implemented
-    (void)typedData;
-    return false;
+    return CFrontendMicrophone::GetInterface(*typedData);
   }
   case RETRO_ENVIRONMENT_GET_DEVICE_POWER:
   {
