@@ -60,18 +60,21 @@ bool CLibretroDevice::Deserialize(const TiXmlElement* pElement, unsigned int but
   m_controllerId = controllerId;
   m_type = LibretroTranslator::GetDeviceType(type);
 
-  if (m_type == RETRO_DEVICE_NONE)
-  {
-    esyslog("<%s> tag has invalid device type: \"%s\"", BUTTONMAP_XML_ELM_CONTROLLER, type);
-    return false;
-  }
-
   // Device subclass
   const char* subclass = pElement->Attribute(BUTTONMAP_XML_ATTR_DEVICE_SUBCLASS);
   if (subclass)
     std::istringstream(subclass) >> m_subclass;
   else
     m_subclass = RETRO_SUBCLASS_NONE;
+
+  // A subclass of no device is one the core reads itself, as Dolphin reads a
+  // real Wii Remote
+  if (m_type == RETRO_DEVICE_NONE &&
+      (std::string(type) != "RETRO_DEVICE_NONE" || m_subclass == RETRO_SUBCLASS_NONE))
+  {
+    esyslog("<%s> tag has invalid device type: \"%s\"", BUTTONMAP_XML_ELM_CONTROLLER, type);
+    return false;
+  }
 
   // Features
   const TiXmlElement* pFeature = pElement->FirstChildElement(BUTTONMAP_XML_ELM_FEATURE);
