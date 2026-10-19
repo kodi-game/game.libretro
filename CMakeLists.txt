@@ -29,6 +29,7 @@ endif()
 set(LIBRETRO_SOURCES src/client.cpp
                      src/audio/AudioStream.cpp
                      src/audio/AudioTiming.cpp
+                     src/audio/microphone/FrontendMicrophone.cpp
                      src/audio/SingleFrameAudio.cpp
                      src/cheevos/Cheevos.cpp
                      src/cheevos/CheevosEnvironment.cpp
@@ -70,9 +71,17 @@ set(LIBRETRO_SOURCES src/client.cpp
                      src/video/VideoTiming.cpp
 )
 
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  list(APPEND LIBRETRO_SOURCES src/audio/microphone/AlsaMicrophone.cpp)
+else()
+  list(APPEND LIBRETRO_SOURCES src/audio/microphone/NullMicrophone.cpp)
+endif()
+
 set(LIBRETRO_HEADERS src/GameInfoLoader.h
                      src/audio/AudioStream.h
                      src/audio/AudioTiming.h
+                     src/audio/microphone/FrontendMicrophone.h
+                     src/audio/microphone/IMicrophone.h
                      src/audio/SingleFrameAudio.h
                      src/input/ButtonMapper.h
                      src/cheevos/Cheevos.h
