@@ -85,7 +85,7 @@ CGameLibRetro::~CGameLibRetro()
 
   // The next instance may be another core. Not done in Deinitialize(), which
   // also runs as each game starts, after Create() named this one.
-  CCheevos::Get().SetCoreIdentity("", "");
+  CCheevos::Get().SetCoreIdentity("", "", "");
 
   CLibretroEnvironment::Get().CloseStreams();
   if (m_coreInitialized)
@@ -155,7 +155,7 @@ ADDON_STATUS CGameLibRetro::Create()
 
     // RetroAchievements is told which emulator this is
     const std::string libretroCore = GetLibretroCore(*this);
-    CCheevos::Get().SetCoreIdentity(libretroCore, libraryVersion);
+    CCheevos::Get().SetCoreIdentity(libretroCore, libraryName, libraryVersion);
 
     dsyslog("CORE: ----------------------------------");
     dsyslog("CORE: Library name:    %s", libraryName.c_str());
