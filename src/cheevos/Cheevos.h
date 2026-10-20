@@ -52,8 +52,13 @@ public:
    * leaves the emulator out.
    *
    * Called as the core is loaded, which is before the client is built.
+   *
+   * The library name is the one the core gives itself, such as "FCEUmm",
+   * which is what RetroAchievements' rules for the core's options go by.
    */
-  void SetCoreIdentity(const std::string& name, const std::string& version);
+  void SetCoreIdentity(const std::string& name,
+                       const std::string& libraryName,
+                       const std::string& version);
 
   /// @brief Store credentials from Kodi (called before LoadGame)
   void SetCredentials(const std::string& username, const std::string& token);
@@ -67,7 +72,10 @@ public:
    *
    * \return False if hardcore was asked for and refused, which it is for a
    *         core with no libretro name: RetroAchievements restricts hardcore
-   *         per core by that name, so it couldn't hold the core to them
+   *         per core by that name, so it couldn't hold the core to them. It is
+   *         also refused while a core option has a value RetroAchievements
+   *         doesn't allow in hardcore, or for a console the core isn't
+   *         allowed hardcore on.
    */
   bool SetHardcoreEnabled(bool enabled);
 
@@ -88,6 +96,15 @@ public:
 
   //! \brief Whether hardcore is on, for callers that must refuse what it forbids
   bool IsHardcoreEnabled() const { return m_hardcoreEnabled; }
+
+  /*!
+   * \brief Whether a core option can take a value now
+   *
+   * Always true outside hardcore. In hardcore, RetroAchievements forbids some
+   * values of some cores' options, such as cheat devices and an underclocked
+   * CPU.
+   */
+  bool IsSettingAllowed(const std::string& name, const std::string& value) const;
 
   /// @brief Called every emulated frame from RunFrame()
   void DoFrame();
@@ -150,6 +167,15 @@ private:
   };
 
   /*!
+   * @brief What RetroAchievements doesn't allow in hardcore with this core
+   *
+   * Checks the core's options, and the console once a game is identified.
+   *
+   * @return A description for the log, or empty if hardcore is allowed
+   */
+  std::string FindHardcoreConflict() const;
+
+  /*!
    * @brief Apply progress that arrived before the game had been identified
    *
    * Called once the game load completes. See DeserializeProgress().
@@ -202,6 +228,7 @@ private:
 
   // The emulator, as it describes itself
   std::string m_coreName;
+  std::string m_libraryName;
   std::string m_coreVersion;
 
   std::atomic<bool> m_hardcoreEnabled{false};
