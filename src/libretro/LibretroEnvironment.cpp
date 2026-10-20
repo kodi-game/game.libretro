@@ -12,6 +12,7 @@
 #include "LibretroDLL.h"
 #include "LibretroTranslator.h"
 #include "audio/microphone/FrontendMicrophone.h"
+#include "cheevos/Cheevos.h"
 #include "filesystem/FrontendVFS.h"
 #include "input/InputManager.h"
 #include "log/Log.h"
@@ -169,7 +170,29 @@ void CLibretroEnvironment::UpdateVideoGeometry(const retro_game_geometry &geomet
 
 void CLibretroEnvironment::SetSetting(const std::string& name, const std::string& value)
 {
+  std::lock_guard<std::mutex> lock(m_heldSettingsMutex);
+
+  if (!CCheevos::Get().IsSettingAllowed(name, value))
+  {
+    isyslog("Keeping %s = \"%s\" from the core until hardcore mode ends: "
+            "RetroAchievements doesn't allow it in hardcore",
+            name.c_str(), value.c_str());
+    m_heldSettings[name] = value;
+    return;
+  }
+
+  m_heldSettings.erase(name);
   m_settings.SetCurrentValue(name, value);
+}
+
+void CLibretroEnvironment::ApplyHeldSettings()
+{
+  std::lock_guard<std::mutex> lock(m_heldSettingsMutex);
+
+  for (const auto& [name, value] : m_heldSettings)
+    m_settings.SetCurrentValue(name, value);
+
+  m_heldSettings.clear();
 }
 
 std::string CLibretroEnvironment::GetResourcePath(const char* relPath)
