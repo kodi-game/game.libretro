@@ -203,6 +203,20 @@ const char* CLibretroSettings::GetCurrentValue(const std::string& settingName)
   return it->second.CurrentValue().c_str();
 }
 
+std::optional<std::pair<std::string, std::string>> CLibretroSettings::FindValue(
+    const std::function<bool(const std::string& name, const std::string& value)>& match)
+{
+  std::unique_lock<std::mutex> lock(m_mutex);
+
+  for (const auto& [name, setting] : m_settings)
+  {
+    if (match(name, setting.CurrentValue()))
+      return std::make_pair(name, setting.CurrentValue());
+  }
+
+  return std::nullopt;
+}
+
 void CLibretroSettings::SetCurrentValue(const std::string& name, const std::string& value)
 {
   std::unique_lock<std::mutex> lock(m_mutex);
