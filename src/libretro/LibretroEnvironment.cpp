@@ -1049,8 +1049,8 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
 
     if (typedData != nullptr)
     {
-      // Least restrictive, and fits Kodi's current context
-      *typedData = RETRO_SAVESTATE_CONTEXT_NORMAL;
+      *typedData = m_runaheadState ? RETRO_SAVESTATE_CONTEXT_RUNAHEAD_SAME_INSTANCE
+                                   : RETRO_SAVESTATE_CONTEXT_NORMAL;
     }
 
     break;

@@ -80,6 +80,12 @@ namespace LIBRETRO
     bool IsSerializationIncomplete() const { return m_serializationIncomplete; }
 
     /*!
+     * \brief Tell the core whether the state it saves or loads next is for
+     *        run-ahead
+     */
+    void SetRunaheadState(bool runahead) { m_runaheadState = runahead; }
+
+    /*!
      * Invoked when the frontend transfers a setting to the add-on.
      */
     void SetSetting(const std::string& name, const std::string& value);
@@ -115,6 +121,7 @@ namespace LIBRETRO
     GAME_VIDEO_ROTATION m_videoRotation;
     bool m_speculativeFrame = false;
     bool m_serializationIncomplete = false;
+    bool m_runaheadState = false;
 
     CLibretroSettings m_settings;
     CLibretroResources m_resources;
