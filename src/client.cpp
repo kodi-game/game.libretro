@@ -594,6 +594,24 @@ GAME_ERROR CGameLibRetro::Deserialize(const uint8_t* data, size_t size)
   return result ? GAME_ERROR_NO_ERROR : GAME_ERROR_FAILED;
 }
 
+GAME_ERROR CGameLibRetro::SerializeSpeculative(uint8_t* data, size_t size)
+{
+  CLibretroEnvironment::Get().SetRunaheadState(true);
+  const GAME_ERROR error = Serialize(data, size);
+  CLibretroEnvironment::Get().SetRunaheadState(false);
+
+  return error;
+}
+
+GAME_ERROR CGameLibRetro::DeserializeSpeculative(const uint8_t* data, size_t size)
+{
+  CLibretroEnvironment::Get().SetRunaheadState(true);
+  const GAME_ERROR error = Deserialize(data, size);
+  CLibretroEnvironment::Get().SetRunaheadState(false);
+
+  return error;
+}
+
 size_t CGameLibRetro::AchievementStateSize()
 {
   return CCheevos::Get().ProgressSize();
