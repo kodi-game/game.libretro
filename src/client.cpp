@@ -654,6 +654,14 @@ GAME_ERROR CGameLibRetro::RCSetEncoreModeEnabled(bool enabled)
   return GAME_ERROR_NO_ERROR;
 }
 
+#if defined(HAVE_GAME_RC_ACHIEVEMENT_SETS)
+GAME_ERROR CGameLibRetro::RCSetAchievementSetEnabled(unsigned int setId, bool enabled)
+{
+  return CCheevos::Get().SetAchievementSetEnabled(setId, enabled) ? GAME_ERROR_NO_ERROR
+                                                                  : GAME_ERROR_INVALID_PARAMETERS;
+}
+#endif
+
 GAME_ERROR CGameLibRetro::ActivateAchievement(unsigned cheevo_id, const std::string& memAddrExpression)
 {
   return GAME_ERROR_NOT_IMPLEMENTED;

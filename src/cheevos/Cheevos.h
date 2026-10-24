@@ -79,6 +79,13 @@ public:
    */
   void SetEncoreModeEnabled(bool enabled);
 
+  /*!
+   * \brief Turn one of the loaded game's achievement sets on or off
+   *
+   * \return False if no game is loaded or it has no such set
+   */
+  bool SetAchievementSetEnabled(unsigned int setId, bool enabled);
+
   //! \brief Whether hardcore is on, for callers that must refuse what it forbids
   bool IsHardcoreEnabled() const { return m_hardcoreEnabled; }
 

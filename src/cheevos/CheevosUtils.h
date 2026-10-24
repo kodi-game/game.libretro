@@ -27,6 +27,13 @@ constexpr unsigned int HTTP_STATUS_NO_RESPONSE = 0;
  */
 GAME_RC_UNLOCK_STATE TranslateUnlockState(uint8_t unlocked);
 
+#if defined(HAVE_GAME_RC_ACHIEVEMENT_SETS)
+/*!
+ * \brief Translate rc_client's achievement type into the Game API's enum
+ */
+GAME_RC_ACHIEVEMENT_TYPE TranslateAchievementType(uint8_t type);
+#endif
+
 /*!
  * \brief Extract the status code from an HTTP response line
  *
