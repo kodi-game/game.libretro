@@ -24,6 +24,23 @@ GAME_RC_UNLOCK_STATE TranslateUnlockState(uint8_t unlocked)
   return GAME_RC_UNLOCK_STATE_LOCKED;
 }
 
+#if defined(HAVE_GAME_RC_ACHIEVEMENT_SETS)
+GAME_RC_ACHIEVEMENT_TYPE TranslateAchievementType(uint8_t type)
+{
+  switch (type)
+  {
+    case RC_CLIENT_ACHIEVEMENT_TYPE_MISSABLE:
+      return GAME_RC_ACHIEVEMENT_TYPE_MISSABLE;
+    case RC_CLIENT_ACHIEVEMENT_TYPE_PROGRESSION:
+      return GAME_RC_ACHIEVEMENT_TYPE_PROGRESSION;
+    case RC_CLIENT_ACHIEVEMENT_TYPE_WIN:
+      return GAME_RC_ACHIEVEMENT_TYPE_WIN;
+    default:
+      return GAME_RC_ACHIEVEMENT_TYPE_STANDARD;
+  }
+}
+#endif
+
 unsigned int ParseHttpStatus(const std::string& responseProtocol)
 {
   const size_t start = responseProtocol.find(' ');
