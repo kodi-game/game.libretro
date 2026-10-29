@@ -9,13 +9,17 @@
 #include "log/Log.h"
 
 #include <kodi/Filesystem.h>
+#include <kodi/General.h>
 
+#include <algorithm>
+#include <new>
 #include <stdint.h>
 
 using namespace LIBRETRO;
 
 #define READ_SIZE      (100 * 1024)         // Read from VFS 100KB at a time (if file size is unknown)
-#define MAX_READ_SIZE  (100 * 1024 * 1024)  // Read at most 100MB from VFS
+#define MAX_READ_SIZE  (513 * 1024 * 1024)  // Read at most the largest Nintendo DS cartridge, 512MB, and a header
+#define MAX_UNCHECKED_READ_SIZE (100 * 1024 * 1024)  // Read at most 100MB when size or free memory is unknown
 
 CGameInfoLoader::CGameInfoLoader(const std::string& path, bool bSupportsVFS)
  : m_path(path),
@@ -53,44 +57,91 @@ bool CGameInfoLoader::Load(void)
     return false;
   }
 
-  uint64_t size = statStruct.GetSize();
-  if (size > 0)
+  // A core that doesn't need a full path reads the game from memory, so the
+  // whole file is loaded, within limits. Loading by path is the fallback
+  // whenever it can't be.
+  try
   {
-    // Size is known, read entire file at once (unless it is too big)
-    if (size <= MAX_READ_SIZE)
-    {
-      m_dataBuffer.resize(static_cast<size_t>(size));
-      file.Read(m_dataBuffer.data(), static_cast<size_t>(size));
-    }
-    else
+    uint64_t size = statStruct.GetSize();
+    if (size > MAX_READ_SIZE)
     {
       dsyslog("File size (%d MB) is greater than memory limit (%d MB), loading by path",
-              size / (1024 * 1024), MAX_READ_SIZE / (1024 * 1024));
+              static_cast<int>(size / (1024 * 1024)), MAX_READ_SIZE / (1024 * 1024));
       return false;
     }
-  }
-  else
-  {
-    // Read file in chunks
-    ssize_t bytesRead;
-    uint8_t buffer[READ_SIZE];
-    while ((bytesRead = file.Read(buffer, sizeof(buffer))) > 0)
+    else if (size > 0)
     {
-      m_dataBuffer.insert(m_dataBuffer.end(), buffer, buffer + bytesRead);
-
-      // If we read less than READ_SIZE, assume we hit the end of the file
-      if (bytesRead < READ_SIZE)
-        break;
-
-      // If we have exceeded the VFS file size limit, don't try to load by
-      // VFS and fall back to loading by path
-      if (m_dataBuffer.size() > MAX_READ_SIZE)
+      // An allocation the system can't back gets Kodi killed rather than
+      // throwing, so only load what fits in the free memory twice over with
+      // some to spare, as cores like melonDS make their own copy
+      long freeMB = 0;
+      long totalMB = 0;
+      kodi::GetFreeMem(freeMB, totalMB);
+      const uint64_t sizeMB = size / (1024 * 1024);
+      if (totalMB <= 0)
       {
-        dsyslog("File exceeds memory limit (%d MB), loading by path",
-                MAX_READ_SIZE / (1024 * 1024));
+        // Kodi couldn't tell, so keep to the limit there was before
+        if (size > MAX_UNCHECKED_READ_SIZE)
+        {
+          esyslog("Free memory unknown, not loading a %d MB file into memory, loading by path: %s",
+                  static_cast<int>(sizeMB), m_path.c_str());
+          return false;
+        }
+      }
+      else if (sizeMB * 2 + 128 > static_cast<uint64_t>(std::max(freeMB, 0L)))
+      {
+        esyslog("Not enough free memory (%ld MB) to load a %d MB file, loading by path: %s",
+                freeMB, static_cast<int>(sizeMB), m_path.c_str());
+        return false;
+      }
+
+      // Size is known, read entire file at once
+      m_dataBuffer.resize(static_cast<size_t>(size));
+      size_t total = 0;
+      ssize_t bytesRead;
+      while (total < m_dataBuffer.size() &&
+             (bytesRead = file.Read(m_dataBuffer.data() + total, m_dataBuffer.size() - total)) > 0)
+        total += static_cast<size_t>(bytesRead);
+
+      // A read that stops short would hand the core a truncated game
+      if (total < m_dataBuffer.size())
+      {
+        std::vector<uint8_t>().swap(m_dataBuffer);
+        esyslog("Read %d of %d MB, loading by path: %s", static_cast<int>(total / (1024 * 1024)),
+                static_cast<int>(sizeMB), m_path.c_str());
         return false;
       }
     }
+    else
+    {
+      // Read file in chunks
+      ssize_t bytesRead;
+      uint8_t buffer[READ_SIZE];
+      while ((bytesRead = file.Read(buffer, sizeof(buffer))) > 0)
+      {
+        m_dataBuffer.insert(m_dataBuffer.end(), buffer, buffer + bytesRead);
+
+        // If we read less than READ_SIZE, assume we hit the end of the file
+        if (bytesRead < READ_SIZE)
+          break;
+
+        // The buffer grows as it reads, and each reallocation briefly needs
+        // more, so a file of unknown size keeps a lower limit
+        if (m_dataBuffer.size() > MAX_UNCHECKED_READ_SIZE)
+        {
+          std::vector<uint8_t>().swap(m_dataBuffer);
+          dsyslog("File exceeds memory limit (%d MB), loading by path",
+                  MAX_UNCHECKED_READ_SIZE / (1024 * 1024));
+          return false;
+        }
+      }
+    }
+  }
+  catch (const std::bad_alloc&)
+  {
+    std::vector<uint8_t>().swap(m_dataBuffer);
+    esyslog("Not enough memory to load the file, loading by path: %s", m_path.c_str());
+    return false;
   }
 
   if (m_dataBuffer.empty())
