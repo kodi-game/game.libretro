@@ -8,6 +8,7 @@
 #include "Cheevos.h"
 
 #include "CheevosUtils.h"
+#include "libretro/LibretroEnvironment.h"
 #include "utils/Base64.h"
 
 #include <kodi/Filesystem.h>
@@ -18,8 +19,11 @@
 
 #include <rcheevos/rc_api_runtime.h>
 #include <rcheevos/rc_client.h>
+#include <rcheevos/rc_consoles.h>
+#include <rcheevos/rc_libretro.h>
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <cstring>
 #include <future>
@@ -238,15 +242,31 @@ void CCheevos::Deinitialize()
 
 bool CCheevos::SetHardcoreEnabled(bool enabled)
 {
-  const bool refused = enabled && m_coreName.empty();
-  if (refused)
+  bool refused = false;
+  if (enabled && m_coreName.empty())
   {
     kodi::Log(ADDON_LOG_WARNING,
               "CCheevos: hardcore refused, the core's add-on doesn't give its libretro name");
-    enabled = false;
+    refused = true;
+  }
+  else if (enabled)
+  {
+    const std::string conflict = FindHardcoreConflict();
+    if (!conflict.empty())
+    {
+      kodi::Log(ADDON_LOG_WARNING, "CCheevos: hardcore refused, %s", conflict.c_str());
+      refused = true;
+    }
   }
 
+  if (refused)
+    enabled = false;
+
   m_hardcoreEnabled = enabled;
+
+  // Values held back while hardcore was on reach the core now
+  if (!enabled)
+    CLibretroEnvironment::Get().ApplyHeldSettings();
 
   kodi::Log(ADDON_LOG_INFO, "CCheevos: hardcore mode %s", enabled ? "enabled" : "disabled");
 
@@ -283,10 +303,76 @@ void CCheevos::SetEncoreModeEnabled(bool enabled)
     rc_client_set_encore_mode_enabled(m_rcClient, enabled ? 1 : 0);
 }
 
-void CCheevos::SetCoreIdentity(const std::string& name, const std::string& version)
+void CCheevos::SetCoreIdentity(const std::string& name,
+                               const std::string& libraryName,
+                               const std::string& version)
 {
   m_coreName = name;
+  m_libraryName = libraryName;
   m_coreVersion = version;
+}
+
+bool CCheevos::IsSettingAllowed(const std::string& name, const std::string& value) const
+{
+  if (!m_hardcoreEnabled)
+    return true;
+
+  const rc_disallowed_setting_t* disallowed =
+      rc_libretro_get_disallowed_settings(m_libraryName.c_str());
+  if (disallowed != nullptr &&
+      !rc_libretro_is_setting_allowed(disallowed, name.c_str(), value.c_str()))
+    return false;
+
+  // Some rules apply on one console only, which is known once a game is
+  // identified
+  const rc_client_game_t* game = m_rcClient != nullptr ? rc_client_get_game_info(m_rcClient) : nullptr;
+  if (game != nullptr && game->console_id != RC_CONSOLE_UNKNOWN)
+  {
+    disallowed = rc_libretro_get_disallowed_settings_for_system(m_libraryName.c_str(),
+                                                                game->console_id);
+    if (disallowed != nullptr &&
+        !rc_libretro_is_setting_allowed(disallowed, name.c_str(), value.c_str()))
+      return false;
+  }
+
+  return true;
+}
+
+std::string CCheevos::FindHardcoreConflict() const
+{
+  const rc_client_game_t* game = m_rcClient != nullptr ? rc_client_get_game_info(m_rcClient) : nullptr;
+  const uint32_t consoleId = game != nullptr ? game->console_id : RC_CONSOLE_UNKNOWN;
+
+  // With no console yet, rc_libretro_is_system_allowed() would match the
+  // zeroes that end each core's list of consoles
+  if (consoleId != RC_CONSOLE_UNKNOWN &&
+      !rc_libretro_is_system_allowed(m_libraryName.c_str(), consoleId))
+  {
+    return "RetroAchievements doesn't allow " + m_libraryName + " hardcore on this console";
+  }
+
+  const std::array<const rc_disallowed_setting_t*, 2> lists = {
+      rc_libretro_get_disallowed_settings(m_libraryName.c_str()),
+      consoleId != RC_CONSOLE_UNKNOWN
+          ? rc_libretro_get_disallowed_settings_for_system(m_libraryName.c_str(), consoleId)
+          : nullptr};
+
+  for (const rc_disallowed_setting_t* disallowed : lists)
+  {
+    if (disallowed == nullptr)
+      continue;
+
+    const auto setting = CLibretroEnvironment::Get().FindSettingValue(
+        [disallowed](const std::string& name, const std::string& value)
+        { return !rc_libretro_is_setting_allowed(disallowed, name.c_str(), value.c_str()); });
+    if (setting)
+    {
+      return "RetroAchievements doesn't allow " + setting->first + " = \"" + setting->second +
+             "\" in hardcore";
+    }
+  }
+
+  return "";
 }
 
 void CCheevos::SetCredentials(const std::string& username, const std::string& token)
@@ -1011,6 +1097,23 @@ void CCheevos::RcheevosGameLoadCallback(int result, const char* errorMessage,
   cheevos->m_gameLoadRetryDelaySeconds = 0;
 
   const rc_client_game_t* gameInfo = rc_client_get_game_info(client);
+
+  // Hardcore was granted before the console was known, and before a core that
+  // declares its options as the game loads had declared them. If either rules
+  // it out now, nothing more is earned in hardcore in this game. The frontend
+  // can't be told and keeps its restrictions, which errs on the strict side.
+  if (cheevos->m_hardcoreEnabled)
+  {
+    const std::string conflict = cheevos->FindHardcoreConflict();
+    if (!conflict.empty())
+    {
+      kodi::Log(ADDON_LOG_WARNING, "CCheevos: leaving hardcore for this game, %s",
+                conflict.c_str());
+      cheevos->m_hardcoreEnabled = false;
+      rc_client_set_hardcore_enabled(client, 0);
+      CLibretroEnvironment::Get().ApplyHeldSettings();
+    }
+  }
 
   // When RetroAchievements doesn't recognise a ROM's hash it still resolves it,
   // to a placeholder game titled "Unsupported Game Version (<real game>)" that
