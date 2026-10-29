@@ -23,6 +23,8 @@ bool loaded = false;
 uint8_t memoryBuffers[3][16]{{0x11}, {0x22}, {0x33}};
 std::thread audioThread;
 std::atomic<bool> stopAudio{false};
+const retro_game_info* keptInfo = nullptr;
+retro_game_info keptCopy{};
 
 void PublishMemoryMap(bool invalid = false)
 {
@@ -80,7 +82,13 @@ void retro_get_system_av_info(retro_system_av_info* info)
                         : retro_system_av_info{{2, 2, 2, 2, 1.0f}, {70.0, 48000.0}};
 }
 void retro_set_controller_port_device(unsigned, unsigned) {}
-void retro_reset() {}
+void retro_reset()
+{
+  // Like melonDS, which loads the game again through the pointer it was given
+  if (state.keepGameInfo && keptInfo)
+    state.resetFoundGameInfo = keptInfo->data == keptCopy.data &&
+                               keptInfo->size == keptCopy.size && keptInfo->path == keptCopy.path;
+}
 void retro_run()
 {
   if (loaded)
@@ -155,6 +163,11 @@ bool retro_load_game(const retro_game_info* info)
   if (loaded)
     return false;
   ++state.loadAttempts;
+  if (state.keepGameInfo)
+  {
+    keptInfo = info;
+    keptCopy = info ? *info : retro_game_info{};
+  }
   if (state.memoryMaps && state.publishLoadMap)
   {
     state.memoryBuffer = 1;

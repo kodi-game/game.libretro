@@ -373,6 +373,7 @@ int main(int argc, char** argv)
   const bool testUnnamedHardcore = std::strcmp(scenario, "hardcore_unnamed_core") == 0;
   const bool testAudioThread = std::strcmp(scenario, "audio_core_thread") == 0;
   const bool testVfs = std::strcmp(scenario, "vfs_v5") == 0;
+  const bool testKeptGameInfo = std::strcmp(scenario, "reset_keeps_game_info") == 0;
   if (std::strcmp(scenario, "preferred_gles") == 0)
     backend = HardwareBackend::OpenGLES;
   else if (std::strcmp(scenario, "preferred_none") == 0)
@@ -387,7 +388,8 @@ int main(int argc, char** argv)
   Require(environment != nullptr, "fixture environment unavailable");
   ReloadCoreState& core = *getCoreState();
   core.memoryMaps = testMemoryMap;
-  core.memoryLoad = memoryRetry;
+  core.memoryLoad = memoryRetry || testKeptGameInfo;
+  core.keepGameInfo = testKeptGameInfo;
   core.hardware = testHardware || testGrowth;
   core.growGeometry = testGrowth;
   geometryGrowth = testGrowth;
@@ -448,7 +450,7 @@ int main(int argc, char** argv)
                         : path);
     };
   }
-  if (memoryRetry)
+  if (memoryRetry || testKeptGameInfo)
   {
     filesystemCallbacks.file_exists = [](void*, const char*, bool) { return true; };
     filesystemCallbacks.open_file = [](void*, const char*, unsigned int) -> void*
@@ -490,7 +492,7 @@ int main(int argc, char** argv)
   callbacks.kodi_network = &networkCallbacks;
 
   AddonProps_Game properties{};
-  properties.supports_vfs = memoryRetry;
+  properties.supports_vfs = memoryRetry || testKeptGameInfo;
   properties.game_client_dll_path = argv[2];
   properties.profile_directory = "/unused-reload-test";
   if (testCoreName)
@@ -1192,6 +1194,17 @@ int main(int argc, char** argv)
     }
     std::puts("PASS: hardware reset, framebuffer, restoration, DAR, rotation, "
               "failures, and reload");
+  }
+  else if (testKeptGameInfo)
+  {
+    Require(gameFunctions.LoadGame(&game, "reload.test") == GAME_ERROR_NO_ERROR, "load failed");
+    Require(core.memoryAttempts == 1, "the game must reach the core from memory");
+    // Calls after loading reuse the stack it ran on
+    Require(gameFunctions.RunFrame(&game) == GAME_ERROR_NO_ERROR, "running a frame failed");
+    Require(gameFunctions.Reset(&game) == GAME_ERROR_NO_ERROR, "reset failed");
+    Require(core.resetFoundGameInfo, "the game info a core was given didn't last until reset");
+    Require(gameFunctions.UnloadGame(&game) == GAME_ERROR_NO_ERROR, "unloading failed");
+    std::printf("PASS: %s\n", scenario);
   }
   else if (testAudioThread)
   {
