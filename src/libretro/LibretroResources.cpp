@@ -7,6 +7,8 @@
 
 #include "LibretroResources.h"
 #include "filesystem/FilesystemDefines.h"
+#include "filesystem/FilesystemUtils.h"
+#include "filesystem/SystemFiles.h"
 #include "log/Log.h"
 #include "settings/Settings.h"
 
@@ -40,6 +42,18 @@ void CLibretroResources::Initialize(CGameLibRetro* addon)
   // With sharing on, every emulator uses the shared folder, so a BIOS needs
   // putting there only once
   m_systemDirectory = m_addon->Settings().SharedSystemDirectory();
+
+  // The system files an emulator comes with go into the folder it's given: the
+  // shared one, or else its own in the profile, as the folder it's installed in
+  // may be read-only. Kodi lists that own folder once there's something in it,
+  // and the emulator's files would be missing from it otherwise.
+  const std::string ownDirectory = CFilesystemUtils::CoreDirectory(m_addon->ProfileDirectory()) +
+                                   "/resources/" LIBRETRO_SYSTEM_DIRECTORY_NAME;
+  const std::string copyTo = !m_systemDirectory.empty() ? m_systemDirectory : ownDirectory;
+  if (CSystemFiles::Copy(m_resourceDirectories, copyTo, ownDirectory,
+                         kodi::addon::GetAddonInfo("version"),
+                         m_addon->ProfileDirectory() + "/" SYSTEM_FILES_RECORD_NAME))
+    m_systemDirectory = copyTo;
 
   // Set system path to first resource path discovered
   if (m_systemDirectory.empty() && !m_resourceDirectories.empty())

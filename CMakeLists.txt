@@ -50,6 +50,7 @@ set(LIBRETRO_SOURCES src/client.cpp
                      src/filesystem/FilesystemUtils.cpp
                      src/filesystem/FrontendVFS.cpp
                      src/filesystem/MissingFileWatcher.cpp
+                     src/filesystem/SystemFiles.cpp
                      src/GameInfoLoader.cpp
                      src/input/ButtonMapper.cpp
                      src/input/ControllerLayout.cpp
@@ -77,6 +78,7 @@ set(LIBRETRO_SOURCES src/client.cpp
                      src/settings/Settings.cpp
                      src/settings/SettingsXML.cpp
                      src/utils/Base64.cpp
+                     src/utils/Hash.cpp
                      src/utils/Timer.cpp
                      src/video/VideoGeometry.cpp
                      src/video/VideoStream.cpp
@@ -102,6 +104,7 @@ set(LIBRETRO_HEADERS src/GameInfoLoader.h
                      src/filesystem/FilesystemUtils.h
                      src/filesystem/FrontendVFS.h
                      src/filesystem/MissingFileWatcher.h
+                     src/filesystem/SystemFiles.h
                      src/input/ControllerLayout.h
                      src/input/ControllerTopology.h
                      src/input/DefaultControllerDefines.h
@@ -133,6 +136,7 @@ set(LIBRETRO_HEADERS src/GameInfoLoader.h
                      src/settings/SettingsXML.h
                      src/settings/SettingsTypes.h
                      src/utils/Base64.h
+                     src/utils/Hash.h
                      src/utils/Timer.h
                      src/video/VideoGeometry.h
                      src/video/VideoStream.h
