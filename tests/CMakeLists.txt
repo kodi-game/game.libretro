@@ -21,6 +21,12 @@ target_link_libraries(test_missing_file_watcher PRIVATE Threads::Threads)
 add_test(NAME missing_file_watcher COMMAND test_missing_file_watcher)
 set_tests_properties(missing_file_watcher PROPERTIES TIMEOUT 10)
 
+add_executable(test_file_mapping TestFileMapping.cpp ../src/filesystem/FileMapping.cpp)
+target_include_directories(test_file_mapping PRIVATE ../src)
+target_compile_features(test_file_mapping PRIVATE cxx_std_11)
+add_test(NAME file_mapping COMMAND test_file_mapping)
+set_tests_properties(file_mapping PROPERTIES TIMEOUT 10)
+
 # Use the addon's already-built, pinned rcheevos dependency. Never download it.
 find_path(RCHEEVOS_INCLUDE_DIR rc_libretro.h PATH_SUFFIXES rcheevos)
 find_library(RCHEEVOS_LIBRARY NAMES rcheevoslib)
