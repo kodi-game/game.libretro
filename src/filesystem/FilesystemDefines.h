@@ -23,3 +23,7 @@
  * retro_get_memory_data().
  */
 #define LIBRETRO_SAVE_DIRECTORY_NAME  "save"
+
+// In an emulator's profile folder, the record of the last time its system files
+// were copied
+#define SYSTEM_FILES_RECORD_NAME  "system-files.txt"
