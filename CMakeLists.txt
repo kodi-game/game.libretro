@@ -50,6 +50,8 @@ set(LIBRETRO_SOURCES src/client.cpp
                      src/filesystem/FilesystemUtils.cpp
                      src/filesystem/FrontendVFS.cpp
                      src/filesystem/MissingFileWatcher.cpp
+                     src/filesystem/SharedSystemFiles.cpp
+                     src/filesystem/SharedSystemRecord.cpp
                      src/GameInfoLoader.cpp
                      src/input/ButtonMapper.cpp
                      src/input/ControllerLayout.cpp
@@ -102,6 +104,8 @@ set(LIBRETRO_HEADERS src/GameInfoLoader.h
                      src/filesystem/FilesystemUtils.h
                      src/filesystem/FrontendVFS.h
                      src/filesystem/MissingFileWatcher.h
+                     src/filesystem/SharedSystemFiles.h
+                     src/filesystem/SharedSystemRecord.h
                      src/input/ControllerLayout.h
                      src/input/ControllerTopology.h
                      src/input/DefaultControllerDefines.h

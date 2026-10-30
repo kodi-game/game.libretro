@@ -21,6 +21,7 @@
 #include <cstring>
 #include <dirent.h>
 #include <dlfcn.h>
+#include <ftw.h>
 #include <map>
 #include <mutex>
 #include <string>
@@ -342,6 +343,53 @@ std::vector<char> ReadWholeFile(const std::string& path)
   return contents;
 }
 
+// The add-on version Kodi reports, which the shared_system_files scenario updates
+std::string addonVersion = "test";
+
+std::string ReadText(const std::string& path)
+{
+  const std::vector<char> contents = ReadWholeFile(path);
+  return std::string(contents.begin(), contents.end());
+}
+
+void WriteText(const std::string& path, const std::string& text)
+{
+  for (size_t separator = path.find('/', 1); separator != std::string::npos;
+       separator = path.find('/', separator + 1))
+    ::mkdir(path.substr(0, separator).c_str(), 0755);
+  std::FILE* file = std::fopen(path.c_str(), "wb");
+  Require(file != nullptr, "a test file must be writable");
+  std::fputs(text.c_str(), file);
+  std::fclose(file);
+}
+
+bool CopyWholeFile(const char* source, const char* destination)
+{
+  std::FILE* in = std::fopen(source, "rb");
+  if (in == nullptr)
+    return false;
+  std::FILE* out = std::fopen(destination, "wb");
+  if (out == nullptr)
+  {
+    std::fclose(in);
+    return false;
+  }
+  char buffer[4096];
+  size_t bytes;
+  bool written = true;
+  while (written && (bytes = std::fread(buffer, 1, sizeof(buffer), in)) > 0)
+    written = std::fwrite(buffer, 1, bytes, out) == bytes;
+  std::fclose(in);
+  return std::fclose(out) == 0 && written;
+}
+
+void RemoveTree(const std::string& path)
+{
+  const auto remove = [](const char* item, const struct stat*, int, FTW*)
+  { return std::remove(item); };
+  nftw(path.c_str(), remove, 16, FTW_DEPTH | FTW_PHYS);
+}
+
 int main(int argc, char** argv)
 {
   Require(argc == 3 || argc == 4,
@@ -359,6 +407,17 @@ int main(int argc, char** argv)
     sharedSystemSet = sharedSystemExpected = "/";
   else if (std::strcmp(scenario, "shared_system_drive_root") == 0)
     sharedSystemSet = sharedSystemExpected = "D:\\";
+  // Real folders: an emulator's resources, its profile and the shared folder
+  const bool testSharedFiles = std::strcmp(scenario, "shared_system_files") == 0;
+  std::string sharedRoot;
+  if (testSharedFiles)
+  {
+    char folder[] = "/tmp/game-libretro-shared-XXXXXX";
+    Require(mkdtemp(folder) != nullptr, "test folder must be creatable");
+    sharedRoot = folder;
+    sharedSystemSet = sharedRoot + "/shared/";
+    sharedSystemExpected = sharedRoot + "/shared";
+  }
   const bool testHardware = std::strcmp(scenario, "hardware") == 0;
   const bool testPreference = std::strncmp(scenario, "preferred_", 10) == 0;
   const bool testHandoff = std::strcmp(scenario, "retained_hardware_software") == 0;
@@ -403,7 +462,8 @@ int main(int argc, char** argv)
   Require(create != nullptr, "wrapper must export ADDON_Create");
 
   AddonToKodiFuncTable_kodi_addon addonCallbacks{};
-  addonCallbacks.get_addon_info = [](KODI_ADDON_BACKEND_HDL, const char*) { return strdup("test"); };
+  addonCallbacks.get_addon_info = [](KODI_ADDON_BACKEND_HDL, const char*)
+  { return strdup(addonVersion.c_str()); };
   addonCallbacks.get_addon_path = [](KODI_ADDON_BACKEND_HDL) { return strdup("/test-core"); };
   AddonToKodiFuncTable_kodi_filesystem filesystemCallbacks{};
   filesystemCallbacks.directory_exists = [](void*, const char*) { return true; };
@@ -457,11 +517,16 @@ int main(int argc, char** argv)
     { *static_cast<char*>(buffer) = 0; return 1; };
     filesystemCallbacks.close_file = [](void*, void* file) { delete static_cast<int*>(file); };
   }
-  if (testVfs)
+  if (testVfs || testSharedFiles)
   {
-    char folder[] = "/tmp/game-libretro-vfs-XXXXXX";
-    Require(mkdtemp(folder) != nullptr, "test folder must be creatable");
-    vfsRoot = folder;
+    if (testVfs)
+    {
+      char folder[] = "/tmp/game-libretro-vfs-XXXXXX";
+      Require(mkdtemp(folder) != nullptr, "test folder must be creatable");
+      vfsRoot = folder;
+    }
+    else
+      vfsRoot = sharedRoot;
     filesystemCallbacks.stat_file = VfsStat;
     filesystemCallbacks.directory_exists = VfsDirectoryExists;
     filesystemCallbacks.create_directory = [](void*, const char* path)
@@ -479,6 +544,18 @@ int main(int argc, char** argv)
     { return static_cast<ssize_t>(std::fwrite(buffer, 1, size, static_cast<std::FILE*>(file))); };
     filesystemCallbacks.close_file = [](void*, void* file) { std::fclose(static_cast<std::FILE*>(file)); };
   }
+  if (testSharedFiles)
+  {
+    filesystemCallbacks.file_exists = [](void*, const char* path, bool)
+    {
+      struct stat info{};
+      return UnderVfsRoot(path) && ::stat(path, &info) == 0 && S_ISREG(info.st_mode);
+    };
+    filesystemCallbacks.copy_file = [](void*, const char* source, const char* destination)
+    { return CopyWholeFile(source, destination); };
+    filesystemCallbacks.rename_file = [](void*, const char* from, const char* to)
+    { return std::rename(from, to) == 0; };
+  }
   AddonToKodiFuncTable_kodi_network networkCallbacks{};
   networkCallbacks.get_user_agent = [](void*) { return strdup("reload-test"); };
   AddonToKodiFuncTable_Addon callbacks{};
@@ -493,6 +570,24 @@ int main(int argc, char** argv)
   properties.supports_vfs = memoryRetry;
   properties.game_client_dll_path = argv[2];
   properties.profile_directory = "/unused-reload-test";
+  // Kodi lists a game resource add-on's folder before the emulator's own
+  const std::string userResources = sharedRoot + "/user/resources";
+  const std::string addonResources = sharedRoot + "/addon/resources";
+  const std::string profile = sharedRoot + "/profile";
+  const std::string shared = sharedRoot + "/shared/";
+  const char* resourceDirectories[] = {userResources.c_str(), addonResources.c_str()};
+  if (testSharedFiles)
+  {
+    properties.resource_directories = resourceDirectories;
+    properties.resource_directory_count = 2;
+    properties.profile_directory = profile.c_str();
+    ::mkdir(profile.c_str(), 0755);
+    WriteText(userResources + "/system/bios.bin", "resource bios");
+    WriteText(addonResources + "/system/bios.bin", "shipped bios");
+    WriteText(addonResources + "/system/core/data.txt", "v1");
+    WriteText(addonResources + "/system/mine.txt", "shipped");
+    WriteText(shared + "mine.txt", "already there");
+  }
   if (testCoreName)
     properties.libretro_core = "reload_libretro";
   AddonToKodiFuncTable_Game gameCallbacks{};
@@ -543,9 +638,54 @@ int main(int argc, char** argv)
   {
     const char* directory = nullptr;
     const bool answered = environment(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &directory);
-    std::remove(addonSettingsFile.c_str());
+    if (!testSharedFiles)
+      std::remove(addonSettingsFile.c_str());
     Require(answered && directory != nullptr && directory == sharedSystemExpected,
             "every emulator must be given the shared system folder");
+  }
+  if (testSharedFiles)
+  {
+    Require(ReadText(shared + "core/data.txt") == "v1",
+            "an emulator's system file must be copied into the shared folder");
+    Require(ReadText(shared + "bios.bin") == "resource bios",
+            "the resource folder listed first must give the copy");
+    Require(ReadText(shared + "mine.txt") == "already there",
+            "a file the shared folder already has must be kept");
+
+    const auto recreate = [&]()
+    {
+      functions.destroy(interface.addonBase);
+      interface.addonBase = nullptr;
+      interface.globalSingleInstance = nullptr;
+      const ADDON_STATUS nextStatus = create(&interface);
+      Require(nextStatus == ADDON_STATUS_OK || nextStatus == ADDON_STATUS_NEED_SETTINGS,
+              "emulator creation failed");
+    };
+
+    // An update changes a file that was copied
+    WriteText(addonResources + "/system/core/data.txt", "v2, longer");
+    addonVersion = "2";
+    recreate();
+    Require(ReadText(shared + "core/data.txt") == "v2, longer", "an earlier copy must be updated");
+
+    // Someone changes the copy, then another update comes
+    WriteText(shared + "core/data.txt", "edited");
+    WriteText(addonResources + "/system/core/data.txt", "v3");
+    addonVersion = "3";
+    recreate();
+    Require(ReadText(shared + "core/data.txt") == "edited", "a copy changed since must be kept");
+
+    // A copy is deleted while nothing else changes
+    std::remove((shared + "bios.bin").c_str());
+    recreate();
+    Require(ReadText(shared + "bios.bin") == "resource bios", "a deleted copy must be made again");
+
+    struct stat info{};
+    Require(::stat((shared + "core/data.txt.partial").c_str(), &info) != 0 &&
+                ::stat((shared + "bios.bin.partial").c_str(), &info) != 0,
+            "no partial copy may be left");
+    std::remove(addonSettingsFile.c_str());
+    std::puts("PASS: an emulator's system files are copied into the shared folder");
   }
 
   if (testCoreName)
@@ -1260,6 +1400,8 @@ int main(int argc, char** argv)
   }
   dlclose(library);
   dlclose(coreLibrary);
+  if (testSharedFiles)
+    RemoveTree(sharedRoot);
   if (std::strcmp(scenario, "software") == 0)
     std::puts("PASS: timing, video, and audio survive six loads on one addon instance");
 }

@@ -23,3 +23,7 @@
  * retro_get_memory_data().
  */
 #define LIBRETRO_SAVE_DIRECTORY_NAME  "save"
+
+// In an emulator's profile folder, the record of the files it copied into the
+// shared system folder
+#define SHARED_SYSTEM_RECORD_NAME  "shared-system-copies.txt"
