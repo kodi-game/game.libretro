@@ -21,6 +21,20 @@ using namespace LIBRETRO;
 #define MAX_READ_SIZE  (513 * 1024 * 1024)  // Read at most the largest Nintendo DS cartridge, 512MB, and a header
 #define MAX_UNCHECKED_READ_SIZE (100 * 1024 * 1024)  // Read at most 100MB when size or free memory is unknown
 
+namespace
+{
+// The local file a path names, or empty for a path only the VFS can open
+std::string LocalFile(const std::string& path)
+{
+  const std::string fileProtocol = "file://";
+  if (path.compare(0, fileProtocol.size(), fileProtocol) == 0)
+    return path.substr(fileProtocol.size());
+  if (path.find("://") != std::string::npos)
+    return "";
+  return path;
+}
+} // namespace
+
 CGameInfoLoader::CGameInfoLoader(const std::string& path, bool bSupportsVFS)
  : m_path(path),
    m_bSupportsVfs(bSupportsVFS)
@@ -95,6 +109,14 @@ bool CGameInfoLoader::Load(void)
         return false;
       }
 
+      // A local file is mapped rather than read, so it isn't copied
+      const std::string localFile = LocalFile(m_path);
+      if (!localFile.empty() && m_mapping.Map(localFile))
+      {
+        dsyslog("Mapped file into memory (%zu bytes): %s", m_mapping.Size(), m_path.c_str());
+        return true;
+      }
+
       // Size is known, read entire file at once
       m_dataBuffer.resize(static_cast<size_t>(size));
       size_t total = 0;
@@ -157,15 +179,16 @@ bool CGameInfoLoader::Load(void)
 
 bool CGameInfoLoader::GetMemoryStruct(retro_game_info& info) const
 {
-  if (!m_dataBuffer.empty())
+  const bool bMapped = m_mapping.Data() != nullptr;
+  if (bMapped || !m_dataBuffer.empty())
   {
     //! @todo path is null according to libretro API, but many cores expect
     //        the frontend to set this. Do so to guard against
     //        noncompliant cores.
     info.path = m_path.c_str();
 
-    info.data = m_dataBuffer.data();
-    info.size = m_dataBuffer.size();
+    info.data = bMapped ? m_mapping.Data() : m_dataBuffer.data();
+    info.size = bMapped ? m_mapping.Size() : m_dataBuffer.size();
     info.meta = nullptr;
     return true;
   }

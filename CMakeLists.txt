@@ -47,6 +47,7 @@ set(LIBRETRO_SOURCES src/client.cpp
                      src/cheevos/CheevosEnvironment.cpp
                      src/cheevos/CheevosFrontendBridge.cpp
                      src/cheevos/CheevosUtils.cpp
+                     src/filesystem/FileMapping.cpp
                      src/filesystem/FilesystemUtils.cpp
                      src/filesystem/FrontendVFS.cpp
                      src/filesystem/MissingFileWatcher.cpp
@@ -98,6 +99,7 @@ set(LIBRETRO_HEADERS src/GameInfoLoader.h
                      src/input/ButtonMapper.h
                      src/cheevos/Cheevos.h
                      src/cheevos/CheevosUtils.h
+                     src/filesystem/FileMapping.h
                      src/filesystem/FilesystemDefines.h
                      src/filesystem/FilesystemUtils.h
                      src/filesystem/FrontendVFS.h

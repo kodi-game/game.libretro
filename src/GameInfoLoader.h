@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "filesystem/FileMapping.h"
 #include "libretro-common/libretro.h"
 
 #include <stdint.h>
@@ -46,5 +47,6 @@ namespace LIBRETRO
     const std::string                   m_path;
     const bool                          m_bSupportsVfs;
     std::vector<uint8_t>                m_dataBuffer;
+    CFileMapping                        m_mapping;
   };
 } // namespace LIBRETRO
