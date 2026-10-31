@@ -74,6 +74,18 @@ namespace LIBRETRO
     GAME_VIDEO_ROTATION GetVideoRotation() const { return m_videoRotation; }
 
     /*!
+     * \brief Whether the core said its states are incomplete, which libretro.h
+     *        says rules out frame-sensitive features such as run-ahead
+     */
+    bool IsSerializationIncomplete() const { return m_serializationIncomplete; }
+
+    /*!
+     * \brief Tell the core whether the state it saves or loads next is for
+     *        run-ahead
+     */
+    void SetRunaheadState(bool runahead) { m_runaheadState = runahead; }
+
+    /*!
      * Invoked when the frontend transfers a setting to the add-on.
      */
     void SetSetting(const std::string& name, const std::string& value);
@@ -82,8 +94,10 @@ namespace LIBRETRO
 
     /*!
      * \brief Called before a game is run for a frame
+     *
+     * \param speculative True if the frontend rolls the frame back
      */
-    void OnFrameBegin();
+    void OnFrameBegin(bool speculative = false);
 
     /*!
      * \brief Called after game has been run for a frame
@@ -105,6 +119,9 @@ namespace LIBRETRO
 
     GAME_PIXEL_FORMAT m_videoFormat;
     GAME_VIDEO_ROTATION m_videoRotation;
+    bool m_speculativeFrame = false;
+    bool m_serializationIncomplete = false;
+    bool m_runaheadState = false;
 
     CLibretroSettings m_settings;
     CLibretroResources m_resources;
