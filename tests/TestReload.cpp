@@ -45,6 +45,9 @@ std::map<KODI_GAME_STREAM_HANDLE, StreamState> streams;
 // A core may deliver audio from its own thread
 std::mutex streamsMutex;
 bool slowAudioClose = false;
+// What's left to read of the content_info_override scenario's game, which is
+// big enough for the system to take its memory back once it's freed
+size_t overrideGameLeft = 0;
 unsigned videoPackets = 0;
 std::vector<GAME_PIXEL_FORMAT> videoFormats;
 std::vector<GAME_VIDEO_ROTATION> videoRotations;
@@ -366,6 +369,7 @@ int main(int argc, char** argv)
   const bool testFailedLoad = std::strncmp(scenario, "failed_load_", 12) == 0;
   const bool testMemoryMap = std::strncmp(scenario, "memory_map_", 11) == 0;
   const bool memoryRetry = std::strcmp(scenario, "failed_load_memory_retry") == 0;
+  const bool testContentOverride = std::strcmp(scenario, "content_info_override") == 0;
   const bool standaloneFailure = std::strcmp(scenario, "failed_load_standalone") == 0;
   const bool testCoreName = std::strncmp(scenario, "core_name", 9) == 0;
   // Kodi has passed the core's name since game API 8.2.1
@@ -389,6 +393,7 @@ int main(int argc, char** argv)
   ReloadCoreState& core = *getCoreState();
   core.memoryMaps = testMemoryMap;
   core.memoryLoad = memoryRetry || testKeptGameInfo;
+  core.contentOverride = testContentOverride;
   core.keepGameInfo = testKeptGameInfo;
   core.hardware = testHardware || testGrowth;
   core.growGeometry = testGrowth;
@@ -449,6 +454,23 @@ int main(int argc, char** argv)
                         ? addonSettingsFile.c_str()
                         : path);
     };
+  }
+  if (testContentOverride)
+  {
+    filesystemCallbacks.file_exists = [](void*, const char*, bool) { return true; };
+    filesystemCallbacks.open_file = [](void*, const char*, unsigned int) -> void*
+    {
+      overrideGameLeft = 1024 * 1024;
+      return new int;
+    };
+    filesystemCallbacks.read_file = [](void*, void*, void* buffer, size_t size) -> ssize_t
+    {
+      const size_t bytes = std::min(size, overrideGameLeft);
+      std::memset(buffer, 0x5a, bytes);
+      overrideGameLeft -= bytes;
+      return static_cast<ssize_t>(bytes);
+    };
+    filesystemCallbacks.close_file = [](void*, void* file) { delete static_cast<int*>(file); };
   }
   if (memoryRetry || testKeptGameInfo)
   {
@@ -1195,6 +1217,25 @@ int main(int argc, char** argv)
     std::puts("PASS: hardware reset, framebuffer, restoration, DAR, rotation, "
               "failures, and reload");
   }
+  else if (testContentOverride)
+  {
+    Require(core.contentOverrideAccepted, "the core's content overrides were refused");
+    // Asking whether overrides are supported must not clear them
+    Require(environment(RETRO_ENVIRONMENT_SET_CONTENT_INFO_OVERRIDE, nullptr),
+            "a core must be able to ask whether content overrides are supported");
+    // The core itself asks for a full path, so only the override loads the game from memory.
+    // Both games' data must outlive the second load, until retro_deinit() returns.
+    for (unsigned load = 1; load <= 2; ++load)
+    {
+      Require(gameFunctions.LoadGame(&game, "/games/Reload.TEST") == GAME_ERROR_NO_ERROR,
+              "load failed");
+      Require(core.memoryAttempts == load, "the override must have the game loaded from memory");
+      Require(core.gameInfoExtMatches,
+              "GET_GAME_INFO_EXT must describe the game the core was given");
+      Require(gameFunctions.RunFrame(&game) == GAME_ERROR_NO_ERROR, "running a frame failed");
+      Require(gameFunctions.UnloadGame(&game) == GAME_ERROR_NO_ERROR, "unloading failed");
+    }
+  }
   else if (testKeptGameInfo)
   {
     Require(gameFunctions.LoadGame(&game, "reload.test") == GAME_ERROR_NO_ERROR, "load failed");
@@ -1243,6 +1284,11 @@ int main(int argc, char** argv)
     }
   }
   functions.destroy(interface.addonBase);
+  if (testContentOverride)
+  {
+    Require(core.persistentDataAtDeinit, "persistent game data must last until retro_deinit() returns");
+    std::printf("PASS: %s\n", scenario);
+  }
   if (testMemoryMap)
   {
     Require(core.deinitializations == 1 && !core.deinitializedWithContent,
