@@ -7,6 +7,7 @@
 
 #include "LibretroResources.h"
 #include "filesystem/FilesystemDefines.h"
+#include "filesystem/SharedSystemFiles.h"
 #include "log/Log.h"
 #include "settings/Settings.h"
 
@@ -40,6 +41,7 @@ void CLibretroResources::Initialize(CGameLibRetro* addon)
   // With sharing on, every emulator uses the shared folder, so a BIOS needs
   // putting there only once
   m_systemDirectory = m_addon->Settings().SharedSystemDirectory();
+  const bool sharedSystemDirectory = !m_systemDirectory.empty();
 
   // Set system path to first resource path discovered
   if (m_systemDirectory.empty() && !m_resourceDirectories.empty())
@@ -60,6 +62,12 @@ void CLibretroResources::Initialize(CGameLibRetro* addon)
     dsyslog("Creating save directory: %s", m_saveDirectory.c_str());
     kodi::vfs::CreateDirectory(m_saveDirectory);
   }
+
+  // Otherwise the shared folder hides the system files an emulator comes with
+  if (sharedSystemDirectory)
+    CSharedSystemFiles::Copy(m_resourceDirectories, m_systemDirectory,
+                             kodi::addon::GetAddonInfo("version"),
+                             m_addon->ProfileDirectory() + "/" SHARED_SYSTEM_RECORD_NAME);
 
   // A core finds its BIOS, fonts and other data files under this, and one
   // pointed somewhere else fails in whatever way that core fails when its data

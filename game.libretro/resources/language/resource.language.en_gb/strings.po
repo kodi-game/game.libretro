@@ -41,7 +41,7 @@ msgid "Use shared System/BIOS folder"
 msgstr ""
 
 msgctxt "#30004"
-msgid "Use a shared System/BIOS folder for all libretro cores, instead of a folder for each core. A core's own system folder is not used, so any system files from it have to be copied to the shared folder."
+msgid "Use a shared System/BIOS folder for all libretro cores, instead of a folder for each core. The system files a core comes with, or that were put in its own system folder, are copied into the shared folder."
 msgstr ""
 
 msgctxt "#30005"

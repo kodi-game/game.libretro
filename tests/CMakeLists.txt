@@ -21,6 +21,13 @@ target_link_libraries(test_missing_file_watcher PRIVATE Threads::Threads)
 add_test(NAME missing_file_watcher COMMAND test_missing_file_watcher)
 set_tests_properties(missing_file_watcher PROPERTIES TIMEOUT 10)
 
+add_executable(test_shared_system_record TestSharedSystemRecord.cpp
+               ../src/filesystem/SharedSystemRecord.cpp)
+target_include_directories(test_shared_system_record PRIVATE ../src)
+target_compile_features(test_shared_system_record PRIVATE cxx_std_11)
+add_test(NAME shared_system_record COMMAND test_shared_system_record)
+set_tests_properties(shared_system_record PROPERTIES TIMEOUT 10)
+
 # Use the addon's already-built, pinned rcheevos dependency. Never download it.
 find_path(RCHEEVOS_INCLUDE_DIR rc_libretro.h PATH_SUFFIXES rcheevos)
 find_library(RCHEEVOS_LIBRARY NAMES rcheevoslib)
@@ -67,7 +74,7 @@ if(GAME_LIBRETRO_LIBRARY)
                    memory_map_failed_load settings_core_switch settings_file video_core_switch
                    crop_overscan core_name core_name_older_kodi hardcore_unnamed_core
                    audio_core_thread shared_system_directory shared_system_root
-                   shared_system_drive_root vfs_v5)
+                   shared_system_drive_root shared_system_files vfs_v5)
     add_test(NAME ${scenario}
              COMMAND test_reload "${GAME_LIBRETRO_LIBRARY}" $<TARGET_FILE:reload_core> ${scenario})
     set_tests_properties(${scenario} PROPERTIES TIMEOUT 10)
