@@ -969,17 +969,19 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   {
     const retro_system_content_info_override* typedData = static_cast<const retro_system_content_info_override*>(data);
 
-    // Not implemented
-    (void)typedData;
-    return false;
+    // A core passes none to ask whether overrides are supported
+    if (typedData != nullptr)
+      m_addon->SetContentInfoOverrides(typedData);
+    break;
   }
   case RETRO_ENVIRONMENT_GET_GAME_INFO_EXT:
   {
     const retro_game_info_ext** typedData = static_cast<const retro_game_info_ext**>(data);
+    if (typedData == nullptr)
+      return false;
 
-    // Not implemented
-    (void)typedData;
-    return false;
+    *typedData = m_addon->GetGameInfoExt();
+    return *typedData != nullptr;
   }
   case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2:
   {
