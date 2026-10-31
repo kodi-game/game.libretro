@@ -30,6 +30,10 @@ struct ReloadCoreState
   unsigned failedLoads{};
   unsigned loadAttempts{};
   unsigned memoryAttempts{};
+  bool contentOverride{};
+  bool contentOverrideAccepted{};
+  bool gameInfoExtMatches{};
+  bool persistentDataAtDeinit{};
   bool emitFailureFrame{};
   unsigned failedCallbacks{};
   bool memoryMaps{};

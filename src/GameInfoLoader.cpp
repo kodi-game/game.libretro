@@ -10,6 +10,7 @@
 
 #include <kodi/Filesystem.h>
 #include <kodi/General.h>
+#include <kodi/tools/StringUtils.h>
 
 #include <algorithm>
 #include <new>
@@ -25,6 +26,13 @@ CGameInfoLoader::CGameInfoLoader(const std::string& path, bool bSupportsVFS)
  : m_path(path),
    m_bSupportsVfs(bSupportsVFS)
 {
+  const size_t slash = m_path.find_last_of("/\\");
+  if (slash != std::string::npos)
+    m_directory = m_path.substr(0, slash);
+
+  const std::string fileName = m_path.substr(slash + 1);
+  m_name = fileName.substr(0, fileName.rfind('.'));
+  m_extension = GetExtension(m_path);
 }
 
 bool CGameInfoLoader::Load(void)
@@ -179,4 +187,33 @@ bool CGameInfoLoader::GetPathStruct(retro_game_info& info) const
   info.size = 0;
   info.meta = nullptr;
   return true;
+}
+
+void CGameInfoLoader::GetExtendedStruct(const retro_game_info& info,
+                                        bool bPersistentData,
+                                        retro_game_info_ext& infoExt) const
+{
+  // Kodi's paths into archives open through the VFS like any other, so they
+  // are given whole rather than split into archive_path and archive_file
+  infoExt = {};
+  infoExt.full_path = m_path.c_str();
+  infoExt.dir = m_directory.c_str();
+  infoExt.name = m_name.c_str();
+  infoExt.ext = m_extension.c_str();
+  infoExt.meta = info.meta;
+  infoExt.data = info.data;
+  infoExt.size = info.size;
+  infoExt.persistent_data = info.data != nullptr && bPersistentData;
+}
+
+std::string CGameInfoLoader::GetExtension(const std::string& path)
+{
+  const std::string fileName = path.substr(path.find_last_of("/\\") + 1);
+  const size_t dot = fileName.rfind('.');
+  if (dot == std::string::npos)
+    return "";
+
+  std::string extension = fileName.substr(dot + 1);
+  kodi::tools::StringUtils::ToLower(extension);
+  return extension;
 }
