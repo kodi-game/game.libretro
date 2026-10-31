@@ -126,6 +126,9 @@ private:
   LIBRETRO::CClientBridge                 m_clientBridge;
   LIBRETRO::CSettings                     m_settings;
   std::vector<LIBRETRO::CGameInfoLoader*> m_gameInfo;
+  // What the core was given to load, kept until the game is unloaded: a core
+  // can hold on to it, as melonDS does to load the game again on reset
+  retro_game_info                         m_loadedGameInfo{};
   bool                                    m_supportsVFS = false; // TODO
   int64_t                                 m_frameTimeLast = 0;
   bool                                    m_coreInitialized = false;

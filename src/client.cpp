@@ -217,18 +217,17 @@ GAME_ERROR CGameLibRetro::LoadGame(const std::string& url)
   bool bResult = false;
 
   // Try to load via memory
-  retro_game_info gameInfo;
   if (m_gameInfo[0]->Load())
   {
-    m_gameInfo[0]->GetMemoryStruct(gameInfo);
-    bResult = LoadGameInternal(&gameInfo);
+    m_gameInfo[0]->GetMemoryStruct(m_loadedGameInfo);
+    bResult = LoadGameInternal(&m_loadedGameInfo);
   }
 
   if (!bResult)
   {
     // Fall back to loading via path
-    m_gameInfo[0]->GetPathStruct(gameInfo);
-    bResult = LoadGameInternal(&gameInfo);
+    m_gameInfo[0]->GetPathStruct(m_loadedGameInfo);
+    bResult = LoadGameInternal(&m_loadedGameInfo);
   }
 
   if (bResult)
@@ -330,6 +329,7 @@ GAME_ERROR CGameLibRetro::UnloadGame()
   error = GAME_ERROR_NO_ERROR;
 
   SAFE_DELETE_GAME_INFO(m_gameInfo);
+  m_loadedGameInfo = {};
 
   return error;
 }
