@@ -9,8 +9,12 @@
 
 #include "ReloadCoreState.h"
 
+#include <algorithm>
 #include <atomic>
+#include <cstring>
 #include <thread>
+#include <utility>
+#include <vector>
 
 namespace
 {
@@ -25,6 +29,8 @@ std::thread audioThread;
 std::atomic<bool> stopAudio{false};
 const retro_game_info* keptInfo = nullptr;
 retro_game_info keptCopy{};
+// Every game's data the core was told persists
+std::vector<std::pair<const uint8_t*, size_t>> persistentData;
 
 void PublishMemoryMap(bool invalid = false)
 {
@@ -46,7 +52,19 @@ extern "C"
 {
 ReloadCoreState* test_core_state() { return &state; }
 bool test_core_environment(unsigned command, void* data) { return environment(command, data); }
-void retro_set_environment(retro_environment_t callback) { environment = callback; }
+void retro_set_environment(retro_environment_t callback)
+{
+  environment = callback;
+  if (state.contentOverride)
+  {
+    // Upper case and listed twice: case doesn't matter, and the first listing counts
+    static const retro_system_content_info_override overrides[] = {
+        {"TEST", false, true}, {"test", true, false}, {nullptr, false, false}};
+    state.contentOverrideAccepted =
+        environment(RETRO_ENVIRONMENT_SET_CONTENT_INFO_OVERRIDE,
+                    const_cast<retro_system_content_info_override*>(overrides));
+  }
+}
 void retro_set_video_refresh(retro_video_refresh_t callback) { video = callback; }
 void retro_set_audio_sample(retro_audio_sample_t) {}
 void retro_set_audio_sample_batch(retro_audio_sample_batch_t callback) { audio = callback; }
@@ -68,6 +86,12 @@ void retro_deinit()
     stopAudio = true;
     audioThread.join();
   }
+  if (!persistentData.empty())
+    state.persistentDataAtDeinit = std::all_of(
+        persistentData.begin(), persistentData.end(),
+        [](const std::pair<const uint8_t*, size_t>& game)
+        { return std::all_of(game.first, game.first + game.second,
+                             [](uint8_t byte) { return byte == 0x5a; }); });
   ++state.deinitializations;
   state.deinitializedWithContent = loaded;
 }
@@ -174,6 +198,20 @@ bool retro_load_game(const retro_game_info* info)
   {
     keptInfo = info;
     keptCopy = info ? *info : retro_game_info{};
+  }
+  if (state.contentOverride)
+  {
+    // Like ProSystem, which plays the game from the frontend's data when it persists
+    const retro_game_info_ext* infoExt = nullptr;
+    state.gameInfoExtMatches =
+        environment(RETRO_ENVIRONMENT_GET_GAME_INFO_EXT, &infoExt) && infoExt != nullptr &&
+        info != nullptr && info->data != nullptr && infoExt->data == info->data &&
+        infoExt->size == info->size && infoExt->persistent_data && !infoExt->file_in_archive &&
+        std::strcmp(infoExt->full_path, info->path) == 0 &&
+        std::strcmp(infoExt->dir, "/games") == 0 && std::strcmp(infoExt->name, "Reload") == 0 &&
+        std::strcmp(infoExt->ext, "test") == 0;
+    if (state.gameInfoExtMatches)
+      persistentData.emplace_back(static_cast<const uint8_t*>(infoExt->data), infoExt->size);
   }
   if (state.memoryMaps && state.publishLoadMap)
   {

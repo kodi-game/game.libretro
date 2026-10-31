@@ -72,6 +72,7 @@ if(GAME_LIBRETRO_LIBRARY)
   set_tests_properties(retained_instance_reload hardware_stream_lifecycle PROPERTIES TIMEOUT 10)
   foreach(scenario preferred_gl preferred_gles preferred_none retained_hardware_software
                    hardware_geometry_growth failed_load_content failed_load_standalone
+                   content_info_override
                    failed_load_memory_retry memory_map_reload memory_map_runtime_replace
                    memory_map_failed_load settings_core_switch settings_file video_core_switch
                    crop_overscan core_name core_name_older_kodi hardcore_unnamed_core
