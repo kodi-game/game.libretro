@@ -42,8 +42,8 @@ msgid "Use shared System/BIOS folder"
 msgstr "Používat sdílenou složku pro systémové soubory a BIOS"
 
 msgctxt "#30004"
-msgid "Use a shared System/BIOS folder for all libretro cores, instead of a folder for each core. A core's own system folder is not used, so any system files from it have to be copied to the shared folder."
-msgstr "Použije pro všechna jádra libretro sdílenou složku pro systémové soubory a BIOS místo samostatné složky pro každé jádro. Vlastní složka jádra se systémovými soubory se nepoužívá, takže všechny systémové soubory z ní je nutné zkopírovat do sdílené složky."
+msgid "Use a shared System/BIOS folder for all libretro cores, instead of a folder for each core. The system files a core comes with are copied into the shared folder, replacing any file of the same name. A core's own system folder is not used, so any files put there have to be copied to the shared folder."
+msgstr ""
 
 msgctxt "#30005"
 msgid "Shared folder"
@@ -52,3 +52,7 @@ msgstr "Sdílená složka"
 msgctxt "#30006"
 msgid "The folder every emulator looks in for BIOS and other system files."
 msgstr "Složka, ve které každý emulátor hledá BIOS a další systémové soubory."
+
+#~ msgctxt "#30004"
+#~ msgid "Use a shared System/BIOS folder for all libretro cores, instead of a folder for each core. A core's own system folder is not used, so any system files from it have to be copied to the shared folder."
+#~ msgstr "Použije pro všechna jádra libretro sdílenou složku pro systémové soubory a BIOS místo samostatné složky pro každé jádro. Vlastní složka jádra se systémovými soubory se nepoužívá, takže všechny systémové soubory z ní je nutné zkopírovat do sdílené složky."
