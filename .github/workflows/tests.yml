@@ -15,12 +15,22 @@ concurrency:
 env:
   # Temporary until the paired RetroPlayer/Game API work lands upstream.
   KODI_REPOSITORY: https://github.com/xbmc/xbmc.git
-  KODI_BRANCH: master
 
 jobs:
   tests:
-    name: Native Linux regressions
+    name: Native Linux regressions (Game API ${{ matrix.kodi.api }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        kodi:
+          # The last master before run-ahead, game API 8.6.0 (xbmc/xbmc#30155)
+          - api: "8.5"
+            ref: 93d509a125941e381a7306e7f1ce7e7c59778a0b
+          - api: "8.6"
+            ref: master
+    env:
+      KODI_REF: ${{ matrix.kodi.ref }}
     defaults:
       run:
         shell: bash
@@ -52,9 +62,12 @@ jobs:
       - name: Clone paired Kodi
         run: |
           set -euo pipefail
-          git clone --branch "$KODI_BRANCH" --depth=1 "$KODI_REPOSITORY" "$KODI_SOURCE_DIR"
+          git init -q "$KODI_SOURCE_DIR"
+          git -C "$KODI_SOURCE_DIR" remote add origin "$KODI_REPOSITORY"
+          git -C "$KODI_SOURCE_DIR" fetch -q --depth=1 origin "$KODI_REF"
+          git -C "$KODI_SOURCE_DIR" checkout -q FETCH_HEAD
           git -C "$KODI_SOURCE_DIR" remote get-url origin
-          git -C "$KODI_SOURCE_DIR" branch --show-current
+          printf '%s\n' "$KODI_REF"
           git -C "$KODI_SOURCE_DIR" rev-parse HEAD
           git -C "$GITHUB_WORKSPACE" rev-parse HEAD
           grep -E '^#define ADDON_INSTANCE_VERSION_GAME +"' \
@@ -142,7 +155,7 @@ jobs:
           set -euo pipefail
           {
             printf 'Wrapper: `%s`\n\n' "$GAME_LIBRETRO_LIBRARY"
-            printf 'Kodi: `%s` / `%s`\n\n' "$KODI_REPOSITORY" "$KODI_BRANCH"
+            printf 'Kodi: `%s` / `%s`\n\n' "$KODI_REPOSITORY" "$KODI_REF"
             if [[ -f "$TEST_BUILD_DIR/discovered-tests.txt" ]]; then
               grep '^Total Tests:' "$TEST_BUILD_DIR/discovered-tests.txt"
             fi
@@ -153,7 +166,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: game-libretro-test-results
+          name: game-libretro-test-results-${{ matrix.kodi.api }}
           path: |
             ${{ env.TEST_BUILD_DIR }}/results.xml
             ${{ env.TEST_BUILD_DIR }}/discovered-tests.txt

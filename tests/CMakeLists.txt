@@ -65,6 +65,19 @@ if(GAME_LIBRETRO_LIBRARY)
   target_link_libraries(test_reload PRIVATE ${CMAKE_DL_LIBS} Threads::Threads)
   target_compile_features(test_reload PRIVATE cxx_std_11)
 
+  # The speculative frame scenarios need game API 8.6.0's run-ahead entries
+  include(CheckCXXSourceCompiles)
+  set(CMAKE_REQUIRED_INCLUDES ${KODI_INCLUDE_DIR} ${KODI_INCLUDE_DIR}/..)
+  check_cxx_source_compiles("#include <kodi/c-api/addon-instance/game.h>
+int main() { KodiToAddonFuncTable_Game functions{}; return functions.RunFrameSpeculative != nullptr; }"
+                            HAVE_GAME_RUNAHEAD_API)
+  unset(CMAKE_REQUIRED_INCLUDES)
+  set(speculative_scenarios)
+  if(HAVE_GAME_RUNAHEAD_API)
+    target_compile_definitions(test_reload PRIVATE HAVE_GAME_RUNAHEAD_API)
+    set(speculative_scenarios speculative_shutdown speculative_message speculative_older_kodi)
+  endif()
+
   add_test(NAME retained_instance_reload
            COMMAND test_reload "${GAME_LIBRETRO_LIBRARY}" $<TARGET_FILE:reload_core>)
   add_test(NAME hardware_stream_lifecycle
@@ -78,7 +91,7 @@ if(GAME_LIBRETRO_LIBRARY)
                    crop_overscan core_name core_name_older_kodi hardcore_unnamed_core
                    audio_core_thread shared_system_directory shared_system_root
                    shared_system_drive_root vfs_v5 reset_keeps_game_info shared_system_files
-                   own_system_files)
+                   own_system_files ${speculative_scenarios})
     add_test(NAME ${scenario}
              COMMAND test_reload "${GAME_LIBRETRO_LIBRARY}" $<TARGET_FILE:reload_core> ${scenario})
     set_tests_properties(${scenario} PROPERTIES TIMEOUT 10)

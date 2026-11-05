@@ -48,6 +48,9 @@ public:
   GAME_REGION GetRegion() override;
   bool RequiresGameLoop() override { return true; }
   GAME_ERROR RunFrame() override;
+#if defined(HAVE_GAME_RUNAHEAD_API)
+  GAME_ERROR RunFrameSpeculative() override;
+#endif
   GAME_ERROR Reset() override;
 
   // --- Hardware rendering operations -------------------------------------------
@@ -75,6 +78,10 @@ public:
   size_t SerializeSize() override;
   GAME_ERROR Serialize(uint8_t* data, size_t size) override;
   GAME_ERROR Deserialize(const uint8_t* data, size_t size) override;
+#if defined(HAVE_GAME_RUNAHEAD_API)
+  GAME_ERROR SerializeSpeculative(uint8_t* data, size_t size) override;
+  GAME_ERROR DeserializeSpeculative(const uint8_t* data, size_t size) override;
+#endif
   size_t AchievementStateSize() override;
   GAME_ERROR SerializeAchievements(uint8_t* data, size_t size) override;
   GAME_ERROR DeserializeAchievements(const uint8_t* data, size_t size) override;
@@ -154,6 +161,7 @@ private:
   std::map<std::string, ContentInfoOverride> m_contentInfoOverrides; // By lower-case extension
   bool                                    m_supportsVFS = false; // TODO
   int64_t                                 m_frameTimeLast = 0;
+  int64_t                                 m_frameTimeDelta = 0;
   bool                                    m_coreInitialized = false;
   bool                                    m_contentLoaded = false;
   LIBRETRO::CMissingFileWatcher           m_missingFiles; // Of the last game loaded
