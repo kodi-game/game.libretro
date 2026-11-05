@@ -448,6 +448,8 @@ int main(int argc, char** argv)
   const bool testKeptGameInfo = std::strcmp(scenario, "reset_keeps_game_info") == 0;
   const bool testShutdown = std::strcmp(scenario, "speculative_shutdown") == 0;
   const bool testMessage = std::strcmp(scenario, "speculative_message") == 0;
+  // An add-on built for run-ahead, loaded by a Kodi from before it
+  const bool olderGameApi = std::strcmp(scenario, "speculative_older_kodi") == 0;
   if (std::strcmp(scenario, "preferred_gles") == 0)
     backend = HardwareBackend::OpenGLES;
   else if (std::strcmp(scenario, "preferred_none") == 0)
@@ -666,7 +668,7 @@ int main(int argc, char** argv)
   currentGame = &game;
   KODI_ADDON_INSTANCE_INFO info{};
   info.type = ADDON_INSTANCE_GAME;
-  info.version = olderKodi ? "8.2.0" : ADDON_INSTANCE_VERSION_GAME;
+  info.version = olderKodi ? "8.2.0" : olderGameApi ? "8.5.0" : ADDON_INSTANCE_VERSION_GAME;
   KODI_ADDON_INSTANCE_FUNC instanceFunctions{};
   KODI_ADDON_INSTANCE_STRUCT instance{};
   instance.info = &info;
@@ -1473,6 +1475,7 @@ int main(int argc, char** argv)
     }
     std::puts("PASS: audio from a core's own thread stays out of a closing stream");
   }
+#if defined(HAVE_GAME_RUNAHEAD_API)
   else if (testShutdown)
   {
     Require(gameFunctions.LoadGame(&game, "reload.test") == GAME_ERROR_NO_ERROR,
@@ -1506,6 +1509,15 @@ int main(int argc, char** argv)
     Require(gameFunctions.UnloadGame(&game) == GAME_ERROR_NO_ERROR, "message unload failed");
     std::printf("PASS: %s\n", scenario);
   }
+  else if (olderGameApi)
+  {
+    Require(gameFunctions.RunFrameSpeculative == nullptr &&
+                gameFunctions.SerializeSpeculative == nullptr &&
+                gameFunctions.DeserializeSpeculative == nullptr,
+            "an older Kodi's table was given run-ahead entries");
+    std::printf("PASS: %s\n", scenario);
+  }
+#endif
   else
   {
     for (unsigned cycle = 0; cycle < 6; ++cycle)

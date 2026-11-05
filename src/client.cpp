@@ -396,6 +396,7 @@ GAME_ERROR CGameLibRetro::RunFrame()
   return GAME_ERROR_NO_ERROR;
 }
 
+#if defined(HAVE_GAME_RUNAHEAD_API)
 GAME_ERROR CGameLibRetro::RunFrameSpeculative()
 {
   if (CLibretroEnvironment::Get().IsSerializationIncomplete())
@@ -413,6 +414,7 @@ GAME_ERROR CGameLibRetro::RunFrameSpeculative()
 
   return GAME_ERROR_NO_ERROR;
 }
+#endif
 
 GAME_ERROR CGameLibRetro::Reset()
 {
@@ -594,6 +596,7 @@ GAME_ERROR CGameLibRetro::Deserialize(const uint8_t* data, size_t size)
   return result ? GAME_ERROR_NO_ERROR : GAME_ERROR_FAILED;
 }
 
+#if defined(HAVE_GAME_RUNAHEAD_API)
 GAME_ERROR CGameLibRetro::SerializeSpeculative(uint8_t* data, size_t size)
 {
   CLibretroEnvironment::Get().SetRunaheadState(true);
@@ -611,6 +614,7 @@ GAME_ERROR CGameLibRetro::DeserializeSpeculative(const uint8_t* data, size_t siz
 
   return error;
 }
+#endif
 
 size_t CGameLibRetro::AchievementStateSize()
 {

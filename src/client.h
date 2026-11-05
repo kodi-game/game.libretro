@@ -47,7 +47,9 @@ public:
   GAME_REGION GetRegion() override;
   bool RequiresGameLoop() override { return true; }
   GAME_ERROR RunFrame() override;
+#if defined(HAVE_GAME_RUNAHEAD_API)
   GAME_ERROR RunFrameSpeculative() override;
+#endif
   GAME_ERROR Reset() override;
 
   // --- Hardware rendering operations -------------------------------------------
@@ -75,8 +77,10 @@ public:
   size_t SerializeSize() override;
   GAME_ERROR Serialize(uint8_t* data, size_t size) override;
   GAME_ERROR Deserialize(const uint8_t* data, size_t size) override;
+#if defined(HAVE_GAME_RUNAHEAD_API)
   GAME_ERROR SerializeSpeculative(uint8_t* data, size_t size) override;
   GAME_ERROR DeserializeSpeculative(const uint8_t* data, size_t size) override;
+#endif
   size_t AchievementStateSize() override;
   GAME_ERROR SerializeAchievements(uint8_t* data, size_t size) override;
   GAME_ERROR DeserializeAchievements(const uint8_t* data, size_t size) override;
