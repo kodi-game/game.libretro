@@ -43,8 +43,25 @@ namespace LIBRETRO
      */
     bool GetPathStruct(retro_game_info& info) const;
 
+    /*!
+     * Get the extended struct a core can ask for while it loads the game,
+     * matching one of the structs above. Its data is marked persistent if
+     * bPersistentData is set and the struct carries data.
+     */
+    void GetExtendedStruct(const retro_game_info& info,
+                           bool bPersistentData,
+                           retro_game_info_ext& infoExt) const;
+
+    /*!
+     * Get the extension of the file a path names, in lower case
+     */
+    static std::string GetExtension(const std::string& path);
+
   private:
     const std::string                   m_path;
+    std::string                         m_directory;
+    std::string                         m_name;
+    std::string                         m_extension;
     const bool                          m_bSupportsVfs;
     std::vector<uint8_t>                m_dataBuffer;
     CFileMapping                        m_mapping;

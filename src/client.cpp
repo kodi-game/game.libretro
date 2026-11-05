@@ -19,6 +19,8 @@
 
 #include "client.h"
 
+#include <kodi/tools/StringUtils.h>
+
 #include <set>
 #include <string>
 #include <type_traits>
@@ -100,6 +102,7 @@ CGameLibRetro::~CGameLibRetro()
   CLog::Get().SetType(SYS_LOG_TYPE_CONSOLE);
 
   SAFE_DELETE_GAME_INFO(m_gameInfo);
+  SAFE_DELETE_GAME_INFO(m_persistentGameInfo);
 }
 
 ADDON_STATUS CGameLibRetro::Create()
@@ -209,8 +212,17 @@ ADDON_STATUS CGameLibRetro::SetSetting(const std::string& settingName, const kod
 GAME_ERROR CGameLibRetro::LoadGame(const std::string& url)
 {
   // Build info loader vector
-  SAFE_DELETE_GAME_INFO(m_gameInfo);
-  m_gameInfo.push_back(new CGameInfoLoader(url, m_supportsVFS));
+  ReleaseGameInfo();
+
+  bool bSupportsVFS = m_supportsVFS;
+  bool bPersistentData = false;
+  const auto contentInfoOverride = m_contentInfoOverrides.find(CGameInfoLoader::GetExtension(url));
+  if (contentInfoOverride != m_contentInfoOverrides.end())
+  {
+    bSupportsVFS = !contentInfoOverride->second.needFullpath;
+    bPersistentData = contentInfoOverride->second.persistentData;
+  }
+  m_gameInfo.push_back(new CGameInfoLoader(url, bSupportsVFS));
 
   m_missingFiles.Clear();
 
@@ -219,7 +231,9 @@ GAME_ERROR CGameLibRetro::LoadGame(const std::string& url)
   // Try to load via memory
   if (m_gameInfo[0]->Load())
   {
+    m_gameDataPersists = bPersistentData;
     m_gameInfo[0]->GetMemoryStruct(m_loadedGameInfo);
+    m_gameInfo[0]->GetExtendedStruct(m_loadedGameInfo, bPersistentData, m_loadedGameInfoExt);
     bResult = LoadGameInternal(&m_loadedGameInfo);
   }
 
@@ -227,6 +241,7 @@ GAME_ERROR CGameLibRetro::LoadGame(const std::string& url)
   {
     // Fall back to loading via path
     m_gameInfo[0]->GetPathStruct(m_loadedGameInfo);
+    m_gameInfo[0]->GetExtendedStruct(m_loadedGameInfo, bPersistentData, m_loadedGameInfoExt);
     bResult = LoadGameInternal(&m_loadedGameInfo);
   }
 
@@ -276,6 +291,7 @@ GAME_ERROR CGameLibRetro::LoadGameSpecial(SPECIAL_GAME_TYPE type, const std::vec
 
 GAME_ERROR CGameLibRetro::LoadStandalone()
 {
+  ReleaseGameInfo();
   m_missingFiles.Clear();
   return LoadGameInternal(nullptr) ? GAME_ERROR_NO_ERROR : LoadFailure();
 }
@@ -328,10 +344,47 @@ GAME_ERROR CGameLibRetro::UnloadGame()
 
   error = GAME_ERROR_NO_ERROR;
 
-  SAFE_DELETE_GAME_INFO(m_gameInfo);
-  m_loadedGameInfo = {};
+  ReleaseGameInfo();
 
   return error;
+}
+
+void CGameLibRetro::ReleaseGameInfo()
+{
+  // A core told its game data persists can use it until retro_deinit() returns,
+  // even after another game is loaded
+  if (m_gameDataPersists)
+    m_persistentGameInfo.insert(m_persistentGameInfo.end(), m_gameInfo.begin(), m_gameInfo.end());
+  else
+    SAFE_DELETE_GAME_INFO(m_gameInfo);
+  m_gameInfo.clear();
+  m_gameDataPersists = false;
+  m_loadedGameInfo = {};
+  m_loadedGameInfoExt = {};
+}
+
+void CGameLibRetro::SetContentInfoOverrides(const retro_system_content_info_override* overrides)
+{
+  m_contentInfoOverrides.clear();
+  for (; overrides->extensions != nullptr; ++overrides)
+  {
+    dsyslog("CORE: Content override: %s, need_fullpath %s, persistent_data %s",
+            overrides->extensions, overrides->need_fullpath ? "true" : "false",
+            overrides->persistent_data ? "true" : "false");
+
+    for (std::string extension : kodi::tools::StringUtils::Split(overrides->extensions, '|'))
+    {
+      kodi::tools::StringUtils::ToLower(extension);
+      // An extension listed more than once keeps its first override
+      m_contentInfoOverrides.emplace(
+          extension, ContentInfoOverride{overrides->need_fullpath, overrides->persistent_data});
+    }
+  }
+}
+
+const retro_game_info_ext* CGameLibRetro::GetGameInfoExt() const
+{
+  return m_loadedGameInfoExt.full_path != nullptr ? &m_loadedGameInfoExt : nullptr;
 }
 
 GAME_ERROR CGameLibRetro::GetGameTiming(game_system_timing& timing_info)

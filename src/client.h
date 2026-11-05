@@ -18,6 +18,7 @@
 
 #include <cstdint>
 #include <functional>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -115,9 +116,26 @@ public:
   LIBRETRO::CSettings& Settings() { return m_settings; }
   const LIBRETRO::CSettings& Settings() const { return m_settings; }
 
+  /*!
+   * \brief Take a core's overrides for how files of some types are loaded
+   */
+  void SetContentInfoOverrides(const retro_system_content_info_override* overrides);
+
+  /*!
+   * \brief Get the extended info of the game the core was given, if any
+   */
+  const retro_game_info_ext* GetGameInfoExt() const;
+
 private:
+  struct ContentInfoOverride
+  {
+    bool needFullpath;
+    bool persistentData;
+  };
+
   bool LoadGameInternal(const retro_game_info* gameInfo);
   GAME_ERROR LoadFailure();
+  void ReleaseGameInfo();
 
   LIBRETRO::Timer                         m_timer;
   LIBRETRO::CLibretroDLL                  m_client;
@@ -126,9 +144,14 @@ private:
   LIBRETRO::CClientBridge                 m_clientBridge;
   LIBRETRO::CSettings                     m_settings;
   std::vector<LIBRETRO::CGameInfoLoader*> m_gameInfo;
-  // What the core was given to load, kept until the game is unloaded: a core
-  // can hold on to it, as melonDS does to load the game again on reset
+  // Games whose data a core was told persists, kept until retro_deinit() returns
+  std::vector<LIBRETRO::CGameInfoLoader*> m_persistentGameInfo;
+  bool                                    m_gameDataPersists = false;
+  // What the core was given to load, kept at least until the game is unloaded:
+  // a core can hold on to it, as melonDS does to load the game again on reset
   retro_game_info                         m_loadedGameInfo{};
+  retro_game_info_ext                     m_loadedGameInfoExt{};
+  std::map<std::string, ContentInfoOverride> m_contentInfoOverrides; // By lower-case extension
   bool                                    m_supportsVFS = false; // TODO
   int64_t                                 m_frameTimeLast = 0;
   bool                                    m_coreInitialized = false;
