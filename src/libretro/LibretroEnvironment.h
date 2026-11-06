@@ -16,8 +16,13 @@
 
 #include <kodi/addon-instance/Game.h>
 
+#include <functional>
+#include <map>
 #include <memory>
+#include <mutex>
+#include <optional>
 #include <string>
+#include <utility>
 
 class CGameLibRetro;
 
@@ -87,8 +92,28 @@ namespace LIBRETRO
 
     /*!
      * Invoked when the frontend transfers a setting to the add-on.
+     *
+     * A value RetroAchievements doesn't allow in hardcore is held back from
+     * the core until hardcore ends. Kodi has stored it by then, so it still
+     * keeps the next game out of hardcore.
      */
     void SetSetting(const std::string& name, const std::string& value);
+
+    /*!
+     * \brief Give the core the values held back while hardcore was on
+     */
+    void ApplyHeldSettings();
+
+    /*!
+     * \brief The first core option whose current value matches
+     *
+     * \return The option's name and value, or nothing if none matches
+     */
+    std::optional<std::pair<std::string, std::string>> FindSettingValue(
+        const std::function<bool(const std::string& name, const std::string& value)>& match)
+    {
+      return m_settings.FindValue(match);
+    }
 
     std::string GetResourcePath(const char* relPath);
 
@@ -125,5 +150,8 @@ namespace LIBRETRO
 
     CLibretroSettings m_settings;
     CLibretroResources m_resources;
+
+    std::map<std::string, std::string> m_heldSettings;
+    std::mutex m_heldSettingsMutex;
   };
 } // namespace LIBRETRO

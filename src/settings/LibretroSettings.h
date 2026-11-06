@@ -11,9 +11,11 @@
 
 #include <mutex>
 
+#include <functional>
 #include <map>
 #include <optional>
 #include <string>
+#include <utility>
 
 struct retro_variable;
 struct retro_core_option_definition;
@@ -47,6 +49,14 @@ namespace LIBRETRO
     const char* GetCurrentValue(const std::string& settingName);
 
     void SetCurrentValue(const std::string& name, const std::string& value);
+
+    /*!
+     * \brief The first setting whose current value matches
+     *
+     * \return The setting's name and value, or nothing if none matches
+     */
+    std::optional<std::pair<std::string, std::string>> FindValue(
+        const std::function<bool(const std::string& name, const std::string& value)>& match);
 
   private:
     /*!
