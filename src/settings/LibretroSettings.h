@@ -33,6 +33,12 @@ namespace LIBRETRO
     bool Changed();
     void SetUnchanged();
 
+    /*!
+     * \brief Take the settings a core declares
+     *
+     * A core can declare them again, adding settings once a game is loaded.
+     * The settings it declared before keep their current values.
+     */
     void SetAllSettings(const retro_variable* libretroVariables);
 
     /*!
@@ -41,11 +47,14 @@ namespace LIBRETRO
      * Same job as the retro_variable overload, for the two shapes the newer
      * API uses. A core that speaks this API never calls SET_VARIABLES at all,
      * so without these its settings are never registered and every value it
-     * asks for comes back empty.
+     * asks for comes back unset.
      */
     void SetAllSettings(const retro_core_option_definition* definitions);
     void SetAllSettings(const retro_core_option_v2_definition* definitions);
 
+    /*!
+     * \return The setting's value, or null if the core hasn't declared it
+     */
     const char* GetCurrentValue(const std::string& settingName);
 
     void SetCurrentValue(const std::string& name, const std::string& value);

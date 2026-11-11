@@ -1019,7 +1019,55 @@ int main(int argc, char** argv)
   else if (testSettings)
   {
     const char* keys[] = {"core_a_option", "core_b_option", "core_c_option"};
+    const char* gameKeys[] = {"core_a_game_option", "core_b_game_option", "core_c_game_option"};
     const char* profiles[] = {"/unused-reload-test", "/unused-core-b", "/unused-core-c"};
+    const auto declare = [&](unsigned cycle, const std::vector<const char*>& declared)
+    {
+      if (cycle == 0)
+      {
+        std::vector<retro_variable> options;
+        for (const char* key : declared)
+          options.push_back({key, "Core A option; first|second"});
+        options.push_back({nullptr, nullptr});
+        Require(environment(RETRO_ENVIRONMENT_SET_VARIABLES, options.data()),
+                "legacy registration failed");
+      }
+      else if (cycle == 1)
+      {
+        std::vector<retro_core_option_definition> options(declared.size() + 1);
+        for (size_t i = 0; i < declared.size(); ++i)
+        {
+          options[i].key = declared[i];
+          options[i].desc = "Core B option";
+          options[i].values[0].value = "first";
+          options[i].values[1].value = "second";
+          options[i].default_value = "second";
+        }
+        Require(environment(RETRO_ENVIRONMENT_SET_CORE_OPTIONS, options.data()),
+                "v1 registration failed");
+      }
+      else
+      {
+        std::vector<retro_core_option_v2_definition> options(declared.size() + 1);
+        for (size_t i = 0; i < declared.size(); ++i)
+        {
+          options[i].key = declared[i];
+          options[i].desc = "Core C option";
+          options[i].values[0].value = "first";
+          options[i].values[1].value = "second";
+          options[i].default_value = "second";
+        }
+        retro_core_options_v2 definitions{nullptr, options.data()};
+        Require(environment(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2, &definitions),
+                "v2 registration failed");
+      }
+    };
+    const auto valueOf = [&](const char* key)
+    {
+      retro_variable value{key, nullptr};
+      Require(environment(RETRO_ENVIRONMENT_GET_VARIABLE, &value), "option lookup failed");
+      return value.value;
+    };
     for (unsigned cycle = 0; cycle < 3; ++cycle)
     {
       if (cycle != 0)
@@ -1035,44 +1083,36 @@ int main(int argc, char** argv)
       bool changed = false;
       Require(environment(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &changed) && changed,
               "new core must start with changed settings");
-      if (cycle == 0)
-      {
-        retro_variable options[] = {{keys[cycle], "Core A option; first|second"}, {nullptr, nullptr}};
-        Require(environment(RETRO_ENVIRONMENT_SET_VARIABLES, options), "legacy registration failed");
-      }
-      else if (cycle == 1)
-      {
-        retro_core_option_definition options[2]{};
-        options[0].key = keys[cycle];
-        options[0].desc = "Core B option";
-        options[0].values[0].value = "first";
-        options[0].values[1].value = "second";
-        options[0].default_value = "second";
-        Require(environment(RETRO_ENVIRONMENT_SET_CORE_OPTIONS, options), "v1 registration failed");
-      }
-      else
-      {
-        retro_core_option_v2_definition options[2]{};
-        options[0].key = keys[cycle];
-        options[0].desc = "Core C option";
-        options[0].values[0].value = "first";
-        options[0].values[1].value = "second";
-        options[0].default_value = "second";
-        retro_core_options_v2 definitions{nullptr, options};
-        Require(environment(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2, &definitions),
-                "v2 registration failed");
-      }
-      retro_variable value{keys[cycle], nullptr};
-      Require(environment(RETRO_ENVIRONMENT_GET_VARIABLE, &value) && value.value &&
-                  std::strcmp(value.value, cycle == 0 ? "first" : "second") == 0,
+      const char* defaultValue = cycle == 0 ? "first" : "second";
+      declare(cycle, {keys[cycle]});
+      const char* value = valueOf(keys[cycle]);
+      Require(value && std::strcmp(value, defaultValue) == 0,
               "current core option missing or incorrect");
       Require(environment(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &changed) && !changed,
               "reading settings must clear changed flag");
+
+      // Kodi changes the option, then the core declares its options again,
+      // adding one once a game is loaded
+      const char* kodiValue = cycle == 0 ? "second" : "first";
+      Require(functions.setting_change_string(interface.addonBase, keys[cycle], kodiValue) ==
+                  ADDON_STATUS_OK,
+              "setting change failed");
+      value = valueOf(keys[cycle]);
+      Require(value && std::strcmp(value, kodiValue) == 0, "Kodi's value must reach the core");
+      declare(cycle, {keys[cycle], gameKeys[cycle]});
+      Require(environment(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &changed) && changed,
+              "an option declared later must be reported as a change");
+      value = valueOf(gameKeys[cycle]);
+      Require(value && std::strcmp(value, defaultValue) == 0,
+              "an option declared later must be answered with its default");
+      value = valueOf(keys[cycle]);
+      Require(value && std::strcmp(value, kodiValue) == 0,
+              "declaring options again must keep their values");
+
       for (unsigned previous = 0; previous < cycle; ++previous)
       {
-        value = {keys[previous], nullptr};
-        Require(environment(RETRO_ENVIRONMENT_GET_VARIABLE, &value) && value.value &&
-                    value.value[0] == '\0', "previous core option survived teardown");
+        Require(valueOf(keys[previous]) == nullptr && valueOf(gameKeys[previous]) == nullptr,
+                "previous core option survived teardown");
       }
     }
     std::puts("PASS: core settings and change notification across three lifetimes");
