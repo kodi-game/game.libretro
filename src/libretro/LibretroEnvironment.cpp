@@ -130,6 +130,8 @@ void CLibretroEnvironment::Deinitialize()
     std::lock_guard<std::mutex> lock(m_heldSettingsMutex);
     m_heldSettings.clear();
   }
+  m_earlyVulkan.reset();
+  m_gameLoading = false;
   VulkanBridge().Reset();
   m_addon = nullptr;
   m_client = nullptr;
@@ -152,10 +154,24 @@ void CLibretroEnvironment::CloseStreams()
     m_addon->EnableHardwareRendering({});
 }
 
-void CLibretroEnvironment::ResetLoadState()
+bool CLibretroEnvironment::ResetLoadState()
 {
   CloseStreams();
   InitializeStreams();
+  m_gameLoading = true;
+
+  if (!m_earlyVulkan)
+    return true;
+
+  // The core was told yes before load and can't fall back now
+  m_clientBridge->SetHwContextReset(m_earlyVulkanReset);
+  m_clientBridge->SetHwContextDestroy(m_earlyVulkanDestroy);
+  if (!m_videoStream.EnableHardwareRendering() || !m_addon->EnableHardwareRendering(*m_earlyVulkan))
+  {
+    kodi::Log(ADDON_LOG_ERROR, "Vulkan bridge: Kodi refused the context at load too");
+    return false;
+  }
+  return true;
 }
 
 void CLibretroEnvironment::UpdateVideoGeometry(const retro_game_geometry &geometry,
@@ -378,6 +394,17 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
         // Now that hooks are installed, enable HW rendering in the frontend
         if (!m_addon->EnableHardwareRendering(hw_info))
         {
+          // Kodi has no streams before the game opens, so keep a Vulkan request
+          // made from retro_init() and make it at load
+          if (VulkanBridge().IsRequested() && !m_gameLoading)
+          {
+            m_earlyVulkan = hw_info;
+            m_earlyVulkanReset = typedData->context_reset;
+            m_earlyVulkanDestroy = typedData->context_destroy;
+            kodi::Log(ADDON_LOG_DEBUG, "Vulkan bridge: context asked for before load, kept for it");
+            break;
+          }
+
           VulkanBridge().Reset();
           // The frontend cannot render this context type on the display stack
           // it has. Returning false leaves the core to fall back to software,

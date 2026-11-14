@@ -56,7 +56,7 @@ namespace LIBRETRO
     CAudioTiming& AudioTiming(void) { return m_audioTiming; }
 
     void InitializeStreams();
-    void ResetLoadState();
+    bool ResetLoadState();
     void CloseStreams();
 
     /*!
@@ -153,5 +153,11 @@ namespace LIBRETRO
 
     std::map<std::string, std::string> m_heldSettings;
     std::mutex m_heldSettingsMutex;
+
+    // A Vulkan context asked for before the game opens, made again at load
+    std::optional<game_hw_rendering_properties> m_earlyVulkan;
+    void (*m_earlyVulkanReset)(void) = nullptr;
+    void (*m_earlyVulkanDestroy)(void) = nullptr;
+    bool m_gameLoading = false;
   };
 } // namespace LIBRETRO
