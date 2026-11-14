@@ -151,6 +151,23 @@ set(LIBRETRO_HEADERS src/GameInfoLoader.h
                      src/video/VideoTiming.h
 )
 
+# Vulkan cores on OpenGL ES, through dma-buf images
+list(APPEND LIBRETRO_HEADERS src/video/vulkan/IVulkanBridge.h)
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  find_path(VULKAN_INCLUDE_DIR vulkan/vulkan.h)
+  find_path(EGL_INCLUDE_DIR EGL/eglext.h)
+  find_path(GLES3_INCLUDE_DIR GLES3/gl3.h)
+endif()
+if(VULKAN_INCLUDE_DIR AND EGL_INCLUDE_DIR AND GLES3_INCLUDE_DIR)
+  include_directories(${VULKAN_INCLUDE_DIR} ${EGL_INCLUDE_DIR} ${GLES3_INCLUDE_DIR})
+  list(APPEND LIBRETRO_SOURCES src/video/vulkan/VulkanBridge.cpp)
+  list(APPEND LIBRETRO_HEADERS src/video/vulkan/VulkanBridge.h)
+  message(STATUS "Vulkan bridge: enabled")
+else()
+  list(APPEND LIBRETRO_SOURCES src/video/vulkan/NullVulkanBridge.cpp)
+  message(STATUS "Vulkan bridge: disabled, needs the Vulkan, EGL and GLES 3 headers on Linux")
+endif()
+
 build_addon(${PROJECT_NAME} LIBRETRO DEPLIBS)
 
 # RetroAchievements identifies an integration by the client name and version in
