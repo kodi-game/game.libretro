@@ -300,7 +300,11 @@ bool CGameLibRetro::LoadGameInternal(const retro_game_info* gameInfo)
 {
   auto& environment = CLibretroEnvironment::Get();
   CCheevos::Get().Deinitialize();
-  environment.ResetLoadState();
+  if (!environment.ResetLoadState())
+  {
+    environment.CloseStreams();
+    return false;
+  }
   m_memory.BeginContent();
 
   // A core missing its BIOS usually just fails to load, so watch what it looks for
