@@ -6,6 +6,7 @@
  */
 
 #include "LibretroEnvironment.h"
+#include "video/vulkan/IVulkanBridge.h"
 #include "ClientBridge.h"
 #include "FrontendBridge.h"
 #include "libretro-common/libretro.h"
@@ -129,6 +130,7 @@ void CLibretroEnvironment::Deinitialize()
     std::lock_guard<std::mutex> lock(m_heldSettingsMutex);
     m_heldSettings.clear();
   }
+  VulkanBridge().Reset();
   m_addon = nullptr;
   m_client = nullptr;
   m_clientBridge = nullptr;
@@ -348,6 +350,19 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
         hw_info.cache_context      = typedData->cache_context;
         hw_info.debug_context      = typedData->debug_context;
 
+        // A Vulkan core renders on its own device and the bridge draws its
+        // image into a GLES framebuffer
+        if (typedData->context_type == RETRO_HW_CONTEXT_VULKAN && VulkanBridge().IsUsable())
+        {
+          VulkanBridge().Request();
+          hw_info.context_type       = GAME_HW_CONTEXT_OPENGLES3;
+          hw_info.version_major      = 3;
+          hw_info.version_minor      = 0;
+          hw_info.depth              = false;
+          hw_info.stencil            = false;
+          hw_info.bottom_left_origin = true;
+        }
+
         // Set up the video stream
         if (!m_videoStream.EnableHardwareRendering())
           return false;
@@ -363,6 +378,7 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
         // Now that hooks are installed, enable HW rendering in the frontend
         if (!m_addon->EnableHardwareRendering(hw_info))
         {
+          VulkanBridge().Reset();
           // The frontend cannot render this context type on the display stack
           // it has. Returning false leaves the core to fall back to software,
           // so put back everything set up above -- the stream especially, which
@@ -662,11 +678,13 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   }
   case RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE:
   {
-    const retro_hw_render_interface* typedData = static_cast<const retro_hw_render_interface*>(data);
+    const retro_hw_render_interface** typedData = static_cast<const retro_hw_render_interface**>(data);
     if (typedData)
     {
-      // Not implemented
-      return false;
+      const retro_hw_render_interface* hardwareInterface = VulkanBridge().Interface();
+      if (hardwareInterface == nullptr)
+        return false;
+      *typedData = hardwareInterface;
     }
     break;
   }
@@ -689,8 +707,10 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
     const retro_hw_render_context_negotiation_interface* typedData = static_cast<const retro_hw_render_context_negotiation_interface*>(data);
     if (typedData)
     {
-      // Not implemented
-      return false;
+      if (typedData->interface_type != RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_VULKAN ||
+          !(VulkanBridge().IsRequested() || VulkanBridge().IsUsable()))
+        return false;
+      VulkanBridge().SetNegotiation(typedData);
     }
     break;
   }
@@ -1087,10 +1107,12 @@ bool CLibretroEnvironment::EnvironmentCallback(unsigned int cmd, void *data)
   case RETRO_ENVIRONMENT_GET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_SUPPORT:
   {
     retro_hw_render_context_negotiation_interface* typedData = static_cast<retro_hw_render_context_negotiation_interface*>(data);
-
-    // Not implemented
-    (void)typedData;
-    return false;
+    if (typedData == nullptr ||
+        typedData->interface_type != RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_VULKAN ||
+        !VulkanBridge().IsUsable())
+      return false;
+    typedData->interface_version = 2;
+    break;
   }
   case RETRO_ENVIRONMENT_GET_JIT_CAPABLE:
   {

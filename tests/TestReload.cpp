@@ -1412,6 +1412,17 @@ int main(int argc, char** argv)
               "unavailable context was accepted after probing");
       Require(!unavailable.get_current_framebuffer && !unavailable.get_proc_address,
               "refused context left hardware callbacks installed");
+      retro_hw_render_context_negotiation_interface negotiation{
+          RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_VULKAN, 1};
+      Require(!environment(RETRO_ENVIRONMENT_GET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_SUPPORT,
+                           &negotiation) &&
+                  !environment(RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE,
+                               &negotiation),
+              "Vulkan negotiation offered without a context to run it on");
+      const retro_hw_render_interface* hardwareInterface = nullptr;
+      Require(!environment(RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE, &hardwareInterface) &&
+                  hardwareInterface == nullptr,
+              "hardware interface given for a refused context");
       core.hardware = false;
       Require(gameFunctions.LoadGame(&game, "reload.test") == GAME_ERROR_NO_ERROR,
               "software load after preference failed");
