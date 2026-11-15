@@ -91,7 +91,7 @@ int main() { KodiToAddonFuncTable_Game functions{}; return functions.RunFrameSpe
                    crop_overscan core_name core_name_older_kodi hardcore_unnamed_core
                    audio_core_thread shared_system_directory shared_system_root
                    shared_system_drive_root vfs_v5 reset_keeps_game_info shared_system_files
-                   own_system_files ${speculative_scenarios})
+                   own_system_files no_system_files ${speculative_scenarios})
     add_test(NAME ${scenario}
              COMMAND test_reload "${GAME_LIBRETRO_LIBRARY}" $<TARGET_FILE:reload_core> ${scenario})
     set_tests_properties(${scenario} PROPERTIES TIMEOUT 10)

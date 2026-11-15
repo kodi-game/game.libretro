@@ -424,7 +424,8 @@ int main(int argc, char** argv)
   // Real folders: an emulator's resources, its profile and the shared folder
   const bool testSharedFiles = std::strcmp(scenario, "shared_system_files") == 0;
   const bool testOwnFiles = std::strcmp(scenario, "own_system_files") == 0;
-  const bool testSystemFiles = testSharedFiles || testOwnFiles;
+  const bool testNoFiles = std::strcmp(scenario, "no_system_files") == 0;
+  const bool testSystemFiles = testSharedFiles || testOwnFiles || testNoFiles;
   std::string sharedRoot;
   if (testSystemFiles)
   {
@@ -640,8 +641,11 @@ int main(int argc, char** argv)
     properties.profile_directory = profile.c_str();
     ::mkdir(profile.c_str(), 0755);
     ::mkdir(ownResources.c_str(), 0755);
-    WriteText(addonResources + "/system/bios.bin", "shipped bios");
-    WriteText(addonResources + "/system/core/data.txt", "v1");
+    if (!testNoFiles)
+    {
+      WriteText(addonResources + "/system/bios.bin", "shipped bios");
+      WriteText(addonResources + "/system/core/data.txt", "v1");
+    }
   }
   if (testSharedFiles)
   {
@@ -657,7 +661,7 @@ int main(int argc, char** argv)
     WriteText(own + "/IPL.bin", "old dump");
     WriteText(shared + "IPL.bin", "newer dump");
   }
-  if (testOwnFiles)
+  if (testOwnFiles || testNoFiles)
   {
     // The own folder is empty, so Kodi lists only the folder the emulator is
     // installed in
@@ -796,6 +800,17 @@ int main(int argc, char** argv)
             "a file put in the emulator's own folder must not be copied");
     std::remove(addonSettingsFile.c_str());
     std::puts("PASS: an emulator's system files are copied into the shared folder");
+  }
+  if (testNoFiles)
+  {
+    struct stat info{};
+    Require(systemDirectory() == own,
+            "an emulator that comes with no system files must be given its own folder");
+    Require(::stat(own.c_str(), &info) == 0 && S_ISDIR(info.st_mode),
+            "the emulator's own folder must be created");
+    Require(::stat((addonResources + "/system").c_str(), &info) != 0,
+            "the folder the emulator is installed in must be left alone");
+    std::puts("PASS: an emulator with no system files is given its own folder");
   }
   if (testOwnFiles)
   {
@@ -1663,7 +1678,7 @@ int main(int argc, char** argv)
   }
   dlclose(library);
   dlclose(coreLibrary);
-  if (testSharedFiles)
+  if (testSharedFiles || testNoFiles)
     RemoveTree(sharedRoot);
   if (std::strcmp(scenario, "software") == 0)
     std::puts("PASS: timing, video, and audio survive six loads on one addon instance");
