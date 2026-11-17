@@ -55,9 +55,18 @@ void CLibretroResources::Initialize(CGameLibRetro* addon)
                          m_addon->ProfileDirectory() + "/" SYSTEM_FILES_RECORD_NAME))
     m_systemDirectory = copyTo;
 
-  // Set system path to first resource path discovered
-  if (m_systemDirectory.empty() && !m_resourceDirectories.empty())
-    m_systemDirectory = m_resourceDirectories.front() + "/" LIBRETRO_SYSTEM_DIRECTORY_NAME;
+  // Otherwise the first resource path's system folder, where the files are if
+  // the copy failed. With none there, the emulator's own folder, as the folder
+  // it's installed in may be read-only.
+  if (m_systemDirectory.empty())
+  {
+    const std::string first =
+        m_resourceDirectories.empty()
+            ? std::string()
+            : m_resourceDirectories.front() + "/" LIBRETRO_SYSTEM_DIRECTORY_NAME;
+    m_systemDirectory =
+        !first.empty() && kodi::vfs::DirectoryExists(first) ? first : ownDirectory;
+  }
 
   // Ensure folder exists
   if (!m_systemDirectory.empty() && !kodi::vfs::DirectoryExists(m_systemDirectory))
