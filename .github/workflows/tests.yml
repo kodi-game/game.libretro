@@ -57,7 +57,8 @@ jobs:
           set -euo pipefail
           sudo apt-get update
           sudo apt-get install --no-install-recommends -y \
-            build-essential ca-certificates cmake git libtinyxml-dev ninja-build patch
+            build-essential ca-certificates cmake git libegl-dev libgles-dev libtinyxml-dev \
+            libvulkan-dev ninja-build patch
 
       - name: Clone paired Kodi
         run: |

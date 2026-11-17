@@ -6,6 +6,7 @@
  */
 
 #include "ClientBridge.h"
+#include "video/vulkan/IVulkanBridge.h"
 
 #include "GameInfoLoader.h"
 
@@ -58,6 +59,9 @@ GAME_ERROR CClientBridge::HwContextReset(void)
   if (!m_retro_hw_context_reset)
     return GAME_ERROR_FAILED;
 
+  if (!VulkanBridge().ContextReset())
+    return GAME_ERROR_FAILED;
+
   m_hwContextReset = true;
   m_retro_hw_context_reset();
 
@@ -73,6 +77,8 @@ GAME_ERROR CClientBridge::HwContextDestroy(void)
     return GAME_ERROR_FAILED;
 
   m_retro_hw_context_destroy();
+
+  VulkanBridge().ContextDestroy();
 
   return GAME_ERROR_NO_ERROR;
 }

@@ -2,7 +2,8 @@ Source: kodi-game-libretro
 Priority: extra
 Maintainer: Garrett Brown <themagnificentmrb@gmail.com>
 Build-Depends: debhelper (>= 9.0.0), cmake,
-               kodi-addon-dev, libtinyxml-dev
+               kodi-addon-dev, libegl-dev, libgles-dev, libtinyxml-dev,
+               libvulkan-dev
 Standards-Version: 4.1.2
 Section: libs
 

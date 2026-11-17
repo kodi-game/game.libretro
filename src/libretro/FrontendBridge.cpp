@@ -6,6 +6,7 @@
  */
 
 #include "FrontendBridge.h"
+#include "video/vulkan/IVulkanBridge.h"
 #include "LibretroEnvironment.h"
 #include "LibretroTranslator.h"
 #include "input/ButtonMapper.h"
@@ -101,11 +102,13 @@ void CFrontendBridge::VideoRefresh(const void* data, unsigned int width, unsigne
 
   if (data == RETRO_HW_FRAME_BUFFER_VALID)
   {
+    VulkanBridge().Present(width, height, CLibretroEnvironment::Get().Video().GetHwFramebuffer());
     CLibretroEnvironment::Get().Video().RenderHwFrame(width, height);
   }
   else if (data == nullptr)
   {
     // Libretro is sending a frame dupe command
+    VulkanBridge().Dupe();
     CLibretroEnvironment::Get().Video().DupeFrame();
   }
   else
