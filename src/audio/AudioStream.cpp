@@ -70,7 +70,7 @@ void CAudioStream::AddFrames_S16NE(const uint8_t* data, unsigned int size)
       if (!m_bLoggedOpenFailure)
       {
         m_bLoggedOpenFailure = true;
-        esyslog("Failed to open the audio stream, this game will be silent");
+        esyslog("Failed to open the audio stream, trying again with the next audio frames");
       }
       return;
     }
