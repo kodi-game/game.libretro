@@ -151,6 +151,22 @@ namespace LIBRETRO
     bool AbsolutePointerState(unsigned int port, unsigned int pointerIndex, float& x, float& y) const;
     bool AccelerometerState(unsigned int port, float& x, float& y, float& z) const;
 
+#if defined(HAVE_GAME_MOTION_API)
+    /*!
+     * \brief The latest reading of the port's motion sensor
+     *
+     * \return False if the port's controller hasn't sent one
+     */
+    bool MotionState(unsigned int port, game_motion_event& motion) const;
+#endif
+
+    /*!
+     * \brief True if the port's controller has motion sensors, by its profile
+     *
+     * Known before any reading, for cores that ask once at the start.
+     */
+    bool HasMotionProfile(unsigned int port) const;
+
     /*!
      * \brief Inform the frontend of controller info
      */

@@ -20,12 +20,18 @@ int main() { game_rc_achievement_sets sets{}; return static_cast<int>(sets.set_c
 check_cxx_source_compiles("#include <kodi/c-api/addon-instance/game.h>
 int main() { KodiToAddonFuncTable_Game functions{}; return functions.RunFrameSpeculative != nullptr; }"
                           HAVE_GAME_RUNAHEAD_API)
+check_cxx_source_compiles("#include <kodi/c-api/addon-instance/game.h>
+int main() { game_motion_event motion{}; return GAME_INPUT_EVENT_MOTION + static_cast<int>(motion.accel_x); }"
+                          HAVE_GAME_MOTION_API)
 unset(CMAKE_REQUIRED_INCLUDES)
 if(HAVE_GAME_RC_ACHIEVEMENT_SETS)
   add_definitions(-DHAVE_GAME_RC_ACHIEVEMENT_SETS)
 endif()
 if(HAVE_GAME_RUNAHEAD_API)
   add_definitions(-DHAVE_GAME_RUNAHEAD_API)
+endif()
+if(HAVE_GAME_MOTION_API)
+  add_definitions(-DHAVE_GAME_MOTION_API)
 endif()
 
 include_directories(${KODI_INCLUDE_DIR}

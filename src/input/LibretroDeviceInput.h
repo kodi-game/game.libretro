@@ -27,6 +27,9 @@ namespace LIBRETRO
     float AnalogButtonState(unsigned int buttonIndex) const;
     bool  AnalogStickState(unsigned int analogStickIndex, float& x, float& y) const;
     bool  AccelerometerState(float& x, float& y, float& z) const;
+#if defined(HAVE_GAME_MOTION_API)
+    bool  MotionState(game_motion_event& motion) const;
+#endif
     int   RelativePointerDeltaX(void);
     int   RelativePointerDeltaY(void);
     bool  AbsolutePointerState(unsigned int pointerIndex, float& x, float& y) const;
@@ -53,5 +56,10 @@ namespace LIBRETRO
     std::vector<game_rel_pointer_event>    m_relativePointers;
     std::vector<game_abs_pointer_event>    m_absolutePointers;
     std::mutex                             m_relativePtrMutex;
+#if defined(HAVE_GAME_MOTION_API)
+    game_motion_event                      m_motion{};
+    bool                                   m_hasMotion = false;
+    mutable std::mutex                     m_motionMutex;
+#endif
   };
 }

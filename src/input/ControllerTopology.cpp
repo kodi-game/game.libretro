@@ -124,6 +124,27 @@ unsigned int CControllerTopology::GetPlayerCount(const ControllerPtr& controller
   return playerCount;
 }
 
+std::vector<std::string> CControllerTopology::AcceptedControllers(unsigned int portIndex) const
+{
+  std::vector<std::string> controllers;
+
+  unsigned int index = 0;
+  for (const auto &port : m_ports)
+  {
+    if (port->type != GAME_PORT_CONTROLLER)
+      continue;
+
+    if (index++ == portIndex)
+    {
+      for (const auto &controller : port->accepts)
+        controllers.push_back(controller->controllerId);
+      break;
+    }
+  }
+
+  return controllers;
+}
+
 int CControllerTopology::GetPortIndex(const std::string &address) const
 {
   int portIndex = -1;
