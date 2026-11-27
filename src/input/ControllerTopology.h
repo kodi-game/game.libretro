@@ -54,6 +54,11 @@ namespace LIBRETRO
 
     int PlayerLimit() const { return m_playerLimit; }
 
+    /*!
+     * \brief The controllers the topology's port for a player takes
+     */
+    std::vector<std::string> AcceptedControllers(unsigned int portIndex) const;
+
   private:
     struct Port;
     using PortPtr = std::unique_ptr<Port>;

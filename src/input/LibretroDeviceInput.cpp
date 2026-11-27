@@ -118,6 +118,18 @@ bool CLibretroDeviceInput::AccelerometerState(float& x, float& y, float& z) cons
   return bSuccess;
 }
 
+#if defined(HAVE_GAME_MOTION_API)
+bool CLibretroDeviceInput::MotionState(game_motion_event& motion) const
+{
+  std::unique_lock<std::mutex> lock(m_motionMutex);
+
+  if (m_hasMotion)
+    motion = m_motion;
+
+  return m_hasMotion;
+}
+#endif
+
 int CLibretroDeviceInput::RelativePointerDeltaX(void)
 {
   int deltaX = 0;
@@ -164,6 +176,16 @@ bool CLibretroDeviceInput::AbsolutePointerState(unsigned int pointerIndex, float
 
 bool CLibretroDeviceInput::InputEvent(const game_input_event& event)
 {
+#if defined(HAVE_GAME_MOTION_API)
+  if (event.type == GAME_INPUT_EVENT_MOTION)
+  {
+    std::unique_lock<std::mutex> lock(m_motionMutex);
+    m_motion = event.motion;
+    m_hasMotion = true;
+    return true;
+  }
+#endif
+
   const std::string strControllerId = event.controller_id ? event.controller_id : "";
   const std::string strFeatureName = event.feature_name ? event.feature_name : "";
 

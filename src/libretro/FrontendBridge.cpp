@@ -302,14 +302,67 @@ bool CFrontendBridge::SensorSetState(unsigned port, retro_sensor_action action, 
 
   CInputManager::Get().EnableAnalogSensors(port, bEnabled);
 
-  // No controller can deliver a sensor yet, so none is available. Saying
-  // otherwise makes a core read zeros as real data: Dolphin's Wii Remote
-  // loses gravity.
+#if defined(HAVE_GAME_MOTION_API)
+  switch (action)
+  {
+  case RETRO_SENSOR_ACCELEROMETER_ENABLE:
+  case RETRO_SENSOR_GYROSCOPE_ENABLE:
+  {
+    // A port has a sensor if its controller has sent a reading, or if the
+    // controller's profile has one: cores like Cemu and Dolphin ask once, at
+    // the start. Saying so for any other port would make a core like Dolphin
+    // take a still reading over its own emulated motion.
+    game_motion_event motion;
+    return CInputManager::Get().MotionState(port, motion) ||
+           CInputManager::Get().HasMotionProfile(port);
+  }
+  default:
+    break;
+  }
+#endif
+
   return false;
 }
 
 float CFrontendBridge::SensorGetInput(unsigned port, unsigned id)
 {
+#if defined(HAVE_GAME_MOTION_API)
+  constexpr float STANDARD_GRAVITY = 9.80665f;
+
+  // Kodi's axes are SDL's, for a controller held in front of you: Y up and Z
+  // towards you. libretro's are those of a device at rest on a table: Y away
+  // from you and Z up, as Dolphin reads them.
+  game_motion_event motion;
+  bool bHasMotion = CInputManager::Get().MotionState(port, motion);
+  if (!bHasMotion && CInputManager::Get().HasMotionProfile(port))
+  {
+    // At rest until the controller sends a reading
+    motion = {};
+    motion.accel_y = STANDARD_GRAVITY;
+    bHasMotion = true;
+  }
+  if (bHasMotion)
+  {
+    switch (id)
+    {
+    case RETRO_SENSOR_ACCELEROMETER_X:
+      return motion.accel_x / STANDARD_GRAVITY;
+    case RETRO_SENSOR_ACCELEROMETER_Y:
+      return -motion.accel_z / STANDARD_GRAVITY;
+    case RETRO_SENSOR_ACCELEROMETER_Z:
+      return motion.accel_y / STANDARD_GRAVITY;
+    case RETRO_SENSOR_GYROSCOPE_X:
+      return motion.gyro_x;
+    case RETRO_SENSOR_GYROSCOPE_Y:
+      return -motion.gyro_z;
+    case RETRO_SENSOR_GYROSCOPE_Z:
+      return motion.gyro_y;
+    default:
+      break;
+    }
+  }
+#endif
+
   float axisState = 0.0f;
 
   float x, y, z;

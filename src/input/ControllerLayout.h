@@ -23,6 +23,7 @@ namespace LIBRETRO
 
     const std::string &ControllerID() const { return m_controller.controller_id; }
     bool ProvidesInput() const { return m_controller.provides_input; }
+    bool HasMotionSensor() const { return !m_controller.accelerometers.empty(); }
 
   private:
     kodi::addon::GameControllerLayout m_controller;

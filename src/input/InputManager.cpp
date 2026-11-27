@@ -253,7 +253,12 @@ bool CInputManager::InputEvent(const game_input_event& event)
   std::string controllerId = event.controller_id != nullptr ? event.controller_id : "";
   std::string feature = event.feature_name != nullptr ? event.feature_name : "";
 
+#if defined(HAVE_GAME_MOTION_API)
+  // Motion comes from the controller as a whole, not from one of its features
+  if (controllerId.empty() || (feature.empty() && event.type != GAME_INPUT_EVENT_MOTION))
+#else
   if (controllerId.empty() || feature.empty())
+#endif
     return false;
 
   bool bHandled = false;
@@ -493,6 +498,45 @@ bool CInputManager::AccelerometerState(unsigned int port, float& x, float& y, fl
   }
 
   return bSuccess;
+}
+
+#if defined(HAVE_GAME_MOTION_API)
+bool CInputManager::MotionState(unsigned int port, game_motion_event& motion) const
+{
+  std::unique_lock<std::recursive_mutex> lock(m_mutex);
+
+  bool bSuccess = false;
+
+  if (port < m_controllers.size())
+  {
+    const DevicePtr &device = m_controllers[port];
+    if (device)
+      bSuccess = device->Input().MotionState(motion);
+  }
+
+  return bSuccess;
+}
+#endif
+
+bool CInputManager::HasMotionProfile(unsigned int port) const
+{
+  std::unique_lock<std::recursive_mutex> lock(m_mutex);
+
+  // The controller connected there, or before one is, those the port takes
+  std::vector<std::string> controllerIds;
+  if (port < m_controllers.size() && m_controllers[port])
+    controllerIds.push_back(m_controllers[port]->ControllerID());
+  else
+    controllerIds = CControllerTopology::GetInstance().AcceptedControllers(port);
+
+  for (const auto& controllerId : controllerIds)
+  {
+    auto it = m_controllerLayouts.find(controllerId);
+    if (it != m_controllerLayouts.end() && it->second->HasMotionSensor())
+      return true;
+  }
+
+  return false;
 }
 
 void CInputManager::SetControllerInfo(const retro_controller_info* info)
